@@ -1,6 +1,6 @@
 pragma solidity ^0.4.21;
 
-import {ERC20Interface as ERC20} from "../erc20/ERC20Interface.sol";
+import {ERC20Interface as ERC20} from "../common/ERC20Interface.sol";
 
 contract AtomicSwapERC20 {
 
@@ -86,7 +86,7 @@ contract AtomicSwapERC20 {
     ERC20 erc20Contract = ERC20(swap.erc20ContractAddress);
     require(erc20Contract.transfer(swap.withdrawTrader, swap.erc20Value));
 
-    emit Close(_swapID, _secretKey);    
+    emit Close(_swapID, _secretKey);
   }
 
   function expire(bytes32 _swapID) public onlyOpenSwaps(_swapID) onlyExpirableSwaps(_swapID) {

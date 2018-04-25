@@ -6,7 +6,7 @@
 pragma solidity ^0.4.11;
 
 import './Owned.sol';
-import "../erc20/ERC20Interface.sol";
+import "../common/ERC20Interface.sol";
 
 /**
  * @title Generic owned destroyable contract
@@ -21,8 +21,9 @@ contract Object is Owned {
         for(uint i=0;i<tokens.length;i++) {
             address token = tokens[i];
             uint balance = ERC20Interface(token).balanceOf(this);
-            if(balance != 0)
+            if(balance != 0) {
                 ERC20Interface(token).transfer(_to,balance);
+            }
         }
         return OK;
     }
