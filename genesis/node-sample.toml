@@ -1,0 +1,22 @@
+[parity]
+chain = "side-chain-demo.json"
+base_path = "./node1"
+[network]
+port = 30300
+bootnodes = ["enode://ec96869b5a4c06020de93892a0b0a22601cfc61f0c67393487ff53a7fcf34cec77be24e37d54c4c2f6ba378d365708f68cb4c7a814eac100b0026795078e79e8@127.0.0.1:30400"]
+[rpc]
+cors = ["*"]
+port = 8540
+interface = "127.0.0.1"
+apis = ["web3", "eth", "net", "personal", "parity", "parity_set", "traces", "rpc", "parity_accounts", "signer"]
+[ui]
+port = 8180
+[websockets]
+port = 8450
+[account]
+password = ["node.pwds"]
+[mining]
+engine_signer = "0x00aa39d30f0d20ff03a22ccfc30b7efbfca597c2"
+reseal_on_txs = "none"
+[misc]
+logging = "signer=trace,engine=trace,own_tx=trace,txqueue=trace,sync=trace,miner=trace,state=trace,local_store=trace,basicauthority=trace,authorityround=trace,spec=trace,network=trace,account_bloom=trace,ethcore=trace"
