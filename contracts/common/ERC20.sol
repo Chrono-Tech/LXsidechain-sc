@@ -5,7 +5,7 @@
 
 pragma solidity ^0.4.11;
 
-contract ERC20Interface {
+contract ERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed from, address indexed spender, uint256 value);
     string public symbol;

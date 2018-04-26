@@ -1,10 +1,8 @@
 pragma solidity ^0.4.23;
 
-import "../../common/Owned.sol";
-import "../validatorset/LXValidatorSetDelegateInterface.sol";
+import "../common/Owned.sol";
 
-
-contract LXValidatorSetDelegate is LXValidatorSetDelegateInterface, Owned {
+contract LXValidatorSetDelegate is Owned {
   address public validatorSet;
 
   modifier onlyValidatorSet() {
@@ -12,7 +10,7 @@ contract LXValidatorSetDelegate is LXValidatorSetDelegateInterface, Owned {
       _;
   }
 
-  function InnerOwnedSet(address _validatorSet) public {
+  function LXValidatorSetDelegate(address _validatorSet) public {
     validatorSet = _validatorSet;
   }
 

@@ -16,12 +16,12 @@ pragma solidity ^0.4.23;
 
 import "../../common/Owned.sol";
 import "../../common/BaseRouter.sol";
-import "./LXValidatorSetDelegateInterface.sol";
-import "./RelaySet.sol";
+import "./IValidatorSet.sol";
+import "../../validators/LXValidatorManager.sol";
 
 // Owner can add or remove validators.
 
-contract LXValidatorSet is Owned, ValidatorSet, BaseRouter {
+contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
     // EVENTS
     event Report(address indexed reporter, address indexed reported, bool indexed malicious);
     event ChangeFinalized(address[] current_set);
@@ -30,6 +30,7 @@ contract LXValidatorSet is Owned, ValidatorSet, BaseRouter {
     address constant SYSTEM_ADDRESS = 0xfffffffffffffffffffffffffffffffffffffffe;
     uint public recentBlocks = 20;
 
+    bool public finalized;
     address public backendAddress;
 
     modifier only_system_and_not_finalized() {
@@ -37,102 +38,75 @@ contract LXValidatorSet is Owned, ValidatorSet, BaseRouter {
         _;
     }
 
-    modifier when_finalized() {
+    modifier onlyFinalized() {
         require(!finalized);
         _;
     }
 
-    modifier is_validator(address _someone) {
-        if (pendingStatus[_someone].isIn) { _; }
+    modifier onlyValidator(address _someone) {
+        if (backendAddress != 0x0
+            && LXValidatorManager(backendAddress).isValidator(_someone)) { _; }
     }
 
-    modifier is_pending(address _someone) {
-        require(pendingStatus[_someone].isIn);
-        _;
-    }
-
-    modifier is_not_pending(address _someone) {
-        require(!pendingStatus[_someone].isIn);
-        _;
-    }
-
-    modifier is_recent(uint _blockNumber) {
+    modifier onlyRecent(uint _blockNumber) {
         require(block.number <= _blockNumber + recentBlocks);
         _;
     }
 
-    struct AddressStatus {
-        bool isIn;
-        uint index;
+    modifier onlyBackend {
+        require(msg.sender == backendAddress);
+        _;
     }
 
-    // Current list of addresses entitled to participate in the consensus.
-    address[] validators;
-    address[] pending;
-    mapping(address => AddressStatus) pendingStatus;
-    // Was the last validator change finalized. Implies validators == pending
-    bool public finalized;
-
-    function LXValidatorSet(address[] _initial) public {
-        pending = _initial;
-        for (uint i = 0; i < _initial.length - 1; i++) {
-            pendingStatus[_initial[i]].isIn = true;
-            pendingStatus[_initial[i]].index = i;
-        }
-        validators = pending;
+    constructor(address _owner)
+    public
+    {
+        require(_owner != 0x0);
+        // TODO: ahiatsevich - why this does not work by default
+        contractOwner = _owner;
     }
 
     // Called to determine the current set of validators.
-    function getValidators() view public returns (address[]) {
-        return validators;
+    function getValidators()
+    public
+    view
+    returns (address[])
+    {
+        if (backendAddress != 0x0) {
+            return LXValidatorManager(backendAddress).getValidators();
+        }
     }
 
-    function getPending() view public returns (address[]) {
-        return pending;
+    function getPending()
+    public
+    view
+    returns (address[])
+    {
+        if (backendAddress != 0x0) {
+            return LXValidatorManager(backendAddress).getPending();
+        }
     }
 
     // Log desire to change the current list.
-    function initiateChange() private when_finalized {
+    function initiateChange()
+    public
+    onlyBackend
+    onlyFinalized
+    {
         finalized = false;
-        InitiateChange(block.blockhash(block.number - 1), getPending());
+        emit InitiateChange(blockhash(block.number - 1), getPending());
     }
 
     function finalizeChange()
     public
     only_system_and_not_finalized
     {
-        validators = pending;
+        if (backendAddress != 0x0) {
+            return LXValidatorManager(backendAddress).finalizeChange();
+        }
+
         finalized = true;
-        ChangeFinalized(getValidators());
-    }
-
-    // OWNER FUNCTIONS
-
-    // Add a validator.
-    function addValidator(address _validator)
-    public
-    onlyContractOwner
-    is_not_pending(_validator)
-    {
-        pendingStatus[_validator].isIn = true;
-        pendingStatus[_validator].index = pending.length;
-        pending.push(_validator);
-        initiateChange();
-    }
-
-    // Remove a validator.
-    function removeValidator(address _validator)
-    public
-    onlyContractOwner
-    is_pending(_validator)
-    {
-        pending[pendingStatus[_validator].index] = pending[pending.length - 1];
-        delete pending[pending.length - 1];
-        pending.length--;
-        // Reset address status.
-        delete pendingStatus[_validator].index;
-        pendingStatus[_validator].isIn = false;
-        initiateChange();
+        emit ChangeFinalized(getValidators());
     }
 
     // MISBEHAVIOUR HANDLING
@@ -141,19 +115,20 @@ contract LXValidatorSet is Owned, ValidatorSet, BaseRouter {
     function reportMalicious(address _validator, uint _blockNumber, bytes _proof)
     public
     onlyContractOwner
-    is_recent(_blockNumber)
+    onlyRecent(_blockNumber)
     {
-        Report(msg.sender, _validator, true);
+        // TODO: ahiatsevich - proof is not used
+        emit Report(msg.sender, _validator, true);
     }
 
     // Report that a validator has misbehaved in a benign way.
     function reportBenign(address _validator, uint _blockNumber)
     public
     onlyContractOwner
-    is_validator(_validator)
-    is_recent(_blockNumber)
+    onlyValidator(_validator)
+    onlyRecent(_blockNumber)
     {
-        Report(msg.sender, _validator, false);
+        emit Report(msg.sender, _validator, false);
     }
 
     // EXTEND DEFAULT FUNCTIONALITY

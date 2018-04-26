@@ -15,7 +15,7 @@
 pragma solidity ^0.4.23;
 
 
-contract ValidatorSet {
+interface IValidatorSet {
 	/// Issue this log event to signal a desired change in validator set.
 	/// This will not lead to a change in active validator set until
 	/// finalizeChange is called.
@@ -43,13 +43,4 @@ contract ValidatorSet {
 
 	function reportBenign(address validator, uint256 blockNumber) public;
 	function reportMalicious(address validator, uint256 blockNumber, bytes proof) public;
-}
-
-contract SafeValidatorSet is ValidatorSet {
-	function reportBenign(address validator, uint256 blockNumber) public {}
-	function reportMalicious(address validator, uint256 blockNumber, bytes proof) public {}
-}
-
-contract ImmediateSet is ValidatorSet {
-	function finalizeChange() public {}
 }

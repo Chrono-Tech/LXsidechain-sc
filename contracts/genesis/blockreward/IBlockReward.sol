@@ -17,7 +17,7 @@
 pragma solidity ^0.4.23;
 
 
-interface BlockReward {
+interface IBlockReward {
     // produce rewards for the given benefactors, with corresponding reward codes.
     // only callable by `SYSTEM_ADDRESS`
     function reward(address[] benefactors, uint16[] kind)

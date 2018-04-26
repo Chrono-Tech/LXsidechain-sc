@@ -1,6 +1,6 @@
 pragma solidity ^0.4.21;
 
-import {ERC20Interface as ERC20} from "../common/ERC20Interface.sol";
+import "../common/ERC20.sol";
 
 contract AtomicSwapERC20 {
 

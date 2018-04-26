@@ -8,7 +8,7 @@ pragma solidity ^0.4.21;
 
 import {ChronoBankPlatformInterface as ChronoBankPlatform} from "./ChronoBankPlatformInterface.sol";
 import {ChronoBankAssetInterface as ChronoBankAsset} from "./ChronoBankAssetInterface.sol";
-import {ERC20Interface as ERC20} from "../common/ERC20Interface.sol";
+import "../common/ERC20.sol";
 
 
 /// @title ChronoBank Asset Proxy.
@@ -159,14 +159,14 @@ contract ChronoBankAssetProxy is ERC20 {
     ///
     /// @return success.
     function __transferWithReference(
-        address _to, 
-        uint _value, 
-        string _reference, 
+        address _to,
+        uint _value,
+        string _reference,
         address _sender
-    ) 
-    onlyAccess(_sender) 
-    public 
-    returns (bool) 
+    )
+    onlyAccess(_sender)
+    public
+    returns (bool)
     {
         return chronoBankPlatform.proxyTransferWithReference(_to, _value, smbl, _reference, _sender) == OK;
     }
@@ -194,15 +194,15 @@ contract ChronoBankAssetProxy is ERC20 {
     ///
     /// @return success.
     function __transferFromWithReference(
-        address _from, 
-        address _to, 
-        uint _value, 
-        string _reference, 
+        address _from,
+        address _to,
+        uint _value,
+        string _reference,
         address _sender
-    ) 
-    onlyAccess(_sender) 
-    public 
-    returns (bool) 
+    )
+    onlyAccess(_sender)
+    public
+    returns (bool)
     {
         return chronoBankPlatform.proxyTransferFromWithReference(_from, _to, _value, smbl, _reference, _sender) == OK;
     }
