@@ -21,6 +21,7 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     mapping (address => bool) public authorised;
     address public validatorSet;
     ChronoBankPlatform platform;
+    address public eventsHistory;
 
     // Current list of addresses entitled to participate in the consensus.
     address[] validators;
@@ -57,6 +58,13 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     {
         require(_validatorSet != 0x0);
         validatorSet = _validatorSet;
+    }
+
+    function setupEventsHistory(address _eventsHistory)
+    public
+    onlyContractOwner
+    {
+        eventsHistory = _eventsHistory;
     }
 
     function addValidator(address _validator)

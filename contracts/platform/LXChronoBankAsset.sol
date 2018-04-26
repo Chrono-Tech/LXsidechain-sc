@@ -11,6 +11,15 @@ import "./LXAssetTransferListener.sol";
 contract LXChronoBankAsset is ChronoBankAsset {
     address public transferListener;
 
+    /// @notice called by the owner to unpause, returns to normal state
+    /// Only admin is allowed to execute this method.
+    function setTransferListener(address _transferListener)
+    public
+    onlyAuthorized
+    {
+        transferListener = _transferListener;
+    }
+
     /// @notice Passes execution into virtual function.
     /// Can only be called by assigned asset proxy.
     /// @dev function is final, and must not be overridden.

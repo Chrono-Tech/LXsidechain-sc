@@ -29,10 +29,13 @@ module.exports = {
       gas: 4700000
     },
     sidechain: {
-      network_id: "*",
-      provider: new HDWalletProvider(getWallet(),'QWEpoi123','http://127.0.0.1:8541'),
-      gas: 3144658,
-      gasPrice: 10000
+        host: "localhost",
+        port: 8545,
+        network_id: "*" // Match any network id
+      // network_id: "*",
+      // provider: new HDWalletProvider(getWallet(),'QWEpoi123','http://127.0.0.1:8545'),
+      // gas: 3144658,
+      // gasPrice: 10000
     }
   }
 };
