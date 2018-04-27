@@ -1,41 +1,33 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 function getWallet(){
-  return require('fs').readFileSync("./wallet.json", "utf8").trim();
+    return require('fs').readFileSync("./wallet.json", "utf8").trim();
 }
 
 module.exports = {
-  networks: {
-    rinkeby:{
-      network_id:4,
-      provider: new HDWalletProvider(getWallet(), "QWEpoi123", 'https://rinkeby.infura.io/'),
-      gas: 4700000,
-      gasPrice: 10000000000
+    networks: {
+        "development": {
+            host: "localhost",
+            port: 8545,
+            network_id: "*" // Match any network id
+        },
+        "chronobank-lx-prod": {
+            network_id: 456719, // TODO
+            provider: new HDWalletProvider(getWallet(),'QWEpoi123','https://public-sidechain.chronobank.io'),
+            port: 8545,
+            gas: 4700000
+        },
+        "chronobank-lx-test": {
+            network_id: 456719, // TODO
+            provider: new HDWalletProvider(getWallet(),'QWEpoi123','https://private-sidechain.chronobank.io'),
+            port: 8545,
+            gas: 4700000
+        }
     },
-    development: {
-      host: "localhost",
-      port: 8545,
-      network_id: "*" // Match any network id
+    solc: {
+        optimizer: {
+            enabled: true,
+            runs: 200
+        }
     },
-    chronobank: {
-      network_id: 456719,
-      provider: new HDWalletProvider(getWallet(),'QWEpoi123','https://private-full-geth-node.chronobank.io'),
-      port: 8545,
-      gas: 4700000
-    },
-    lx: {
-      network_id: 456719,
-      provider: new HDWalletProvider(getWallet(),'QWEpoi123','http://localhost:8545'),
-      port: 8545,
-      gas: 4700000
-    },
-    sidechain: {
-        host: "localhost",
-        port: 8545,
-        network_id: "*" // Match any network id
-      // network_id: "*",
-      // provider: new HDWalletProvider(getWallet(),'QWEpoi123','http://127.0.0.1:8545'),
-      // gas: 3144658,
-      // gasPrice: 10000
-    }
-  }
+    migrations_directory: './migrations'
 };
