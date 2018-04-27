@@ -2,7 +2,7 @@
  * Copyright 2017–2018, LaborX PTY
  * Licensed under the AGPL Version 3 license.
  */
- 
+
 pragma solidity ^0.4.23;
 
 import "../common/Owned.sol";
@@ -10,22 +10,34 @@ import "../genesis/validatorset/ILXValidatorSet.sol";
 import "../platform/LXAssetTransferListener.sol";
 import "../common/ERC20.sol";
 import "../platform/ChronoBankPlatform.sol";
+import "../lib/SafeMath.sol";
 
 contract LXValidatorManager is Owned, LXAssetTransferListener {
+    using SafeMath for uint;
+
     struct AddressStatus {
         bool isIn;
         uint index;
-        //address delegate;
     }
 
-    // address => (type => value)
-    mapping (address => mapping (uint => uint)) public rewards;
-    mapping (bytes32 => bool) rewardAssets;
-    mapping (address => bool) rewardBlacklist;
+    enum RewardKind {
+		Author, /// Reward attributed to the block author.
+        DUMMY1,
+        DUMMY2,
+		EmptyStep /// Reward attributed to the author(s) of empty step(s) included in the block (AuthorityRound engine).
+	}
 
+    // 10 LTH / 100 TIME
+    uint constant DEFAULT_REWARD_COEFFICIENT = (10 * (10**18)) / (100 * (10**8));
+    uint public k = DEFAULT_REWARD_COEFFICIENT;
+
+    // address => (type => value)
+    mapping (address => bool) rewardBlacklist;
     mapping (address => bool) public authorised;
+
     address public validatorSet;
-    ChronoBankPlatform platform;
+    ChronoBankPlatform public platform;
+    ERC20 public shares;
     address public eventsHistory;
 
     // Current list of addresses entitled to participate in the consensus.
@@ -58,11 +70,16 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
         _;
     }
 
-    constructor(address _validatorSet)
+    constructor(address _validatorSet, address _platform, address _shares)
     public
     {
         require(_validatorSet != 0x0);
+        require(_platform != 0x0);
+        require(_shares != 0x0);
+
         validatorSet = _validatorSet;
+        platform = ChronoBankPlatform(_platform);
+        shares = ERC20(_shares);
     }
 
     function setupEventsHistory(address _eventsHistory)
@@ -72,6 +89,13 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
         eventsHistory = _eventsHistory;
     }
 
+    function setupRewardCoefficient(uint _k)
+    public
+    onlyContractOwner
+    {
+        k = _k;
+    }
+
     function addValidator(address _validator)
     public
     onlyAuthorised
@@ -79,8 +103,6 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     {
         pendingStatus[_validator].isIn = true;
         pendingStatus[_validator].index = pending.length;
-
-        //address delegate = pendingStatus[_validator].delegate != 0x0 ? pendingStatus[_validator].delegate : _validator;
         pending.push(_validator);
 
         ILXValidatorSet(validatorSet).initiateChange();
@@ -114,8 +136,12 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     public
     onlyPlatform
     {
-        update(_from, _symbol);
-        update(_to, _symbol);
+        if(platform.proxies(_symbol) != address(shares)) {
+            return;
+        }
+
+        update(_from);
+        update(_to);
     }
 
     function isValidator(address _someone)
@@ -147,23 +173,22 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     view
     returns (uint)
     {
-        // TODO
-        return rewards[_benefactor][_kind];
-    }
-
-    function update(address _someone, bytes32 _symbol)
-    private
-    {
-        if (!rewardAssets[_symbol]) {
-            return;
+        if (_kind != uint(RewardKind.Author)) {
+            return 0;
         }
 
+        uint balance = shares.balanceOf(_benefactor);
+        return balance.mul(k);
+    }
+
+    function update(address _someone)
+    private
+    {
         if (rewardBlacklist[_someone]) {
             return;
         }
 
-        address proxy = platform.proxies(_symbol);
-        uint balance = ERC20(proxy).balanceOf(_someone);
+        uint balance = shares.balanceOf(_someone);
 
         if (balance > 0 && !isValidator(_someone)) {
             addValidator(_someone);

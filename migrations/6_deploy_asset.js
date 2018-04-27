@@ -9,11 +9,7 @@ module.exports = (deployer, network) => {
 			deployer.then(async () => {
 				await deployer.deploy(LXChronoBankAsset)
 				const asset = await LXChronoBankAsset.deployed()
-
-				await asset.init(ChronoBankAssetProxy.address)
-
-				const manager = await LXValidatorManager.deployed()
-				await asset.setTransferListener(manager.address);
+				await asset.init(ChronoBankAssetProxy.address)				
 
 				console.log(`[MIGRATION] [${parseInt(path.basename(__filename))}] ChronoBankAsset: #done`)
 			})
