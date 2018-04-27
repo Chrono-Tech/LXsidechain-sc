@@ -7,24 +7,24 @@ module.exports = (deployer, network) => {
 
 		case "sidechain": {
 			deployer.then(async () => {
-				const LH_SYMBOL = 'LHMOON'
-				const LH_NAME = 'LH Moon Token'
-				const LH_DESCRIPTION = 'ChronoBank LH Moon Token'
+				const TIME_SYMBOL = 'TIME'
+				const TIME_NAME = 'Chronobank TIME'
+				const TIME_DESCRIPTION = 'Chronobank TIME'
 
-				const BASE_UNIT = 12
+				const BASE_UNIT = 8
 				const IS_REISSUABLE = true
 				// const IS_NOT_REISSUABLE = false
 
 				await deployer.deploy(ChronoBankAssetProxy)
 
 				const platform = await ChronoBankPlatform.deployed()
-				await platform.issueAsset(LH_SYMBOL, 2000000000000, LH_NAME, LH_DESCRIPTION, BASE_UNIT, IS_REISSUABLE)
+				await platform.issueAsset(TIME_SYMBOL, 0, TIME_NAME, TIME_DESCRIPTION, BASE_UNIT, IS_REISSUABLE)
 
 				const proxy = await ChronoBankAssetProxy.deployed()
-				await proxy.init(platform.address, LH_SYMBOL, LH_NAME)
-				await platform.setProxy(proxy.address, LH_SYMBOL)
+				await proxy.init(platform.address, TIME_SYMBOL, TIME_NAME)
+				await platform.setProxy(proxy.address, TIME_SYMBOL)
 
-				console.log(`[MIGRATION] [${parseInt(path.basename(__filename))}] ChronoBankAssetProxy: #done`)
+				console.log(`[MIGRATION] [${parseInt(path.basename(__filename))}] ChronoBankAssetProxy(TIME): #done`)
 			})
 			break
 		}

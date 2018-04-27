@@ -9,10 +9,10 @@ module.exports = (deployer, network) => {
 		case "sidechain": {
 			deployer.then(async () => {
 				const ValidatorSetAddress = "0x0000000000000000000000000000000000000005";
-				const LH_SYMBOL = 'LHMOON'
+				const TIME_SYMBOL = 'TIME'
 
 				const platform = await ChronoBankPlatform.deployed()
-				const sharesAddress = await platform.proxies(LH_SYMBOL);
+				const sharesAddress = await platform.proxies(TIME_SYMBOL);
 
 				await deployer.deploy(LXValidatorManager, ValidatorSetAddress, platform.address, sharesAddress)
 
