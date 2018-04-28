@@ -7,8 +7,6 @@ const Reverter = require('./helpers/reverter');
 const sha256 = require("sha256");
 const bytes32 = require("./helpers/bytes32");
 
-const SHA256Helper = artifacts.require("./SHA256Helper.sol");
-
 contract('AtomicSwapERC20', function (accounts) {
     let reverter = new Reverter(web3);
     const middleware = accounts[1];
@@ -26,14 +24,7 @@ contract('AtomicSwapERC20', function (accounts) {
 
         await reverter.promisifySnapshot();
     })
-
-// function open(bytes32 _swapID,
-//  uint256 _erc20Value,
-//    address _erc20ContractAddress,
-//      address _withdrawTrader,
-//      bytes32 _secretLock,
-//      uint256 _timelock
-
+    
     context("Swap", async () => {
         it('mainnet -> sidechain', async () => {
             const secretKey = "Lorem ipsum dolor sit amet";
