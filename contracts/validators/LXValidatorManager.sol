@@ -10,6 +10,7 @@ import "../genesis/validatorset/ILXValidatorSet.sol";
 import "../platform/LXAssetTransferListener.sol";
 import "../common/ERC20.sol";
 import "../platform/ChronoBankPlatform.sol";
+import "../platform/ChronoBankAssetProxyInterface.sol";
 import "../lib/SafeMath.sol";
 
 contract LXValidatorManager is Owned, LXAssetTransferListener {
@@ -37,7 +38,7 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
 
     address public validatorSet;
     ChronoBankPlatform public platform;
-    ERC20 public shares;
+    ChronoBankAssetProxyInterface public shares;
     address public eventsHistory;
 
     // Current list of addresses entitled to participate in the consensus.
@@ -50,8 +51,9 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
         _;
     }
 
-    modifier onlyPlatform {
-        require(msg.sender == address(platform));
+    modifier onlyAsset(address _user, bytes32 _symbol) {
+        require(platform.proxies(_symbol) == address(shares));
+        require(msg.sender == shares.getVersionFor(_user));
         _;
     }
 
@@ -79,7 +81,7 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
 
         validatorSet = _validatorSet;
         platform = ChronoBankPlatform(_platform);
-        shares = ERC20(_shares);
+        shares = ChronoBankAssetProxyInterface(_shares);
     }
 
     function setupEventsHistory(address _eventsHistory)
@@ -97,14 +99,10 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     }
 
     function addValidator(address _validator)
-    public
+    private
     onlyAuthorised
-    onlyNotPending(_validator)
     {
-        pendingStatus[_validator].isIn = true;
-        pendingStatus[_validator].index = pending.length;
-        pending.push(_validator);
-
+        _addValidator(_validator);
         ILXValidatorSet(validatorSet).initiateChange();
     }
 
@@ -112,15 +110,8 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     function removeValidator(address _validator)
     public
     onlyAuthorised
-    onlyPending(_validator)
     {
-        pending[pendingStatus[_validator].index] = pending[pending.length - 1];
-        delete pending[pending.length - 1];
-        pending.length--;
-        // Reset address status.
-        delete pendingStatus[_validator].index;
-        pendingStatus[_validator].isIn = false;
-
+        _removeValidator(_validator);
         ILXValidatorSet(validatorSet).initiateChange();
     }
 
@@ -134,14 +125,14 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
 
     function onTransfer(address _from, address _to, uint _value, bytes32 _symbol)
     public
-    onlyPlatform
+    onlyAsset(_from, _symbol)
     {
-        if(platform.proxies(_symbol) != address(shares)) {
-            return;
-        }
+        bool updatedFrom = _updateValidator(_from);
+        bool updatedTo = _updateValidator(_to);
 
-        update(_from);
-        update(_to);
+        if (updatedFrom || updatedTo) {
+            ILXValidatorSet(validatorSet).initiateChange();
+        }
     }
 
     function isValidator(address _someone)
@@ -181,19 +172,44 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
         return balance.mul(k);
     }
 
-    function update(address _someone)
+    function _updateValidator(address _someone)
     private
+    returns (bool updated)
     {
-        if (rewardBlacklist[_someone]) {
+         if (rewardBlacklist[_someone]) {
             return;
         }
 
         uint balance = shares.balanceOf(_someone);
 
         if (balance > 0 && !isValidator(_someone)) {
-            addValidator(_someone);
+            _addValidator(_someone);
+            updated = true;
         } else if (balance == 0 && isValidator(_someone)) {
-            removeValidator(_someone);
+            _removeValidator(_someone);
+            updated = true;
         }
+    }
+
+    function _addValidator(address _validator)
+    private
+    onlyNotPending(_validator)
+    {
+        pendingStatus[_validator].isIn = true;
+        pendingStatus[_validator].index = pending.length;
+        pending.push(_validator);
+    }
+
+    // Remove a validator.
+    function _removeValidator(address _validator)
+    private
+    onlyPending(_validator)
+    {
+        pending[pendingStatus[_validator].index] = pending[pending.length - 1];
+        delete pending[pending.length - 1];
+        pending.length--;
+        // Reset address status.
+        delete pendingStatus[_validator].index;
+        pendingStatus[_validator].isIn = false;
     }
 }

@@ -34,12 +34,12 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
     address public backendAddress;
 
     modifier only_system_and_not_finalized() {
-        require(msg.sender != SYSTEM_ADDRESS || finalized);
+        require(msg.sender != SYSTEM_ADDRESS || finalized); // TODO
         _;
     }
 
     modifier onlyFinalized() {
-        require(!finalized);
+        require(finalized); // TODO
         _;
     }
 
@@ -91,7 +91,7 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
     function initiateChange()
     public
     onlyBackend
-    onlyFinalized
+    //onlyFinalized
     {
         finalized = false;
         emit InitiateChange(blockhash(block.number - 1), getPending());
@@ -102,7 +102,7 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
     only_system_and_not_finalized
     {
         if (backendAddress != 0x0) {
-            return LXValidatorManager(backendAddress).finalizeChange();
+            LXValidatorManager(backendAddress).finalizeChange();
         }
 
         finalized = true;
