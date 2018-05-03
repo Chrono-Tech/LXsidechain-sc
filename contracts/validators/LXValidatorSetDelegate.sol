@@ -15,7 +15,7 @@ contract LXValidatorSetDelegate is Owned {
       _;
   }
 
-  function LXValidatorSetDelegate(address _validatorSet) public {
+  constructor(address _validatorSet) public {
     validatorSet = _validatorSet;
   }
 
@@ -31,31 +31,31 @@ contract LXValidatorSetDelegate is Owned {
   {
   }
 
-  function addValidator(address _validator)
+  function addValidator(address /*_validator*/)
   public
   onlyValidatorSet
   {
   }
 
-  function removeValidator(address _validator)
+  function removeValidator(address /*_validator*/)
   public
   onlyValidatorSet
   {
   }
 
-  function setRecentBlocks(uint _recentBlocks)
+  function setRecentBlocks(uint /*_recentBlocks*/)
   public
   onlyValidatorSet
   {
   }
 
-  function reportMalicious(address _validator, uint _blockNumber, bytes _proof)
+  function reportMalicious(address /*_validator*/, uint /*_blockNumber*/, bytes /*_proof*/)
   public
   onlyValidatorSet
   {
   }
 
-  function reportBenign(address _validator, uint _blockNumber)
+  function reportBenign(address /*_validator*/, uint /*_blockNumber*/)
   public
   onlyValidatorSet
   {

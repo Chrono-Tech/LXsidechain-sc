@@ -128,7 +128,7 @@ contract LXValidatorManager is Owned, LXAssetListener {
         ILXValidatorSet(validatorSet).initiateChange();
     }
 
-    function onTransfer(address _from, address _to, uint _value, bytes32 _symbol)
+    function onTransfer(address _from, address _to, uint /*_value*/, bytes32 _symbol)
     public
     onlyPlatform()
     {
