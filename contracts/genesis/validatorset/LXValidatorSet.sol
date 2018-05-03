@@ -27,7 +27,7 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
     event ChangeFinalized(address[] current_set);
 
     // System address, used by the block sealer.
-    address constant SYSTEM_ADDRESS = 0xfffffffffffffffffffffffffffffffffffffffe;
+    address constant SYSTEM_ADDRESS = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
     uint public recentBlocks = 20;
 
     bool public finalized;
@@ -65,7 +65,7 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
 
     // Called to determine the current set of validators.
     function getValidators()
-    public
+    external
     view
     returns (address[])
     {
@@ -95,7 +95,7 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
     }
 
     function finalizeChange()
-    public
+    external
     only_system_and_not_finalized
     {
         if (backendAddress != 0x0) {
@@ -103,14 +103,14 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
         }
 
         finalized = true;
-        emit ChangeFinalized(getValidators());
+        emit ChangeFinalized(this.getValidators());
     }
 
     // MISBEHAVIOUR HANDLING
 
     // Called when a validator should be removed.
-    function reportMalicious(address _validator, uint _blockNumber, bytes _proof)
-    public
+    function reportMalicious(address _validator, uint _blockNumber, bytes /*_proof*/)
+    external
     onlyContractOwner
     onlyRecent(_blockNumber)
     {
@@ -120,7 +120,7 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
 
     // Report that a validator has misbehaved in a benign way.
     function reportBenign(address _validator, uint _blockNumber)
-    public
+    external
     onlyContractOwner
     onlyValidator(_validator)
     onlyRecent(_blockNumber)

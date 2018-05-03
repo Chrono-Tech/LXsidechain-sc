@@ -11,7 +11,7 @@ import "../../validators/LXValidatorManager.sol";
 
 
 contract LXBlockReward is IBlockReward, Owned {
-    address constant SYSTEM_ADDRESS = 0xfffffffffffffffffffffffffffffffffffffffe;
+    address constant SYSTEM_ADDRESS = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
     address public dataProvider;
 
     modifier onlySystem {
@@ -19,7 +19,7 @@ contract LXBlockReward is IBlockReward, Owned {
         _;
     }
 
-    constructor(address _owner) {
+    constructor(address _owner) public {
         require(_owner != 0x0);
         contractOwner = _owner;
     }
