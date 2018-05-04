@@ -23,8 +23,8 @@ contract Owned {
 	* @dev Throws if called by any account other than the owner.
 	*/
 
-	modifier onlyContractOwner() {
-		require(msg.sender == contractOwner);
+	modifier onlyContractOwner {
+		require(msg.sender == contractOwner, "Only contract owner");
 		_;
 	}
 
