@@ -8,7 +8,8 @@ module.exports = {
         "development": {
             host: "localhost",
             port: 8545,
-            network_id: "*" // Match any network id
+            network_id: "*", // Match any network id
+            gas: 4700000,
         },
         "local": {
             provider: new HDWalletProvider(getWallet(),'QWEpoi123','http://127.0.0.1:8542'),
@@ -33,4 +34,5 @@ module.exports = {
         }
     },
     migrations_directory: './migrations'
+    // migrations_directory: './migrations-genesis'
 };
