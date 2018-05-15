@@ -1,18 +1,18 @@
 const AtomicSwapERC20 = artifacts.require('./AtomicSwapERC20.sol');
 const ChronobankPlatform = artifacts.require('./ChronobankPlatform.sol');
-const ERC20 = artifacts.require('./ERC20Interface.sol');
+const ERC20 = artifacts.require('./ERC20.sol');
 
 const utils = require('./helpers/utils');
 const Reverter = require('./helpers/reverter');
-const sha256 = require("sha256");
 const bytes32 = require("./helpers/bytes32");
+const sha256 = require("sha256");
 
 contract('AtomicSwapERC20', function (accounts) {
     let reverter = new Reverter(web3);
     const middleware = accounts[1];
     const user = accounts[2];
 
-    const SYMBOL = "LHMOON";
+    const SYMBOL = 'TIME';
 
     let platform;
 
@@ -24,7 +24,7 @@ contract('AtomicSwapERC20', function (accounts) {
 
         await reverter.promisifySnapshot();
     })
-    
+
     context("Swap", async () => {
         it('mainnet -> sidechain', async () => {
             const secretKey = "Lorem ipsum dolor sit amet";
