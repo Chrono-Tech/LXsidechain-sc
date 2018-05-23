@@ -9,4 +9,5 @@ import "./IValidatorSet.sol";
 
 contract ILXValidatorSet is IValidatorSet {
 	function initiateChange() public;
+	function finalized() public view returns(bool);
 }

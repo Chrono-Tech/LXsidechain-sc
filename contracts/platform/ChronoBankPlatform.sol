@@ -8,6 +8,7 @@ pragma solidity ^0.4.21;
 import "../common/Object.sol";
 import "./ChronoBankPlatformEmitter.sol";
 import "../lib/SafeMath.sol";
+import "./LXAssetListener.sol";
 
 
 contract ProxyEventsEmitter {
@@ -60,6 +61,7 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         uint8 baseUnit;                   // Proposed number of decimals.
         mapping(uint => Wallet) wallets;  // Holders wallets.
         mapping(uint => bool) partowners; // Part-owners of an asset; have less access rights than owner
+        address listener;  // token transfer listener
     }
 
     /// @title Structure of an asset holder wallet for particular asset.
@@ -298,7 +300,21 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         proxies[_symbol] = _proxyAddress;
         return OK;
     }
-    
+
+    /// @notice Sets Proxy contract address for a particular asset.
+    /// @dev Can be set only once for each asset and only by contract owner.
+    /// @param _listener Token Listener contract address.
+    /// @param _symbol asset symbol.
+    /// @return success.
+    function setListener(address _listener, bytes32 _symbol) public onlyOneOfContractOwners returns (uint) {
+        if (!isCreated(_symbol)) {
+            return CHRONOBANK_PLATFORM_ASSET_IS_NOT_ISSUED;
+        }
+
+        assets[_symbol].listener = _listener;
+        return OK;
+    }
+
     /// @notice Performes asset transfer for multiple destinations
     /// @param addresses list of addresses to receive some amount
     /// @param values list of asset amounts for according addresses
@@ -353,15 +369,19 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     /// @param _value amount to transfer.
     /// @param _symbol asset symbol.
     function _transferDirect(
-        uint _fromId, 
-        uint _toId, 
-        uint _value, 
+        uint _fromId,
+        uint _toId,
+        uint _value,
         bytes32 _symbol
-    ) 
-    internal 
+    )
+    internal
     {
         assets[_symbol].wallets[_fromId].balance = assets[_symbol].wallets[_fromId].balance.sub(_value);
         assets[_symbol].wallets[_toId].balance = assets[_symbol].wallets[_toId].balance.add(_value);
+
+        if (assets[_symbol].listener != address(0x0)) {
+            LXAssetListener(assets[_symbol].listener).onTransfer(holders[_fromId].addr, holders[_toId].addr, _value, _symbol);
+        }
     }
 
     /// @dev Transfers asset balance between holders wallets.
@@ -376,15 +396,15 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     ///
     /// @return success.
     function _transfer(
-        uint _fromId, 
-        uint _toId, 
-        uint _value, 
-        bytes32 _symbol, 
-        string _reference, 
+        uint _fromId,
+        uint _toId,
+        uint _value,
+        bytes32 _symbol,
+        string _reference,
         uint _senderId
-    ) 
-    internal 
-    returns (uint) 
+    )
+    internal
+    returns (uint)
     {
         // Should not allow to send to oneself.
         if (_fromId == _toId) {
@@ -427,15 +447,15 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     ///
     /// @return success.
     function proxyTransferWithReference(
-        address _to, 
-        uint _value, 
-        bytes32 _symbol, 
-        string _reference, 
+        address _to,
+        uint _value,
+        bytes32 _symbol,
+        string _reference,
         address _sender
-    ) 
-    onlyProxy(_symbol) 
-    public 
-    returns (uint) 
+    )
+    onlyProxy(_symbol)
+    public
+    returns (uint)
     {
         return _transfer(getHolderId(_sender), _createHolderId(_to), _value, _symbol, _reference, getHolderId(_sender));
     }
@@ -488,15 +508,15 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     ///
     /// @return success.
     function issueAsset(
-        bytes32 _symbol, 
-        uint _value, 
-        string _name, 
-        string _description, 
-        uint8 _baseUnit, 
+        bytes32 _symbol,
+        uint _value,
+        string _name,
+        string _description,
+        uint8 _baseUnit,
         bool _isReissuable
-    ) 
-    public 
-    returns (uint) 
+    )
+    public
+    returns (uint)
     {
         return issueAsset(_symbol, _value, _name, _description, _baseUnit, _isReissuable, msg.sender);
     }
@@ -516,17 +536,17 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     ///
     /// @return success.
     function issueAsset(
-        bytes32 _symbol, 
-        uint _value, 
-        string _name, 
-        string _description, 
-        uint8 _baseUnit, 
-        bool _isReissuable, 
+        bytes32 _symbol,
+        uint _value,
+        string _name,
+        string _description,
+        uint8 _baseUnit,
+        bool _isReissuable,
         address _account
-    ) 
-    onlyOneOfContractOwners 
-    public 
-    returns (uint) 
+    )
+    onlyOneOfContractOwners
+    internal // TODO: fix `Invalid number of arguments to Solidity function` in truffle
+    returns (uint)
     {
         // Should have positive value if supply is going to be fixed.
         if (_value == 0 && !_isReissuable) {
@@ -540,8 +560,13 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         uint creatorId = _account == msg.sender ? holderId : _createHolderId(msg.sender);
 
         symbols.push(_symbol);
-        assets[_symbol] = Asset(creatorId, _value, _name, _description, _isReissuable, _baseUnit);
+        assets[_symbol] = Asset(creatorId, _value, _name, _description, _isReissuable, _baseUnit, address(0x0));
         assets[_symbol].wallets[holderId].balance = _value;
+
+        if (assets[_symbol].listener != address(0x0)) {
+            LXAssetListener(assets[_symbol].listener).onTransfer(address(0x0), _account, _value, _symbol);
+        }
+
         // Internal Out Of Gas/Throw: revert this transaction too;
         // Call Stack Depth Limit reached: n/a after HF 4;
         // Recursive Call: safe, all changes already made.
@@ -575,6 +600,11 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         uint holderId = getHolderId(msg.sender);
         asset.wallets[holderId].balance = asset.wallets[holderId].balance.add(_value);
         asset.totalSupply = asset.totalSupply.add(_value);
+
+        if (assets[_symbol].listener != address(0x0)) {
+            LXAssetListener(assets[_symbol].listener).onTransfer(msg.sender, address(0x0), _value, _symbol);
+        }
+
         // Internal Out Of Gas/Throw: revert this transaction too;
         // Call Stack Depth Limit reached: n/a after HF 4;
         // Recursive Call: safe, all changes already made.
@@ -602,6 +632,11 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         }
         asset.wallets[holderId].balance = asset.wallets[holderId].balance.sub(_value);
         asset.totalSupply = asset.totalSupply.sub(_value);
+
+        if (assets[_symbol].listener != address(0x0)) {
+            LXAssetListener(assets[_symbol].listener).onTransfer(address(0x0), msg.sender, _value, _symbol);
+        }
+
         // Internal Out Of Gas/Throw: revert this transaction too;
         // Call Stack Depth Limit reached: n/a after HF 4;
         // Recursive Call: safe, all changes already made.
@@ -711,13 +746,13 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     ///
     /// @return success.
     function _approve(
-        uint _spenderId, 
-        uint _value, 
-        bytes32 _symbol, 
+        uint _spenderId,
+        uint _value,
+        bytes32 _symbol,
         uint _senderId
-    ) 
-    internal 
-    returns (uint) 
+    )
+    internal
+    returns (uint)
     {
         // Asset should exist.
         if (!isCreated(_symbol)) {
@@ -759,14 +794,14 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     ///
     /// @return success.
     function proxyApprove(
-        address _spender, 
-        uint _value, 
-        bytes32 _symbol, 
+        address _spender,
+        uint _value,
+        bytes32 _symbol,
         address _sender
-    ) 
-    onlyProxy(_symbol) 
-    public 
-    returns (uint) 
+    )
+    onlyProxy(_symbol)
+    public
+    returns (uint)
     {
         return _approve(_createHolderId(_spender), _value, _symbol, _createHolderId(_sender));
     }
@@ -784,16 +819,16 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     ///
     /// @return success.
     function proxyTransferFromWithReference(
-        address _from, 
-        address _to, 
-        uint _value, 
-        bytes32 _symbol, 
-        string _reference, 
+        address _from,
+        address _to,
+        uint _value,
+        bytes32 _symbol,
+        string _reference,
         address _sender
-    ) 
-    onlyProxy(_symbol) 
-    public 
-    returns (uint) 
+    )
+    onlyProxy(_symbol)
+    public
+    returns (uint)
     {
         return _transfer(getHolderId(_from), _createHolderId(_to), _value, _symbol, _reference, getHolderId(_sender));
     }

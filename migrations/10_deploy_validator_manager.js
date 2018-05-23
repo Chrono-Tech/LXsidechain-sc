@@ -1,6 +1,6 @@
 const LXValidatorManager = artifacts.require("LXValidatorManager")
 const MultiEventsHistory = artifacts.require("MultiEventsHistory")
-const LXChronoBankAsset = artifacts.require("LXChronoBankAsset")
+const ChronoBankAsset = artifacts.require("ChronoBankAsset")
 const ChronoBankPlatform = artifacts.require("ChronoBankPlatform")
 const LXBlockReward = artifacts.require("LXBlockReward")
 const LXValidatorSet = artifacts.require("LXValidatorSet")
@@ -29,8 +29,7 @@ module.exports = (deployer, network) => {
 		await history.authorize(manager.address)
 		await manager.setupEventsHistory(history.address)
 
-		const asset = await LXChronoBankAsset.deployed()
-		await asset.setTransferListener(manager.address)
+		await platform.setListener(manager.address, TIME_SYMBOL)
 
 		const validatorSet = LXValidatorSet.at(validatorSetAddress)
 		const blockReward = LXBlockReward.at(blockRewardAddress)

@@ -7,13 +7,13 @@ pragma solidity ^0.4.23;
 
 import "../common/Owned.sol";
 import "../genesis/validatorset/ILXValidatorSet.sol";
-import "../platform/LXAssetTransferListener.sol";
+import "../platform/LXAssetListener.sol";
 import "../common/ERC20.sol";
 import "../platform/ChronoBankPlatform.sol";
 import "../platform/ChronoBankAssetProxyInterface.sol";
 import "../lib/SafeMath.sol";
 
-contract LXValidatorManager is Owned, LXAssetTransferListener {
+contract LXValidatorManager is Owned, LXAssetListener {
     using SafeMath for uint;
 
     struct AddressStatus {
@@ -51,9 +51,8 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
         _;
     }
 
-    modifier onlyAsset(address _user, bytes32 _symbol) {
-        require(platform.proxies(_symbol) == address(shares));
-        require(msg.sender == shares.getVersionFor(_user));
+    modifier onlyPlatform() {
+        require(platform == msg.sender);
         _;
     }
 
@@ -63,12 +62,12 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     }
 
     modifier onlyPending(address _someone) {
-        require(pendingStatus[_someone].isIn);
+        if(pendingStatus[_someone].isIn)
         _;
     }
 
     modifier onlyNotPending(address _someone) {
-        require(!pendingStatus[_someone].isIn);
+        if(!pendingStatus[_someone].isIn)
         _;
     }
 
@@ -103,7 +102,7 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     onlyAuthorised
     {
         _addValidator(_validator);
-        ILXValidatorSet(validatorSet).initiateChange();
+        initiateChange();
     }
 
     // Remove a validator.
@@ -112,7 +111,7 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     onlyAuthorised
     {
         _removeValidator(_validator);
-        ILXValidatorSet(validatorSet).initiateChange();
+        initiateChange();
     }
 
     // callback from validatorSet
@@ -123,16 +122,30 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
         validators = pending;
     }
 
+    function initiateChange()
+    private
+    {
+        ILXValidatorSet(validatorSet).initiateChange();
+    }
+
     function onTransfer(address _from, address _to, uint _value, bytes32 _symbol)
     public
-    onlyAsset(_from, _symbol)
+    onlyPlatform()
     {
         bool updatedFrom = _updateValidator(_from);
         bool updatedTo = _updateValidator(_to);
 
         if (updatedFrom || updatedTo) {
-            ILXValidatorSet(validatorSet).initiateChange();
+            initiateChange();
         }
+    }
+
+    function isPending(address _someone)
+    public
+    view
+    returns (bool)
+    {
+        return pendingStatus[_someone].isIn;
     }
 
     function isValidator(address _someone)
@@ -140,7 +153,7 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     view
     returns (bool)
     {
-        return pendingStatus[_someone].isIn;
+        return pendingStatus[_someone].isIn && ILXValidatorSet(validatorSet).finalized();
     }
 
     function getPending()
@@ -176,16 +189,20 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     private
     returns (bool updated)
     {
-         if (rewardBlacklist[_someone]) {
-            return;
+        if (_someone == address(0x0)) {
+            return false;
+        }
+
+        if (rewardBlacklist[_someone]) {
+            return false;
         }
 
         uint balance = shares.balanceOf(_someone);
 
-        if (balance > 0 && !isValidator(_someone)) {
+        if (balance > 0 && !isPending(_someone)) {
             _addValidator(_someone);
             updated = true;
-        } else if (balance == 0 && isValidator(_someone)) {
+        } else if (balance == 0 && isPending(_someone)) {
             _removeValidator(_someone);
             updated = true;
         }
@@ -206,9 +223,10 @@ contract LXValidatorManager is Owned, LXAssetTransferListener {
     onlyPending(_validator)
     {
         pending[pendingStatus[_validator].index] = pending[pending.length - 1];
+        pendingStatus[pending[pendingStatus[_validator].index]].index = pendingStatus[_validator].index;
         delete pending[pending.length - 1];
         pending.length--;
-        // Reset address status.
+
         delete pendingStatus[_validator].index;
         pendingStatus[_validator].isIn = false;
     }
