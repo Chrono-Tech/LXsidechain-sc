@@ -9,6 +9,11 @@ const path = require("path")
 module.exports = (deployer, networks, accounts) => {
 	deployer.then(async () => {
 		const TIME_SYMBOL = 'TIME'
+		
+		let MINER_ADDRESS
+		if (networks == 'development') {
+			MINER_ADDRESS = accounts[9] // TODO: setup for other networks separatly
+		}
 
 		const storageManager = await StorageManager.deployed()
 		await storageManager.giveAccess(TimeHolder.address, "Deposits")
@@ -20,6 +25,10 @@ module.exports = (deployer, networks, accounts) => {
 
 		const history = await MultiEventsHistory.deployed()
 		await history.authorize(timeHolder.address)
+
+		if (MINER_ADDRESS !== undefined) {
+			await timeHolder.setPrimaryMiner(MINER_ADDRESS)
+		}
 
 		console.log(`[MIGRATION] [${parseInt(path.basename(__filename))}] TimeHolder init: #done`)
 	})
