@@ -91,6 +91,10 @@ library StorageInterface {
         Mapping innerMapping;
     }
 
+    struct UIntAddressBoolMapping {
+        Mapping innerMapping;
+    }
+
     struct UIntUIntAddressMapping {
         Mapping innerMapping;
     }
@@ -232,6 +236,10 @@ library StorageInterface {
     }
 
     function init(UIntAddressUIntMapping storage self, bytes32 _id) internal {
+        init(self.innerMapping, _id);
+    }
+
+    function init(UIntAddressBoolMapping storage self, bytes32 _id) internal {
         init(self.innerMapping, _id);
     }
 
@@ -441,6 +449,10 @@ library StorageInterface {
 
     function set(Config storage self, UIntAddressUIntMapping storage item, uint _key, address _key2, uint _value) internal {
         set(self, item.innerMapping, bytes32(_key), bytes32(_key2), bytes32(_value));
+    }
+
+    function set(Config storage self, UIntAddressBoolMapping storage item, uint _key, address _key2, bool _value) internal {
+        set(self, item.innerMapping, bytes32(_key), bytes32(_key2), toBytes32(_value));
     }
 
     function set(Config storage self, UIntUIntAddressMapping storage item, uint _key, uint _key2, address _value) internal {
@@ -767,6 +779,10 @@ library StorageInterface {
 
     function get(Config storage self, UIntAddressUIntMapping storage item, uint _key, address _key2) internal view returns (uint) {
         return uint(get(self, item.innerMapping, bytes32(_key), bytes32(_key2)));
+    }
+
+    function get(Config storage self, UIntAddressBoolMapping storage item, uint _key, address _key2) internal view returns (bool) {
+        return toBool(get(self, item.innerMapping, bytes32(_key), bytes32(_key2)));
     }
 
     function get(Config storage self, UIntAddressAddressBoolMapping storage item, uint _key, address _key2, address _key3) internal view returns (bool) {

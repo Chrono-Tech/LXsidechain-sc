@@ -16,17 +16,21 @@ import "../event/MultiEventsHistoryAdapter.sol";
 /// All the functions is meant to be called using delegatecall.
 contract TimeHolderEmitter is MultiEventsHistoryAdapter {
 
+    event WithdrawalRequested(bytes32 requestId, address token, uint amount, address requester, address recepient);
+
+    event WithdrawalRequestResolved(bytes32 requestId, address token, uint amount, address requester, address recepient);
+
+    event WithdrawalRequestCancelled(bytes32 requestId);
+
+    event MinerDeposited(address token, uint amount, address miner, address sender);
+
+    event PrimaryMinerChanged(address from, address to);
+
     /// @dev User deposited into current period
     event Deposit(address token, address who, uint amount);
 
     /// @dev Shares withdrawn by a shareholder
     event WithdrawShares(address token, address who, uint amount, address receiver);
-
-    /// @dev Shares withdrawn by a shareholder
-    event ListenerAdded(address listener, address token);
-
-    /// @dev Shares listener is removed
-    event ListenerRemoved(address listener, address token);
 
     /// @dev Shares is added to whitelist and start be available to use
     event SharesWhiteListAdded(address token);
@@ -39,20 +43,32 @@ contract TimeHolderEmitter is MultiEventsHistoryAdapter {
 
     /* Emitting events */
 
+    function emitWithdrawalRequested(bytes32 requestId, address token, uint amount, address requester, address recepient) public {
+        emit WithdrawalRequested(requestId, token, amount, requester, recepient);
+    }
+
+    function emitWithdrawalRequestResolved(bytes32 requestId, address token, uint amount, address requester, address recepient) public {
+        emit WithdrawalRequestResolved(requestId, token, amount, requester, recepient);
+    }
+
+    function emitWithdrawalRequestCancelled(bytes32 requestId) public {
+        emit WithdrawalRequestCancelled(requestId);
+    }
+
+    function emitPrimaryMinerChanged(address from, address to) public {
+        emit PrimaryMinerChanged(from, to);
+    }
+
+    function emitMinerDeposited(address token, uint amount, address miner, address sender) public {
+        emit MinerDeposited(token, amount, miner, sender);
+    }
+
     function emitDeposit(address token, address who, uint amount) public {
         emit Deposit(token, who, amount);
     }
 
     function emitWithdrawShares(address token, address who, uint amount, address receiver) public {
         emit WithdrawShares(token, who, amount, receiver);
-    }
-
-    function emitListenerAdded(address listener, address token) public {
-        emit ListenerAdded(listener, token);
-    }
-
-    function emitListenerRemoved(address listener, address token) public {
-        emit ListenerRemoved(listener, token);
     }
 
     function emitSharesWhiteListChanged(address token, uint limit, bool isAdded) public {

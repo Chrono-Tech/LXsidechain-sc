@@ -78,4 +78,8 @@ contract RewardsWallet is Object, DepositWalletInterface {
     function withdraw(address _asset, address _to, uint256 _amount) onlyRewards external returns (bool) {
         return ERC20(_asset).transfer(_to, _amount);
     }
+
+    function withdrawEth(address _to, uint256 _amount) onlyRewards external returns (bool) {
+        return _to.send(_amount);
+    }
 }
