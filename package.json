@@ -13,7 +13,13 @@
     "truffle-hdwallet-provider": "mikefluff/truffle-hdwallet-provider#7a2eccca1ba17c235a3ef258914ca74ea5f13014"
   },
   "scripts": {
-    "test": "test"
+    "test:all": "./node_modules/truffle/build/cli.bundled.js test",
+    "run:rpc": "./node_modules/ganache-cli/build/cli.node.js -g 1 --gasLimit 4700000 --trace_request true | grep -Ev \"FilterSubprovider|eth_getFilterChanges\"",
+    "compile": "./node_modules/truffle/build/cli.bundled.js compile",
+    "compile:all": "./node_modules/truffle/build/cli.bundled.js compile --all",
+    "migrate": "./node_modules/truffle/build/cli.bundled.js migrate",
+    "migrate:reset": "./node_modules/truffle/build/cli.bundled.js migrate --reset",
+    "console": "./node_modules/truffle/build/cli.bundled.js console --network development"
   },
   "repository": {
     "type": "git",
