@@ -10,4 +10,5 @@ pragma solidity ^0.4.23;
 interface DepositWalletInterface {
     function deposit(address _asset, address _from, uint256 amount) external returns (bool);
     function withdraw(address _asset, address _to, uint256 amount) external returns (bool);
+    function withdrawEth(address _to, uint256 amount) external returns (bool);
 }
