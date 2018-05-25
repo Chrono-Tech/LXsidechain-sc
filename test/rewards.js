@@ -18,6 +18,8 @@ const ErrorsEnum = require("../common/errors")
 contract('Rewards', (accounts) => {
     let reverter = new Reverter(web3)
     
+    const miner = accounts[6]
+
     let reward
     let rewardsWallet
     let timeHolder
@@ -42,10 +44,26 @@ contract('Rewards', (accounts) => {
     let defaultInit = async () => {
         await storage.setManager(storageManager.address)
         await rewardsWallet.init(reward.address)
-        await reward.init(rewardsWallet.address, asset1.address, ZERO_INTERVAL)
+        await reward.init(rewardsWallet.address, ZERO_INTERVAL)
         await timeHolderWallet.init(timeHolder.address)
         await timeHolder.init(DEFAULT_SHARE_ADDRESS, timeHolderWallet.address, erc20DepositStorage.address)
+        await timeHolder.setPrimaryMiner(miner)
         await multiEventsHistory.authorize(reward.address)
+    }
+
+    let mintEth = (destination, amount) => {
+        return new Promise((resolve, reject) => {
+            web3.eth.sendTransaction({ from: miner, to: destination, value: amount, }, (e, r) => { 
+                e ? reject(e) : resolve(r)
+            })
+        })
+    }
+
+    let getEthSpent = (tx) => {
+        tx = tx.tx || tx
+        txObj = web3.eth.getTransaction(tx)
+        txReceipt = web3.eth.getTransactionReceipt(tx)
+        return txObj.gasPrice * txReceipt.gasUsed
     }
     
     let assertSharesBalance = async (address, expectedBalance) => {
@@ -54,12 +72,7 @@ contract('Rewards', (accounts) => {
     }
     
     let assertAsset1Balance = async (address, expectedBalance) => {
-        const balance = await asset1.balanceOf(address)
-        assert.equal(balance.toString(), '' + expectedBalance)
-    }
-    
-    let assertAsset2Balance = async (address, expectedBalance) => {
-        const balance = await asset2.balanceOf(address)
+        const balance = web3.eth.getBalance(address)
         assert.equal(balance.toString(), '' + expectedBalance)
     }
     
@@ -78,24 +91,37 @@ contract('Rewards', (accounts) => {
         assert.equal(balance.toString(), '' + expectedBalance)
     }
     
-    let assertAssetBalanceInPeriod = async (assetAddress, period, expectedBalance) => {
-        const balance = await reward.assetBalanceInPeriod(assetAddress, period)
+    let assertAssetBalanceInPeriod = async (period, expectedBalance) => {
+        const balance = await reward.assetBalanceInPeriod(period)
         assert.equal(balance.toString(), '' + expectedBalance)
     }
     
-    let assertRewardsLeft = async (assetAddress, expectedBalance) => {
-        const balance = await reward.getRewardsLeft(assetAddress)
+    let assertRewardsLeft = async (expectedBalance) => {
+        const balance = await reward.getRewardsLeft()
         assert.equal(balance.toString(), '' + expectedBalance)
     }
     
-    let assertRewardsFor = async (address, assetAddress, expectedBalance) => {
-        const balance = await reward.rewardsFor(assetAddress, address)
+    let assertRewardsFor = async (address, expectedBalance) => {
+        const balance = await reward.rewardsFor(address)
         assert.equal(balance.toString(), '' + expectedBalance)
     }
     
     let assertUniqueHoldersForPeriod = async (period, expectedCount) => {
         const count = await reward.periodUnique(period)
         assert.equal(count.toString(), '' + expectedCount)
+    }
+
+    let _withdrawShares = async (sender, amount) => {
+        const registrationId = "0x1111"
+        await timeHolder.requestWithdrawShares(registrationId, shares.address, amount, { from: sender, })
+        // only for real ERC20
+        // await shares.approve(timeHolder.address, amount, { from: miner, })
+        await timeHolder.resolveWithdrawSharesRequest(registrationId, { from: miner, })
+    }
+
+    let _withdrawSharesCall = async (sender, amount) => {
+        const registrationId = "0x1111"
+        return await timeHolder.requestWithdrawShares.call(registrationId, shares.address, amount, { from: sender, })
     }
     
     before('Setup', async () => {
@@ -108,15 +134,16 @@ contract('Rewards', (accounts) => {
         multiEventsHistory = await MultiEventsHistory.deployed()
         storageManager = await ManagerMock.new()
         shares = await FakeCoin.new()
-        asset1 = await FakeCoin2.new()
-        asset2 = await FakeCoin3.new()
-        
+
         DEFAULT_SHARE_ADDRESS = shares.address
         
         await shares.mint(accounts[0], SHARES_BALANCE)
         await shares.mint(accounts[1], SHARES_BALANCE)
         await shares.mint(accounts[2], SHARES_BALANCE)
         
+        timeHolder._withdrawShares = _withdrawShares
+        timeHolder._withdrawSharesCall = _withdrawSharesCall
+
         await reverter.promisifySnapshot()
     })
 
@@ -126,12 +153,6 @@ contract('Rewards', (accounts) => {
         })
     
         afterEach('revert', reverter.revert)
-            
-        it('should receive the rigth reward assets list', async () => {
-            const assets = await reward.getAssets.call()
-            assert.lengthOf(assets, 1)
-            assert.equal(assets[0], asset1.address)
-        })
         
         it("should have right wallet address", async () => {
             const wallet = await reward.wallet.call()
@@ -146,7 +167,7 @@ contract('Rewards', (accounts) => {
         it('should not deposit if sharesContract.transferFrom() failed', async () => {
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], SHARES_BALANCE + 1)
             
-            await assertSharesBalance(accounts[0], 1161)
+            await assertSharesBalance(accounts[0], SHARES_BALANCE)
             await assertDepositBalance(accounts[0], 0)
             await assertDepositBalanceInPeriod(accounts[0], 0, 0)
             await assertTotalDepositInPeriod(0, 0)
@@ -181,27 +202,27 @@ contract('Rewards', (accounts) => {
         
         it('should be possible to call deposit(0) several times', async () => {
             // 1st period - deposit 50
-            await asset1.mint(rewardsWallet.address, 100)
+            await mintEth(rewardsWallet.address, 100)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], 50)
             
             await reward.closePeriod()
             await assertTotalDepositInPeriod(0, 50)
             
-            await assertAssetBalanceInPeriod(asset1.address, 0, 100)
+            await assertAssetBalanceInPeriod(0, 100)
             
             // 2nd period - deposit 0 several times
-            await asset1.mint(rewardsWallet.address, 200)
+            await mintEth(rewardsWallet.address, 200)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], 0)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], 0)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], 0)
             await reward.closePeriod()
             await assertTotalDepositInPeriod(1, 50)
             
-            await assertAssetBalanceInPeriod(asset1.address, 1, 200)
+            await assertAssetBalanceInPeriod(1, 200)
         })
 
         it('should not be possible to close period if period.startDate + closeInterval * 1 days > now', async () => {
-            await reward.init(rewardsWallet.address, asset1.address, 2)
+            await reward.init(rewardsWallet.address, 2)
             const resultCode = await reward.closePeriod.call()
             assert.notEqual(resultCode, ErrorsEnum.OK)
             
@@ -220,73 +241,74 @@ contract('Rewards', (accounts) => {
         
         it('should count incoming rewards separately for each period', async () => {
             // 1st period
-            await asset1.mint(rewardsWallet.address, 100)
+            await mintEth(rewardsWallet.address, 100)
             await reward.closePeriod()
             
-            await assertAssetBalanceInPeriod(asset1.address, 0, 100)
-            await assertRewardsLeft(asset1.address, 100)
+            await assertAssetBalanceInPeriod(0, 100)
+            await assertRewardsLeft(100)
             
             // 2nd period
-            await asset1.mint(rewardsWallet.address, 200)
+            await mintEth(rewardsWallet.address, 200)
             await reward.closePeriod()
             
-            await assertAssetBalanceInPeriod(asset1.address, 1, 200)
-            await assertRewardsLeft(asset1.address, 300)
+            await assertAssetBalanceInPeriod(1, 200)
+            await assertRewardsLeft(300)
         });
         
         it('should calculate reward', async () => {
-            await asset1.mint(rewardsWallet.address, 100)
-            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 75, { from: accounts[0] })
-            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 25, { from: accounts[1] })
+            await mintEth(rewardsWallet.address, 100)
+            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 75, { from: accounts[0], })
+            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 25, { from: accounts[1], })
             
             await reward.closePeriod()
             await assertTotalDepositInPeriod(0, 100)
             
-            assert.isTrue(await reward.isCalculatedFor.call(asset1.address, accounts[0], 0))
-            await assertRewardsFor(accounts[0], asset1.address, 75)
+            assert.isTrue(await reward.isCalculatedFor.call(accounts[0], 0))
+            await assertRewardsFor(accounts[0], 75)
             
-            assert.isTrue(await reward.isCalculatedFor(asset1.address, accounts[1], 0))
-            await assertRewardsFor(accounts[1], asset1.address, 25)
+            assert.isTrue(await reward.isCalculatedFor(accounts[1], 0))
+            await assertRewardsFor(accounts[1], 25)
         });
         
         it('should calculate rewards for several periods', async () => {
             // 1st period - deposit 50
-            await asset1.mint(rewardsWallet.address, 100)
+            await mintEth(rewardsWallet.address, 100)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], 50)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[1], 50)
             await reward.closePeriod()
             await assertTotalDepositInPeriod(0, 100)
-            await assertAssetBalanceInPeriod(asset1.address, 0, 100)
+            await assertAssetBalanceInPeriod(0, 100)
             
             // calculate for 1st period      
-            assert.isTrue(await reward.isCalculatedFor(asset1.address, accounts[0], 0))
-            await assertRewardsFor(accounts[0], asset1.address, 50)
+            assert.isTrue(await reward.isCalculatedFor(accounts[0], 0))
+            await assertRewardsFor(accounts[0], 50)
             
             // 2nd period - should accept all shares
-            await asset1.mint(rewardsWallet.address, 200)
+            await mintEth(rewardsWallet.address, 200)
             await reward.closePeriod()
             await assertTotalDepositInPeriod(1, 100)
-            await assertAssetBalanceInPeriod(asset1.address, 1, 200)
+            await assertAssetBalanceInPeriod(1, 200)
             
             // calculate for 2nd period      
-            assert.isTrue(await reward.isCalculatedFor(asset1.address, accounts[0], 1))
-            await assertRewardsFor(accounts[0], asset1.address, 150)
+            assert.isTrue(await reward.isCalculatedFor(accounts[0], 1))
+            await assertRewardsFor(accounts[0], 150)
         })
         
         it('should not withdraw more shares than you have', async () => {
-            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100)
-            const withdrawResultCode = await timeHolder.withdrawShares.call(DEFAULT_SHARE_ADDRESS, 200)
-            assert.notEqual(withdrawResultCode, ErrorsEnum.OK)
+            const minerBalance = await shares.balanceOf(miner)
+            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100, { from: accounts[0], })
+            const withdrawResultCode = await timeHolder._withdrawSharesCall(accounts[0], 200)
+            assert.equal(withdrawResultCode.toNumber(), ErrorsEnum.TIMEHOLDER_WITHDRAW_LIMIT_EXCEEDED)
             
-            await timeHolder.withdrawShares(DEFAULT_SHARE_ADDRESS, 200)
+            await timeHolder._withdrawShares(accounts[0], 200)
             await assertDepositBalance(accounts[0], 100)
             await assertTotalDepositInPeriod(0, 100)
             await assertSharesBalance(accounts[0], SHARES_BALANCE - 100)
-            await assertSharesBalance(timeHolderWallet.address, 100)
+            await assertSharesBalance(miner, minerBalance.plus(100))
         })
         
         it('should withdraw shares without deposit in new period', async () => {
-            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100)
+            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100, { from: accounts[0], })
             await assertDepositBalance(accounts[0], 100)
             await assertDepositBalanceInPeriod(accounts[0], 0, 100)
             await assertTotalDepositInPeriod(0, 100)
@@ -294,66 +316,75 @@ contract('Rewards', (accounts) => {
             await reward.closePeriod()
             await assertUniqueHoldersForPeriod(0,1)
             
-            await timeHolder.withdrawShares(DEFAULT_SHARE_ADDRESS, 50)
+            await timeHolder._withdrawShares(accounts[0], 50)
             await assertDepositBalance(accounts[0], 50)
             await assertDepositBalanceInPeriod(accounts[0], 1, 50)
             await assertTotalDepositInPeriod(1, 50)
         })
         
         it('should withdraw shares', async () => {
-            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100)
-            await timeHolder.withdrawShares(DEFAULT_SHARE_ADDRESS, 50)
+            await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100, { from: accounts[0], })
+            const minerBalance = await shares.balanceOf(miner)
+            await timeHolder._withdrawShares(accounts[0], 50)
             await assertDepositBalance(accounts[0], 50)
             await assertDepositBalanceInPeriod(accounts[0], 0, 50)
             await assertTotalDepositInPeriod(0, 50)
             await assertSharesBalance(accounts[0], SHARES_BALANCE - 50)
-            await assertSharesBalance(timeHolderWallet.address, 50)
+            await assertSharesBalance(miner, minerBalance.sub(50))
         })
         
         it('should return false if rewardsLeft == 0', async () => {
-            const resultCode = await reward.withdrawReward.call(asset1.address, 100, {from: accounts[0],})
+            const resultCode = await reward.withdrawReward.call(100, { from: accounts[0], })
             assert.notEqual(resultCode, ErrorsEnum.OK)
         })
         
         it('should withdraw reward', async () => {
-            await asset1.mint(rewardsWallet.address, 100)
+            await mintEth(rewardsWallet.address, 100)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], 100)
             await reward.closePeriod()
-            await assertRewardsFor(accounts[0], asset1.address, 100)
+            await assertRewardsFor(accounts[0], 100)
             
-            await reward.withdrawReward(asset1.address, 100, {from: accounts[0]})
-            await assertAsset1Balance(accounts[0], 100)
-            await assertRewardsLeft(asset1.address, 0)
-            await assertRewardsFor(accounts[0], asset1.address, 0)
+            var balanceBefore0 = web3.eth.getBalance(accounts[0])
+            const tx0 = await reward.withdrawReward(100, { from: accounts[0], })
+            balanceBefore0 = balanceBefore0.sub(getEthSpent(tx0))
+            await assertAsset1Balance(accounts[0], balanceBefore0.plus(100))
+            await assertRewardsLeft(0)
+            await assertRewardsFor(accounts[0], 0)
         })
         
         it('should withdraw reward by different shareholders', async () => {
-            await asset1.mint(rewardsWallet.address, 100)
+            await mintEth(rewardsWallet.address, 100)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], 100)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[1], 200)
             await reward.closePeriod()
-            await assertRewardsFor(accounts[0], asset1.address, 33)
-            await assertRewardsFor(accounts[1], asset1.address, 66)
+            await assertRewardsFor(accounts[0], 33)
+            await assertRewardsFor(accounts[1], 66)
             
-            await reward.withdrawReward(asset1.address, 33, {from: accounts[0]})
-            await reward.withdrawReward(asset1.address, 66, {from: accounts[1]})
-            await assertAsset1Balance(accounts[0], 33)
-            await assertAsset1Balance(accounts[1], 66)
-            await assertRewardsLeft(asset1.address, 1)
-            await assertRewardsFor(accounts[0], asset1.address, 0)
-            await assertRewardsFor(accounts[1], asset1.address, 0)
+            var balanceBefore0 = web3.eth.getBalance(accounts[0])
+            var balanceBefore1 = web3.eth.getBalance(accounts[1])
+            const tx0 = await reward.withdrawReward(33, { from: accounts[0], })
+            const tx1 = await reward.withdrawReward(66, { from: accounts[1], })
+            balanceBefore0 = balanceBefore0.sub(getEthSpent(tx0))
+            balanceBefore1 = balanceBefore1.sub(getEthSpent(tx1))
+            await assertAsset1Balance(accounts[0], balanceBefore0.plus(33))
+            await assertAsset1Balance(accounts[1], balanceBefore1.plus(66))
+            await assertRewardsLeft(1)
+            await assertRewardsFor(accounts[0], 0)
+            await assertRewardsFor(accounts[1], 0)
         })
         
         it('should allow partial withdraw reward', async () => {
-            await asset1.mint(rewardsWallet.address, 100)
+            await mintEth(rewardsWallet.address, 100)
             await timeHolder.depositFor(DEFAULT_SHARE_ADDRESS, accounts[0], 100)
             await reward.closePeriod()
-            await assertRewardsFor(accounts[0], asset1.address, 100)
-            
-            await reward.withdrawReward(asset1.address, 30, {from: accounts[0]})
-            await assertAsset1Balance(accounts[0], 30)
-            await assertRewardsLeft(asset1.address, 70)
-            await assertRewardsFor(accounts[0], asset1.address, 70)
+            await assertRewardsFor(accounts[0], 100)
+
+            var balanceBefore0 = web3.eth.getBalance(accounts[0])
+            const tx0 = await reward.withdrawReward(30, { from: accounts[0], })
+            balanceBefore0 = balanceBefore0.sub(getEthSpent(tx0))
+            await assertAsset1Balance(accounts[0], balanceBefore0.plus(30))
+            await assertRewardsLeft(70)
+            await assertRewardsFor(accounts[0], 70)
         })
     })    
 })
