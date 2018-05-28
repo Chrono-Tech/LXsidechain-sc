@@ -58,11 +58,9 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
         _;
     }
 
-    constructor(address _owner)
-    public
-    {
+    function setInitialOwner(address _owner) {
         require(_owner != 0x0);
-        // TODO: ahiatsevich - why this does not work by default
+        require(contractOwner == 0x0);
         contractOwner = _owner;
     }
 
@@ -71,7 +69,7 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
     public
     view
     returns (address[])
-    {
+    {        
         if (backendAddress != 0x0) {
             return LXValidatorManager(backendAddress).getValidators();
         }

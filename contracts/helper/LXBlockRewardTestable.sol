@@ -9,8 +9,7 @@ import "../genesis/blockreward/LXBlockReward.sol";
 
 contract LXBlockRewardTestable is LXBlockReward {
     constructor(address _owner)
-    public
-    LXBlockReward(_owner)
-    {
+    public {
+        setInitialOwner(_owner);
     }
 }

@@ -2,7 +2,7 @@
  * Copyright 2017–2018, LaborX PTY
  * Licensed under the AGPL Version 3 license.
  */
- 
+
 pragma solidity ^0.4.23;
 
 import "../../common/Owned.sol";
@@ -20,9 +20,9 @@ contract LXBlockReward is IBlockReward, Owned {
         _;
     }
 
-    constructor(address _owner) {
+    function setInitialOwner(address _owner) {
         require(_owner != 0x0);
-        // TODO: ahiatsevich - why this does not work by default
+        require(contractOwner == 0x0);
         contractOwner = _owner;
     }
 
