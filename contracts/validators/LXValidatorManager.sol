@@ -57,7 +57,7 @@ contract LXValidatorManager is Owned, LXAssetListener {
     }
 
     modifier onlyValidatorSet {
-        require(msg.sender == validatorSet);
+        require(msg.sender == validatorSet || msg.sender == contractOwner);
         _;
     }
 
