@@ -12,7 +12,6 @@ import "../../validators/LXValidatorManager.sol";
 
 contract LXBlockReward is IBlockReward, Owned {
     address constant SYSTEM_ADDRESS = 0xfffffffffffffffffffffffffffffffffffffffe;
-    uint constant DEFAULT_BLOCK_REWARD = 5 * 10**18;
     address public dataProvider;
 
     modifier onlySystem {
@@ -41,7 +40,7 @@ contract LXBlockReward is IBlockReward, Owned {
             if (dataProvider != 0x0) {
                 rewards[i] = LXValidatorManager(dataProvider).reward(benefactors[i], kind[i]);
             } else {
-                rewards[i] = DEFAULT_BLOCK_REWARD;
+                rewards[i] = 0;
             }
         }
 
