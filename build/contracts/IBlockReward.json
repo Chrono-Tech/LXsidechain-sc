@@ -1,0 +1,477 @@
+{
+  "contractName": "IBlockReward",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "benefactors",
+          "type": "address[]"
+        },
+        {
+          "name": "kind",
+          "type": "uint16[]"
+        }
+      ],
+      "name": "reward",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address[]"
+        },
+        {
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// The block reward contract interface.\n//\n// Copyright 2018 Parity Technologies (UK) Ltd.\n//\n// Licensed under the Apache License, Version 2.0 (the \"License\");\n// you may not use this file except in compliance with the License.\n// You may obtain a copy of the License at\n//\n//     http://www.apache.org/licenses/LICENSE-2.0\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\n\npragma solidity ^0.4.23;\n\n\ninterface IBlockReward {\n    // produce rewards for the given benefactors, with corresponding reward codes.\n    // only callable by `SYSTEM_ADDRESS`\n    function reward(address[] benefactors, uint16[] kind)\n    external\n    returns (address[], uint256[]);\n}\n",
+  "sourcePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/genesis/blockreward/IBlockReward.sol",
+  "ast": {
+    "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/genesis/blockreward/IBlockReward.sol",
+    "exportedSymbols": {
+      "IBlockReward": [
+        1041
+      ]
+    },
+    "id": 1042,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1025,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "650:24:9"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 1041,
+        "linearizedBaseContracts": [
+          1041
+        ],
+        "name": "IBlockReward",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "id": 1040,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "reward",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1032,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1028,
+                  "name": "benefactors",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1040,
+                  "src": "846:21:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_calldata_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1026,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "846:7:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 1027,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "846:9:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1031,
+                  "name": "kind",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1040,
+                  "src": "869:13:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint16_$dyn_calldata_ptr",
+                    "typeString": "uint16[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1029,
+                      "name": "uint16",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "869:6:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint16",
+                        "typeString": "uint16"
+                      }
+                    },
+                    "id": 1030,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "869:8:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint16_$dyn_storage_ptr",
+                      "typeString": "uint16[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "845:38:9"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 1039,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1035,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1040,
+                  "src": "910:9:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1033,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "910:7:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 1034,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "910:9:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1038,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1040,
+                  "src": "921:9:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_memory_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1036,
+                      "name": "uint256",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "921:7:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 1037,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "921:9:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "909:22:9"
+            },
+            "scope": 1041,
+            "src": "830:102:9",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1042,
+        "src": "677:257:9"
+      }
+    ],
+    "src": "650:285:9"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/genesis/blockreward/IBlockReward.sol",
+    "exportedSymbols": {
+      "IBlockReward": [
+        1041
+      ]
+    },
+    "id": 1042,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1025,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "650:24:9"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 1041,
+        "linearizedBaseContracts": [
+          1041
+        ],
+        "name": "IBlockReward",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "id": 1040,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "reward",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1032,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1028,
+                  "name": "benefactors",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1040,
+                  "src": "846:21:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_calldata_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1026,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "846:7:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 1027,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "846:9:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1031,
+                  "name": "kind",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1040,
+                  "src": "869:13:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint16_$dyn_calldata_ptr",
+                    "typeString": "uint16[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1029,
+                      "name": "uint16",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "869:6:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint16",
+                        "typeString": "uint16"
+                      }
+                    },
+                    "id": 1030,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "869:8:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint16_$dyn_storage_ptr",
+                      "typeString": "uint16[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "845:38:9"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 1039,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1035,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1040,
+                  "src": "910:9:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1033,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "910:7:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 1034,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "910:9:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1038,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1040,
+                  "src": "921:9:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_memory_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1036,
+                      "name": "uint256",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "921:7:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 1037,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "921:9:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "909:22:9"
+            },
+            "scope": 1041,
+            "src": "830:102:9",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1042,
+        "src": "677:257:9"
+      }
+    ],
+    "src": "650:285:9"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.23+commit.124ca40d.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "2.0.0",
+  "updatedAt": "2018-05-29T13:47:05.547Z"
+}
