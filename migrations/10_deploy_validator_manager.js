@@ -10,7 +10,7 @@ const path = require("path")
 
 module.exports = (deployer, network) => {
 	deployer.then(async () => {
-		const DEFAULT_VALIDATOR_SET_ADDRESS = "0x0000000000000000000000000000000000000005"
+		const DEFAULT_VALIDATOR_SET_ADDRESS = "0x0000000000000000000000000000000000000011"
 		const DEFAULT_BLOCK_REWARD_ADDRESS = "0x0000000000000000000000000000000000000042"
 
 		let validatorSetAddress = (network == "development") ? LXValidatorSetTestable.address : DEFAULT_VALIDATOR_SET_ADDRESS
