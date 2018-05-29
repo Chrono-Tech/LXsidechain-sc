@@ -21,7 +21,8 @@ import "../genesis/validatorset/LXValidatorSet.sol";
 contract LXValidatorSetTestable is LXValidatorSet {
 
     constructor(address _owner)
+    LXValidatorSet(_owner)
     public {
-        setInitialOwner(_owner);
+    
     }
 }

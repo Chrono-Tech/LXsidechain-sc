@@ -19,9 +19,8 @@ contract LXBlockReward is IBlockReward, Owned {
         _;
     }
 
-    function setInitialOwner(address _owner) {
+    constructor(address _owner) {
         require(_owner != 0x0);
-        require(contractOwner == 0x0);
         contractOwner = _owner;
     }
 
