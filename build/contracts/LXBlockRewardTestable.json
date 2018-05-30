@@ -1,0 +1,475 @@
+{
+  "contractName": "LXBlockRewardTestable",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "dataProvider",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_dataProvider",
+          "type": "address"
+        }
+      ],
+      "name": "setDataProvider",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "contractOwner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "benefactors",
+          "type": "address[]"
+        },
+        {
+          "name": "kind",
+          "type": "uint16[]"
+        }
+      ],
+      "name": "reward",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address[]"
+        },
+        {
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_owner",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50604051602080610559833981016040525160008054600160a060020a03191633600160a060020a039081169190911790915581908116151561005257600080fd5b60008054600160a060020a03909216600160a060020a0319909216919091179055506104d6806100836000396000f30060806040526004361061006c5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663b334ed868114610071578063cc01f875146100a2578063ce606ee0146100c5578063f2fde38b146100da578063f91c2898146100fb575b600080fd5b34801561007d57600080fd5b506100866101c0565b60408051600160a060020a039092168252519081900360200190f35b3480156100ae57600080fd5b506100c3600160a060020a03600435166101cf565b005b3480156100d157600080fd5b50610086610219565b3480156100e657600080fd5b506100c3600160a060020a0360043516610228565b34801561010757600080fd5b5061012760246004803582810192908201359181359182019101356102c0565b604051808060200180602001838103835285818151815260200191508051906020019060200280838360005b8381101561016b578181015183820152602001610153565b50505050905001838103825284818151815260200191508051906020019060200280838360005b838110156101aa578181015183820152602001610192565b5050505090500194505050505060405180910390f35b600154600160a060020a031681565b60005433600160a060020a039081169116146101ea57600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600054600160a060020a031681565b60005433600160a060020a0390811691161461024357600080fd5b600160a060020a038116151561025857600080fd5b60008054604051600160a060020a03808516939216917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e091a36000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b60608080600033600160a060020a031673fffffffffffffffffffffffffffffffffffffffe146102ef57600080fd5b8685146102fb57600080fd5b604080518881526020808a02820101909152878015610324578160200160208202803883390190505b509150600090505b815181101561046757600154600160a060020a03161561044457600154600160a060020a03166321670f2289898481811061036357fe5b90506020020135600160a060020a0316888885818110151561038157fe5b9050602002013561ffff166040518363ffffffff167c01000000000000000000000000000000000000000000000000000000000281526004018083600160a060020a0316600160a060020a031681526020018261ffff16815260200192505050602060405180830381600087803b1580156103fb57600080fd5b505af115801561040f573d6000803e3d6000fd5b505050506040513d602081101561042557600080fd5b5051825183908390811061043557fe5b6020908102909101015261045f565b6000828281518110151561045457fe5b602090810290910101525b60010161032c565b87878382828080602002602001604051908101604052809392919081815260200183836020028082843750949b50949950505050505050505050945094925050505600a165627a7a72305820edee7c7b208cd4436893b127e59c24513de91eeb95baecf577ad8469dcaa12d80029",
+  "deployedBytecode": "0x60806040526004361061006c5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663b334ed868114610071578063cc01f875146100a2578063ce606ee0146100c5578063f2fde38b146100da578063f91c2898146100fb575b600080fd5b34801561007d57600080fd5b506100866101c0565b60408051600160a060020a039092168252519081900360200190f35b3480156100ae57600080fd5b506100c3600160a060020a03600435166101cf565b005b3480156100d157600080fd5b50610086610219565b3480156100e657600080fd5b506100c3600160a060020a0360043516610228565b34801561010757600080fd5b5061012760246004803582810192908201359181359182019101356102c0565b604051808060200180602001838103835285818151815260200191508051906020019060200280838360005b8381101561016b578181015183820152602001610153565b50505050905001838103825284818151815260200191508051906020019060200280838360005b838110156101aa578181015183820152602001610192565b5050505090500194505050505060405180910390f35b600154600160a060020a031681565b60005433600160a060020a039081169116146101ea57600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600054600160a060020a031681565b60005433600160a060020a0390811691161461024357600080fd5b600160a060020a038116151561025857600080fd5b60008054604051600160a060020a03808516939216917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e091a36000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b60608080600033600160a060020a031673fffffffffffffffffffffffffffffffffffffffe146102ef57600080fd5b8685146102fb57600080fd5b604080518881526020808a02820101909152878015610324578160200160208202803883390190505b509150600090505b815181101561046757600154600160a060020a03161561044457600154600160a060020a03166321670f2289898481811061036357fe5b90506020020135600160a060020a0316888885818110151561038157fe5b9050602002013561ffff166040518363ffffffff167c01000000000000000000000000000000000000000000000000000000000281526004018083600160a060020a0316600160a060020a031681526020018261ffff16815260200192505050602060405180830381600087803b1580156103fb57600080fd5b505af115801561040f573d6000803e3d6000fd5b505050506040513d602081101561042557600080fd5b5051825183908390811061043557fe5b6020908102909101015261045f565b6000828281518110151561045457fe5b602090810290910101525b60010161032c565b87878382828080602002602001604051908101604052809392919081815260200183836020028082843750949b50949950505050505050505050945094925050505600a165627a7a72305820edee7c7b208cd4436893b127e59c24513de91eeb95baecf577ad8469dcaa12d80029",
+  "sourceMap": "170:136:14:-;;;224:80;8:9:-1;5:2;;;30:1;27;20:12;5:2;224:80:14;;;;;;;;;;;;;484:13:5;:26;;-1:-1:-1;;;;;;484:26:5;500:10;-1:-1:-1;;;;;484:26:5;;;;;;;;;;224:80:14;;537:13:10;;;;529:22;;;;;;561:13;:22;;-1:-1:-1;;;;;561:22:10;;;-1:-1:-1;;;;;;561:22:10;;;;;;;;;-1:-1:-1;170:136:14;;;;;;",
+  "deployedSourceMap": "170:136:14:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;366:27:10;;8:9:-1;5:2;;;30:1;27;20:12;5:2;366:27:10;;;;;;;;-1:-1:-1;;;;;366:27:10;;;;;;;;;;;;;;1281:120;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;1281:120:10;-1:-1:-1;;;;;1281:120:10;;;;;;;231:28:5;;8:9:-1;5:2;;;30:1;27;20:12;5:2;231:28:5;;;;820:191;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;820:191:5;-1:-1:-1;;;;;820:191:5;;;;;720:555:10;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;720:555:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;23:1:-1;8:100;33:3;30:1;27:10;8:100;;;90:11;;;84:18;71:11;;;64:39;52:2;45:10;8:100;;;12:14;720:555:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;23:1:-1;8:100;33:3;30:1;27:10;8:100;;;90:11;;;84:18;71:11;;;64:39;52:2;45:10;8:100;;;12:14;720:555:10;;;;;;;;;;;;;;;;;;;366:27;;;-1:-1:-1;;;;;366:27:10;;:::o;1281:120::-;644:13:5;;630:10;-1:-1:-1;;;;;630:27:5;;;644:13;;630:27;622:36;;;;;;1366:12:10;:28;;-1:-1:-1;;1366:28:10;-1:-1:-1;;;;;1366:28:10;;;;;;;;;;1281:120::o;231:28:5:-;;;-1:-1:-1;;;;;231:28:5;;:::o;820:191::-;644:13;;630:10;-1:-1:-1;;;;;630:27:5;;;644:13;;630:27;622:36;;;;;;-1:-1:-1;;;;;902:22:5;;;;894:31;;;;;;955:13;;;934:45;;-1:-1:-1;;;;;934:45:5;;;;955:13;;;934:45;;;983:13;:24;;-1:-1:-1;;983:24:5;-1:-1:-1;;;;;983:24:5;;;;;;;;;;820:191::o;720:555:10:-;815:9;;;980:6;438:10;-1:-1:-1;;;;;438:28:10;318:42;438:28;430:37;;;;;;859:33;;;851:42;;;;;;931:33;;;;;;;;;;;;;;;;945:11;931:33;;;;;;;29:2:-1;21:6;17:15;117:4;105:10;97:6;88:34;136:17;;-1:-1;931:33:10;;904:60;;989:1;980:10;;975:254;996:7;:14;992:1;:18;975:254;;;1035:12;;-1:-1:-1;;;;;1035:12:10;:19;1031:188;;1106:12;;-1:-1:-1;;;;;1106:12:10;1087:39;1127:11;;1139:1;1127:14;;;;;;;;;;;;;-1:-1:-1;;;;;1127:14:10;1143:4;;1148:1;1143:7;;;;;;;;;;;;;;;;;1087:64;;;;;;;;;;;;;-1:-1:-1;;;;;1087:64:10;-1:-1:-1;;;;;1087:64:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;1087:64:10;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1087:64:10;;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;1087:64:10;1074:10;;:7;;1082:1;;1074:10;;;;;;;;;;;;;;:77;1031:188;;;1203:1;1190:7;1198:1;1190:10;;;;;;;;;;;;;;;;;;:14;1031:188;1012:3;;975:254;;;1247:11;;1260:7;1239:29;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;1239:29:10;;-1:-1:-1;1239:29:10;;-1:-1:-1;;;;;;;;720:555:10;;;;;;;;;:::o",
+  "source": "/**\n * Copyright 2017–2018, LaborX PTY\n * Licensed under the AGPL Version 3 license.\n */\n\npragma solidity ^0.4.23;\n\nimport \"../genesis/blockreward/LXBlockReward.sol\";\n\ncontract LXBlockRewardTestable is LXBlockReward {\n    constructor(address _owner)\n    LXBlockReward(_owner)\n    public {        \n    }\n}\n",
+  "sourcePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/helper/LXBlockRewardTestable.sol",
+  "ast": {
+    "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/helper/LXBlockRewardTestable.sol",
+    "exportedSymbols": {
+      "LXBlockRewardTestable": [
+        1518
+      ]
+    },
+    "id": 1519,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1505,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "92:24:14"
+      },
+      {
+        "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/genesis/blockreward/LXBlockReward.sol",
+        "file": "../genesis/blockreward/LXBlockReward.sol",
+        "id": 1506,
+        "nodeType": "ImportDirective",
+        "scope": 1519,
+        "sourceUnit": 1178,
+        "src": "118:50:14",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 1507,
+              "name": "LXBlockReward",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 1177,
+              "src": "204:13:14",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_LXBlockReward_$1177",
+                "typeString": "contract LXBlockReward"
+              }
+            },
+            "id": 1508,
+            "nodeType": "InheritanceSpecifier",
+            "src": "204:13:14"
+          }
+        ],
+        "contractDependencies": [
+          1041,
+          1177,
+          902
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 1518,
+        "linearizedBaseContracts": [
+          1518,
+          1177,
+          902,
+          1041
+        ],
+        "name": "LXBlockRewardTestable",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 1516,
+              "nodeType": "Block",
+              "src": "289:15:14",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 1517,
+            "implemented": true,
+            "isConstructor": true,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": [
+                  {
+                    "argumentTypes": null,
+                    "id": 1513,
+                    "name": "_owner",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 1510,
+                    "src": "270:6:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  }
+                ],
+                "id": 1514,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 1512,
+                  "name": "LXBlockReward",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 1177,
+                  "src": "256:13:14",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_type$_t_contract$_LXBlockReward_$1177_$",
+                    "typeString": "type(contract LXBlockReward)"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "256:21:14"
+              }
+            ],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1511,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1510,
+                  "name": "_owner",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1517,
+                  "src": "236:14:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1509,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "236:7:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "235:16:14"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 1515,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "289:0:14"
+            },
+            "scope": 1518,
+            "src": "224:80:14",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1519,
+        "src": "170:136:14"
+      }
+    ],
+    "src": "92:215:14"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/helper/LXBlockRewardTestable.sol",
+    "exportedSymbols": {
+      "LXBlockRewardTestable": [
+        1518
+      ]
+    },
+    "id": 1519,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1505,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "92:24:14"
+      },
+      {
+        "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/genesis/blockreward/LXBlockReward.sol",
+        "file": "../genesis/blockreward/LXBlockReward.sol",
+        "id": 1506,
+        "nodeType": "ImportDirective",
+        "scope": 1519,
+        "sourceUnit": 1178,
+        "src": "118:50:14",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 1507,
+              "name": "LXBlockReward",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 1177,
+              "src": "204:13:14",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_LXBlockReward_$1177",
+                "typeString": "contract LXBlockReward"
+              }
+            },
+            "id": 1508,
+            "nodeType": "InheritanceSpecifier",
+            "src": "204:13:14"
+          }
+        ],
+        "contractDependencies": [
+          1041,
+          1177,
+          902
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 1518,
+        "linearizedBaseContracts": [
+          1518,
+          1177,
+          902,
+          1041
+        ],
+        "name": "LXBlockRewardTestable",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 1516,
+              "nodeType": "Block",
+              "src": "289:15:14",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 1517,
+            "implemented": true,
+            "isConstructor": true,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": [
+                  {
+                    "argumentTypes": null,
+                    "id": 1513,
+                    "name": "_owner",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 1510,
+                    "src": "270:6:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  }
+                ],
+                "id": 1514,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 1512,
+                  "name": "LXBlockReward",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 1177,
+                  "src": "256:13:14",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_type$_t_contract$_LXBlockReward_$1177_$",
+                    "typeString": "type(contract LXBlockReward)"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "256:21:14"
+              }
+            ],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1511,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1510,
+                  "name": "_owner",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1517,
+                  "src": "236:14:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1509,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "236:7:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "235:16:14"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 1515,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "289:0:14"
+            },
+            "scope": 1518,
+            "src": "224:80:14",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1519,
+        "src": "170:136:14"
+      }
+    ],
+    "src": "92:215:14"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.23+commit.124ca40d.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "2.0.0",
+  "updatedAt": "2018-05-29T13:51:30.353Z"
+}

@@ -1,0 +1,33 @@
+{
+  "name": "lxsidechain-sc",
+  "version": "0.0.1",
+  "description": "LaborX Sidechain Base Contracts",
+  "main": "truffle.js",
+  "dependencies": {
+    "abi-decoder": "^1.1.0",
+    "ganache-cli": "6.1.0",
+    "sha256": "^0.2.0",
+    "truffle": "4.1.7",
+    "truffle-hdwallet-provider": "mikefluff/truffle-hdwallet-provider#7a2eccca1ba17c235a3ef258914ca74ea5f13014"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChronoBank/LXsidechain-sc.git"
+  },
+  "keywords": [
+    "LaborX",
+    "Chronobank",
+    "Solidity",
+    "Ethereum"
+  ],
+  "author": "LaborX PTY",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ChronoBank/LXsidechain-sc/issues"
+  },
+  "homepage": "https://github.com/ChronoBank/LXsidechain-sc#readme"
+}

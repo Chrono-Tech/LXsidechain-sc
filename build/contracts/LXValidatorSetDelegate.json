@@ -1,0 +1,2048 @@
+{
+  "contractName": "LXValidatorSetDelegate",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "validatorSet",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "contractOwner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_validatorSet",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "initiateChange",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "iinalizeChange",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_validator",
+          "type": "address"
+        }
+      ],
+      "name": "addValidator",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_validator",
+          "type": "address"
+        }
+      ],
+      "name": "removeValidator",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_recentBlocks",
+          "type": "uint256"
+        }
+      ],
+      "name": "setRecentBlocks",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_validator",
+          "type": "address"
+        },
+        {
+          "name": "_blockNumber",
+          "type": "uint256"
+        },
+        {
+          "name": "_proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "reportMalicious",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_validator",
+          "type": "address"
+        },
+        {
+          "name": "_blockNumber",
+          "type": "uint256"
+        }
+      ],
+      "name": "reportBenign",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516020806103a5833981016040525160008054600160a060020a03338116600160a060020a031992831617909255600180549290931691161790556103488061005d6000396000f3006080604052600436106100a35763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166340a141ff81146100a85780634d238c8e146100a85780638c90ac07146100cb5780639426e226146100e3578063b327374814610114578063c476dd4014610129578063c64a01b914610114578063ce606ee014610192578063d69f13bb146101a7578063f2fde38b146101cb575b600080fd5b3480156100b457600080fd5b506100c9600160a060020a03600435166101ec565b005b3480156100d757600080fd5b506100c96004356101ec565b3480156100ef57600080fd5b506100f861020a565b60408051600160a060020a039092168252519081900360200190f35b34801561012057600080fd5b506100c9610219565b34801561013557600080fd5b50604080516020600460443581810135601f81018490048402850184019095528484526100c9948235600160a060020a03169460248035953695946064949201919081908401838280828437509497506102369650505050505050565b34801561019e57600080fd5b506100f8610256565b3480156101b357600080fd5b506100c9600160a060020a0360043516602435610265565b3480156101d757600080fd5b506100c9600160a060020a0360043516610284565b60015433600160a060020a0390811691161461020757600080fd5b50565b600154600160a060020a031681565b60015433600160a060020a0390811691161461023457600080fd5b565b60015433600160a060020a0390811691161461025157600080fd5b505050565b600054600160a060020a031681565b60015433600160a060020a0390811691161461028057600080fd5b5050565b60005433600160a060020a0390811691161461029f57600080fd5b600160a060020a03811615156102b457600080fd5b60008054604051600160a060020a03808516939216917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e091a36000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790555600a165627a7a7230582092b4fd7541716365111feac14d03ffe5a79fc88267d6bebd891d7e1ba4e358250029",
+  "deployedBytecode": "0x6080604052600436106100a35763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166340a141ff81146100a85780634d238c8e146100a85780638c90ac07146100cb5780639426e226146100e3578063b327374814610114578063c476dd4014610129578063c64a01b914610114578063ce606ee014610192578063d69f13bb146101a7578063f2fde38b146101cb575b600080fd5b3480156100b457600080fd5b506100c9600160a060020a03600435166101ec565b005b3480156100d757600080fd5b506100c96004356101ec565b3480156100ef57600080fd5b506100f861020a565b60408051600160a060020a039092168252519081900360200190f35b34801561012057600080fd5b506100c9610219565b34801561013557600080fd5b50604080516020600460443581810135601f81018490048402850184019095528484526100c9948235600160a060020a03169460248035953695946064949201919081908401838280828437509497506102369650505050505050565b34801561019e57600080fd5b506100f8610256565b3480156101b357600080fd5b506100c9600160a060020a0360043516602435610265565b3480156101d757600080fd5b506100c9600160a060020a0360043516610284565b60015433600160a060020a0390811691161461020757600080fd5b50565b600154600160a060020a031681565b60015433600160a060020a0390811691161461023457600080fd5b565b60015433600160a060020a0390811691161461025157600080fd5b505050565b600054600160a060020a031681565b60015433600160a060020a0390811691161461028057600080fd5b5050565b60005433600160a060020a0390811691161461029f57600080fd5b600160a060020a03811615156102b457600080fd5b60008054604051600160a060020a03808516939216917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e091a36000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790555600a165627a7a7230582092b4fd7541716365111feac14d03ffe5a79fc88267d6bebd891d7e1ba4e358250029",
+  "sourceMap": "150:865:32:-;;;316:101;8:9:-1;5:2;;;30:1;27;20:12;5:2;316:101:32;;;;;;;;;;;;;484:13:5;:26;;-1:-1:-1;;;;;500:10:5;484:26;;-1:-1:-1;;;;;;484:26:5;;;;;;;;384:28:32;;;;;;;;;;;150:865;;;;;;",
+  "deployedSourceMap": "150:865:32:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;632:80;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;632:80:32;-1:-1:-1;;;;;632:80:32;;;;;;;716;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;716:80:32;;;;;195:27;;8:9:-1;5:2;;;30:1;27;20:12;5:2;195:27:32;;;;;;;;-1:-1:-1;;;;;195:27:32;;;;;;;;;;;;;;421:61;;8:9:-1;5:2;;;30:1;27;20:12;5:2;421:61:32;;;;800:113;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;800:113:32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;800:113:32;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;800:113:32;;-1:-1:-1;800:113:32;;-1:-1:-1;;;;;;;800:113:32;231:28:5;;8:9:-1;5:2;;;30:1;27;20:12;5:2;231:28:5;;;;917:96:32;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;917:96:32;-1:-1:-1;;;;;917:96:32;;;;;;;820:191:5;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;820:191:5;-1:-1:-1;;;;;820:191:5;;;;;632:80:32;285:12;;271:10;-1:-1:-1;;;;;271:26:32;;;285:12;;271:26;263:35;;;;;;632:80;:::o;195:27::-;;;-1:-1:-1;;;;;195:27:32;;:::o;421:61::-;285:12;;271:10;-1:-1:-1;;;;;271:26:32;;;285:12;;271:26;263:35;;;;;;421:61::o;800:113::-;285:12;;271:10;-1:-1:-1;;;;;271:26:32;;;285:12;;271:26;263:35;;;;;;800:113;;;:::o;231:28:5:-;;;-1:-1:-1;;;;;231:28:5;;:::o;917:96:32:-;285:12;;271:10;-1:-1:-1;;;;;271:26:32;;;285:12;;271:26;263:35;;;;;;917:96;;:::o;820:191:5:-;644:13;;630:10;-1:-1:-1;;;;;630:27:5;;;644:13;;630:27;622:36;;;;;;-1:-1:-1;;;;;902:22:5;;;;894:31;;;;;;955:13;;;934:45;;-1:-1:-1;;;;;934:45:5;;;;955:13;;;934:45;;;983:13;:24;;-1:-1:-1;;983:24:5;-1:-1:-1;;;;;983:24:5;;;;;;;;;;820:191::o",
+  "source": "/**\n * Copyright 2017–2018, LaborX PTY\n * Licensed under the AGPL Version 3 license.\n */\n \npragma solidity ^0.4.23;\n\nimport \"../common/Owned.sol\";\n\ncontract LXValidatorSetDelegate is Owned {\n  address public validatorSet;\n\n  modifier onlyValidatorSet() {\n      require(msg.sender == validatorSet);\n      _;\n  }\n\n  function LXValidatorSetDelegate(address _validatorSet) public {\n    validatorSet = _validatorSet;\n  }\n\n  function initiateChange()\n  public\n  onlyValidatorSet\n  {\n  }\n\n  function iinalizeChange()\n  public\n  onlyValidatorSet\n  {\n  }\n\n  function addValidator(address _validator)\n  public\n  onlyValidatorSet\n  {\n  }\n\n  function removeValidator(address _validator)\n  public\n  onlyValidatorSet\n  {\n  }\n\n  function setRecentBlocks(uint _recentBlocks)\n  public\n  onlyValidatorSet\n  {\n  }\n\n  function reportMalicious(address _validator, uint _blockNumber, bytes _proof)\n  public\n  onlyValidatorSet\n  {\n  }\n\n  function reportBenign(address _validator, uint _blockNumber)\n  public\n  onlyValidatorSet\n  {\n  }\n}\n",
+  "sourcePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/validators/LXValidatorSetDelegate.sol",
+  "ast": {
+    "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/validators/LXValidatorSetDelegate.sol",
+    "exportedSymbols": {
+      "LXValidatorSetDelegate": [
+        6496
+      ]
+    },
+    "id": 6497,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6411,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "93:24:32"
+      },
+      {
+        "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/common/Owned.sol",
+        "file": "../common/Owned.sol",
+        "id": 6412,
+        "nodeType": "ImportDirective",
+        "scope": 6497,
+        "sourceUnit": 903,
+        "src": "119:29:32",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 6413,
+              "name": "Owned",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 902,
+              "src": "185:5:32",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_Owned_$902",
+                "typeString": "contract Owned"
+              }
+            },
+            "id": 6414,
+            "nodeType": "InheritanceSpecifier",
+            "src": "185:5:32"
+          }
+        ],
+        "contractDependencies": [
+          902
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 6496,
+        "linearizedBaseContracts": [
+          6496,
+          902
+        ],
+        "name": "LXValidatorSetDelegate",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 6416,
+            "name": "validatorSet",
+            "nodeType": "VariableDeclaration",
+            "scope": 6496,
+            "src": "195:27:32",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_address",
+              "typeString": "address"
+            },
+            "typeName": {
+              "id": 6415,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "195:7:32",
+              "typeDescriptions": {
+                "typeIdentifier": "t_address",
+                "typeString": "address"
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6426,
+              "nodeType": "Block",
+              "src": "255:57:32",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "commonType": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        "id": 6422,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "leftExpression": {
+                          "argumentTypes": null,
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 6419,
+                            "name": "msg",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6511,
+                            "src": "271:3:32",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_magic_message",
+                              "typeString": "msg"
+                            }
+                          },
+                          "id": 6420,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "sender",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": null,
+                          "src": "271:10:32",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "nodeType": "BinaryOperation",
+                        "operator": "==",
+                        "rightExpression": {
+                          "argumentTypes": null,
+                          "id": 6421,
+                          "name": "validatorSet",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 6416,
+                          "src": "285:12:32",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "src": "271:26:32",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "id": 6418,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        6514,
+                        6515
+                      ],
+                      "referencedDeclaration": 6514,
+                      "src": "263:7:32",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
+                        "typeString": "function (bool) pure"
+                      }
+                    },
+                    "id": 6423,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "263:35:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6424,
+                  "nodeType": "ExpressionStatement",
+                  "src": "263:35:32"
+                },
+                {
+                  "id": 6425,
+                  "nodeType": "PlaceholderStatement",
+                  "src": "306:1:32"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 6427,
+            "name": "onlyValidatorSet",
+            "nodeType": "ModifierDefinition",
+            "parameters": {
+              "id": 6417,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "252:2:32"
+            },
+            "src": "227:85:32",
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 6436,
+              "nodeType": "Block",
+              "src": "378:39:32",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 6434,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 6432,
+                      "name": "validatorSet",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 6416,
+                      "src": "384:12:32",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 6433,
+                      "name": "_validatorSet",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 6429,
+                      "src": "399:13:32",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "src": "384:28:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 6435,
+                  "nodeType": "ExpressionStatement",
+                  "src": "384:28:32"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 6437,
+            "implemented": true,
+            "isConstructor": true,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "LXValidatorSetDelegate",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6430,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6429,
+                  "name": "_validatorSet",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6437,
+                  "src": "348:21:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6428,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "348:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "347:23:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6431,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "378:0:32"
+            },
+            "scope": 6496,
+            "src": "316:101:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6442,
+              "nodeType": "Block",
+              "src": "477:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6443,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6440,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6439,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "458:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "458:16:32"
+              }
+            ],
+            "name": "initiateChange",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6438,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "444:2:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6441,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "477:0:32"
+            },
+            "scope": 6496,
+            "src": "421:61:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6448,
+              "nodeType": "Block",
+              "src": "542:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6449,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6446,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6445,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "523:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "523:16:32"
+              }
+            ],
+            "name": "iinalizeChange",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6444,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "509:2:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6447,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "542:0:32"
+            },
+            "scope": 6496,
+            "src": "486:61:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6456,
+              "nodeType": "Block",
+              "src": "623:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6457,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6454,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6453,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "604:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "604:16:32"
+              }
+            ],
+            "name": "addValidator",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6452,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6451,
+                  "name": "_validator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6457,
+                  "src": "573:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6450,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "573:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "572:20:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6455,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "623:0:32"
+            },
+            "scope": 6496,
+            "src": "551:77:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6464,
+              "nodeType": "Block",
+              "src": "707:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6465,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6462,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6461,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "688:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "688:16:32"
+              }
+            ],
+            "name": "removeValidator",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6460,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6459,
+                  "name": "_validator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6465,
+                  "src": "657:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6458,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "657:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "656:20:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6463,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "707:0:32"
+            },
+            "scope": 6496,
+            "src": "632:80:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6472,
+              "nodeType": "Block",
+              "src": "791:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6473,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6470,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6469,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "772:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "772:16:32"
+              }
+            ],
+            "name": "setRecentBlocks",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6468,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6467,
+                  "name": "_recentBlocks",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6473,
+                  "src": "741:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6466,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "741:4:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "740:20:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6471,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "791:0:32"
+            },
+            "scope": 6496,
+            "src": "716:80:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6484,
+              "nodeType": "Block",
+              "src": "908:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6485,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6482,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6481,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "889:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "889:16:32"
+              }
+            ],
+            "name": "reportMalicious",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6480,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6475,
+                  "name": "_validator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6485,
+                  "src": "825:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6474,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "825:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6477,
+                  "name": "_blockNumber",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6485,
+                  "src": "845:17:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6476,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "845:4:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6479,
+                  "name": "_proof",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6485,
+                  "src": "864:12:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_memory_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 6478,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "864:5:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "824:53:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6483,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "908:0:32"
+            },
+            "scope": 6496,
+            "src": "800:113:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6494,
+              "nodeType": "Block",
+              "src": "1008:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6495,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6492,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6491,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "989:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "989:16:32"
+              }
+            ],
+            "name": "reportBenign",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6490,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6487,
+                  "name": "_validator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6495,
+                  "src": "939:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6486,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "939:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6489,
+                  "name": "_blockNumber",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6495,
+                  "src": "959:17:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6488,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "959:4:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "938:39:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6493,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1008:0:32"
+            },
+            "scope": 6496,
+            "src": "917:96:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 6497,
+        "src": "150:865:32"
+      }
+    ],
+    "src": "93:923:32"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/validators/LXValidatorSetDelegate.sol",
+    "exportedSymbols": {
+      "LXValidatorSetDelegate": [
+        6496
+      ]
+    },
+    "id": 6497,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6411,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "93:24:32"
+      },
+      {
+        "absolutePath": "/Users/ahiatsevich/Development/chronobank/LXsidechain-sc/contracts/common/Owned.sol",
+        "file": "../common/Owned.sol",
+        "id": 6412,
+        "nodeType": "ImportDirective",
+        "scope": 6497,
+        "sourceUnit": 903,
+        "src": "119:29:32",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 6413,
+              "name": "Owned",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 902,
+              "src": "185:5:32",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_Owned_$902",
+                "typeString": "contract Owned"
+              }
+            },
+            "id": 6414,
+            "nodeType": "InheritanceSpecifier",
+            "src": "185:5:32"
+          }
+        ],
+        "contractDependencies": [
+          902
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 6496,
+        "linearizedBaseContracts": [
+          6496,
+          902
+        ],
+        "name": "LXValidatorSetDelegate",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 6416,
+            "name": "validatorSet",
+            "nodeType": "VariableDeclaration",
+            "scope": 6496,
+            "src": "195:27:32",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_address",
+              "typeString": "address"
+            },
+            "typeName": {
+              "id": 6415,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "195:7:32",
+              "typeDescriptions": {
+                "typeIdentifier": "t_address",
+                "typeString": "address"
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6426,
+              "nodeType": "Block",
+              "src": "255:57:32",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "commonType": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        "id": 6422,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "leftExpression": {
+                          "argumentTypes": null,
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 6419,
+                            "name": "msg",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6511,
+                            "src": "271:3:32",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_magic_message",
+                              "typeString": "msg"
+                            }
+                          },
+                          "id": 6420,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "sender",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": null,
+                          "src": "271:10:32",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "nodeType": "BinaryOperation",
+                        "operator": "==",
+                        "rightExpression": {
+                          "argumentTypes": null,
+                          "id": 6421,
+                          "name": "validatorSet",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 6416,
+                          "src": "285:12:32",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "src": "271:26:32",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "id": 6418,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        6514,
+                        6515
+                      ],
+                      "referencedDeclaration": 6514,
+                      "src": "263:7:32",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
+                        "typeString": "function (bool) pure"
+                      }
+                    },
+                    "id": 6423,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "263:35:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6424,
+                  "nodeType": "ExpressionStatement",
+                  "src": "263:35:32"
+                },
+                {
+                  "id": 6425,
+                  "nodeType": "PlaceholderStatement",
+                  "src": "306:1:32"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 6427,
+            "name": "onlyValidatorSet",
+            "nodeType": "ModifierDefinition",
+            "parameters": {
+              "id": 6417,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "252:2:32"
+            },
+            "src": "227:85:32",
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 6436,
+              "nodeType": "Block",
+              "src": "378:39:32",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 6434,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 6432,
+                      "name": "validatorSet",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 6416,
+                      "src": "384:12:32",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 6433,
+                      "name": "_validatorSet",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 6429,
+                      "src": "399:13:32",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "src": "384:28:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 6435,
+                  "nodeType": "ExpressionStatement",
+                  "src": "384:28:32"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 6437,
+            "implemented": true,
+            "isConstructor": true,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "LXValidatorSetDelegate",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6430,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6429,
+                  "name": "_validatorSet",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6437,
+                  "src": "348:21:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6428,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "348:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "347:23:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6431,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "378:0:32"
+            },
+            "scope": 6496,
+            "src": "316:101:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6442,
+              "nodeType": "Block",
+              "src": "477:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6443,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6440,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6439,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "458:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "458:16:32"
+              }
+            ],
+            "name": "initiateChange",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6438,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "444:2:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6441,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "477:0:32"
+            },
+            "scope": 6496,
+            "src": "421:61:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6448,
+              "nodeType": "Block",
+              "src": "542:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6449,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6446,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6445,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "523:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "523:16:32"
+              }
+            ],
+            "name": "iinalizeChange",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6444,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "509:2:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6447,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "542:0:32"
+            },
+            "scope": 6496,
+            "src": "486:61:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6456,
+              "nodeType": "Block",
+              "src": "623:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6457,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6454,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6453,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "604:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "604:16:32"
+              }
+            ],
+            "name": "addValidator",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6452,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6451,
+                  "name": "_validator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6457,
+                  "src": "573:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6450,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "573:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "572:20:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6455,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "623:0:32"
+            },
+            "scope": 6496,
+            "src": "551:77:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6464,
+              "nodeType": "Block",
+              "src": "707:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6465,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6462,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6461,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "688:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "688:16:32"
+              }
+            ],
+            "name": "removeValidator",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6460,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6459,
+                  "name": "_validator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6465,
+                  "src": "657:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6458,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "657:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "656:20:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6463,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "707:0:32"
+            },
+            "scope": 6496,
+            "src": "632:80:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6472,
+              "nodeType": "Block",
+              "src": "791:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6473,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6470,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6469,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "772:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "772:16:32"
+              }
+            ],
+            "name": "setRecentBlocks",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6468,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6467,
+                  "name": "_recentBlocks",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6473,
+                  "src": "741:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6466,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "741:4:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "740:20:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6471,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "791:0:32"
+            },
+            "scope": 6496,
+            "src": "716:80:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6484,
+              "nodeType": "Block",
+              "src": "908:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6485,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6482,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6481,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "889:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "889:16:32"
+              }
+            ],
+            "name": "reportMalicious",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6480,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6475,
+                  "name": "_validator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6485,
+                  "src": "825:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6474,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "825:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6477,
+                  "name": "_blockNumber",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6485,
+                  "src": "845:17:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6476,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "845:4:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6479,
+                  "name": "_proof",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6485,
+                  "src": "864:12:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_memory_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 6478,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "864:5:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "824:53:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6483,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "908:0:32"
+            },
+            "scope": 6496,
+            "src": "800:113:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6494,
+              "nodeType": "Block",
+              "src": "1008:5:32",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 6495,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 6492,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 6491,
+                  "name": "onlyValidatorSet",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 6427,
+                  "src": "989:16:32",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "989:16:32"
+              }
+            ],
+            "name": "reportBenign",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6490,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6487,
+                  "name": "_validator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6495,
+                  "src": "939:18:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6486,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "939:7:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6489,
+                  "name": "_blockNumber",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6495,
+                  "src": "959:17:32",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6488,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "959:4:32",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "938:39:32"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6493,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1008:0:32"
+            },
+            "scope": 6496,
+            "src": "917:96:32",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 6497,
+        "src": "150:865:32"
+      }
+    ],
+    "src": "93:923:32"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.23+commit.124ca40d.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "2.0.0",
+  "updatedAt": "2018-05-29T13:47:05.598Z"
+}
