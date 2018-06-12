@@ -8,6 +8,8 @@ pragma solidity ^0.4.23;
 
 /// @title Defines an interface for a wallet that can be deposited/withdrawn by 3rd contract
 interface DepositWalletInterface {
+    event EthReceived(uint value);
+
     function deposit(address _asset, address _from, uint256 amount) external returns (bool);
     function withdraw(address _asset, address _to, uint256 amount) external returns (bool);
     function withdrawEth(address _to, uint256 amount) external returns (bool);
