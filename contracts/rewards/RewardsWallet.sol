@@ -82,4 +82,9 @@ contract RewardsWallet is Object, DepositWalletInterface {
     function withdrawEth(address _to, uint256 _amount) onlyRewards external returns (bool) {
         return _to.send(_amount);
     }
+
+    function () payable external {
+        require(msg.value > 0);
+        emit EthReceived(msg.value);
+    }
 }

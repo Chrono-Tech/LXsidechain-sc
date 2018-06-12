@@ -3,7 +3,7 @@
  * Licensed under the AGPL Version 3 license.
  */
 
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.23;
 
 import "../common/Object.sol";
 import "../common/ERC20.sol";
@@ -80,5 +80,10 @@ contract TimeHolderWallet is Object, DepositWalletInterface {
 
     function withdrawEth(address _to, uint256 _amount) onlyTimeHolder external returns (bool) {
         return _to.send(_amount);
+    }
+
+    function () payable external {
+        require(msg.value > 0);
+        emit EthReceived(msg.value);
     }
 }
