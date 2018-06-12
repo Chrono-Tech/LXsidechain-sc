@@ -53,4 +53,8 @@ contract FakeCoin {
             revert();
         }
     }
+
+    function allowance(address _holder, address _spender) public view returns (uint) {
+        return balanceOf[_holder];
+    }
 }
