@@ -1,17 +1,17 @@
-const AtomicSwapERC20 = artifacts.require('AtomicSwapERC20');
+// const AtomicSwapERC20 = artifacts.require('AtomicSwapERC20');
 const ChronoBankPlatform = artifacts.require('ChronoBankPlatform');
 const ChronoBankAsset = artifacts.require('ChronoBankAsset');
 const ChronoBankAssetProxy = artifacts.require('ChronoBankAssetProxy');
-const LXBlockReward = artifacts.require("LXBlockReward")
-const LXValidatorSet = artifacts.require("LXValidatorSet")
+// const LXBlockReward = artifacts.require("LXBlockReward")
+// const LXValidatorSet = artifacts.require("LXValidatorSet")
 const LXBlockRewardTestable = artifacts.require("LXBlockRewardTestable")
 const LXValidatorSetTestable = artifacts.require("LXValidatorSetTestable")
 const LXValidatorManager = artifacts.require("LXValidatorManager")
-const ERC20 = artifacts.require('./ERC20.sol');
+// const ERC20 = artifacts.require('ERC20Interface');
 
-const utils = require('./helpers/utils');
+// const utils = require('./helpers/utils');
 const Reverter = require('./helpers/reverter');
-const bytes32 = require("./helpers/bytes32");
+// const bytes32 = require("./helpers/bytes32");
 
 const RewardKind  = {"Author":0,"EmptyStep":2}
 

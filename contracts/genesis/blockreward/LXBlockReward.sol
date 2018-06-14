@@ -5,7 +5,7 @@
 
 pragma solidity ^0.4.23;
 
-import "../../common/Owned.sol";
+import "solidity-shared-lib/contracts/Owned.sol";
 import "./IBlockReward.sol";
 import "../../validators/LXValidatorManager.sol";
 

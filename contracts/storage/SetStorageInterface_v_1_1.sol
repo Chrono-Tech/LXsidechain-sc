@@ -6,7 +6,7 @@
 pragma solidity ^0.4.23;
 
 
-import "./StorageInterface.sol";
+import "solidity-storage-lib/contracts/StorageInterface.sol";
 
 
 /// @title Storage library

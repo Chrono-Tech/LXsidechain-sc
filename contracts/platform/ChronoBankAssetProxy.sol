@@ -8,7 +8,7 @@ pragma solidity ^0.4.21;
 
 import {ChronoBankPlatformInterface as ChronoBankPlatform} from "./ChronoBankPlatformInterface.sol";
 import {ChronoBankAssetInterface as ChronoBankAsset} from "./ChronoBankAssetInterface.sol";
-import "../common/ERC20.sol";
+import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 
 
 /// @title ChronoBank Asset Proxy.

@@ -14,7 +14,7 @@
 
 pragma solidity ^0.4.23;
 
-import "../../common/Owned.sol";
+import "solidity-shared-lib/contracts/Owned.sol";
 import "../../common/BaseRouter.sol";
 import "./IValidatorSet.sol";
 import "../../validators/LXValidatorManager.sol";
@@ -58,7 +58,7 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
         _;
     }
 
-    constructor(address _owner) {
+    constructor(address _owner) public {
         require(_owner != 0x0);
         contractOwner = _owner;
     }

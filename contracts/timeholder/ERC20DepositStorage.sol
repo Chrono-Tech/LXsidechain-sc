@@ -6,8 +6,8 @@
 pragma solidity ^0.4.23;
 
 
-import "../common/Object.sol";
-import "../storage/StorageAdapter.sol";
+import "solidity-shared-lib/contracts/Owned.sol";
+import "solidity-storage-lib/contracts/StorageAdapter.sol";
 import "../lib/SafeMath.sol";
 
 
@@ -16,7 +16,7 @@ import "../lib/SafeMath.sol";
 /// Contract intends to keep track deposits records.
 /// Supports old and new versions of Deposits and utilized by TimeHolder
 /// to resolve deposit versions.
-contract ERC20DepositStorage is Object, StorageAdapter {
+contract ERC20DepositStorage is Owned, StorageAdapter {
 
     using SafeMath for uint;
 

@@ -7,7 +7,7 @@ pragma solidity ^0.4.23;
 
 
 import "../common/BaseManager.sol";
-import "../common/ERC20.sol";
+import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 import "../lib/SafeMath.sol";
 import "./DepositWalletInterface.sol";
 import "./ERC20DepositStorage.sol";
