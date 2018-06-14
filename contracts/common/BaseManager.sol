@@ -6,16 +6,15 @@
 pragma solidity ^0.4.23;
 
 
-import "./Owned.sol";
-import "../storage/StorageAdapter.sol";
+import "solidity-storage-lib/contracts/StorageAdapter.sol";
+import "./Object.sol";
 
 
-contract BaseManager is Owned, StorageAdapter {
+contract BaseManager is Object, StorageAdapter {
     
-    address eventsEmmiter;
-
-    uint constant OK = 1;
     uint constant REINITIALIZED = 6;
+
+    address eventsEmmiter;    
 
     constructor(Storage _store, bytes32 _crate) StorageAdapter(_store, _crate) public {
         eventsEmmiter = this;

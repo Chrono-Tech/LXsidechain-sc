@@ -6,7 +6,7 @@
 pragma solidity ^0.4.23;
 
 import "../common/Object.sol";
-import "../common/ERC20.sol";
+import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 import "./DepositWalletInterface.sol";
 
 
@@ -43,7 +43,7 @@ contract TimeHolderWallet is Object, DepositWalletInterface {
     * @return result code of an operation
     */
     function destroy(address[] tokens) onlyContractOwner external returns (uint) {
-        withdrawnTokens(tokens, contractOwner);
+        withdrawTokens(tokens);
         selfdestruct(contractOwner);
         return OK;
     }

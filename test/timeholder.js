@@ -103,9 +103,12 @@ contract('New version of TimeHolder', (accounts) => {
             
             after('revert', reverter.revert);
 
-            it("should THROW NOT allow to set a primary miner by non contract owner with UNAUTHORIZED code", async () => {
+            it("should NOT allow to set a primary miner by non contract owner with UNAUTHORIZED code", async () => {
                 const stranger = accounts[5]
-                await timeHolder.setPrimaryMiner.call(accounts[1], { from: stranger, }).then(assert.fail, () => true)
+                assert.equal(
+                    (await timeHolder.setPrimaryMiner.call(accounts[1], { from: stranger, })).toNumber(),
+                    ErrorsEnum.UNAUTHORIZED
+                )
             })
 
             it("should allow to set a primary miner by contract owner with OK code", async () => {
@@ -628,9 +631,12 @@ contract('New version of TimeHolder', (accounts) => {
 
                 after('revert', reverter.revert)
 
-                it("should THROW and NOT allow to force request withdrawal from non contract owner", async () => {
+                it("should NOT allow to force request withdrawal from non contract owner with UNAUTHORIZED code", async () => {
                     const stranger = accounts[3]
-                    await timeHolder.forceRequestWithdrawShares.call(withdrawalRequestId1, depositor, shares.address, withdrawalAmount1, { from: stranger, }).then(assert.fail, () => true)
+                    assert.equal(
+                        (await timeHolder.forceRequestWithdrawShares.call(withdrawalRequestId1, depositor, shares.address, withdrawalAmount1, { from: stranger, })).toNumber(),
+                        ErrorsEnum.UNAUTHORIZED
+                    )
                 })
 
                 it("should allow force request withdrawal from contract owner with OK code", async () => {

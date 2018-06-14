@@ -6,8 +6,8 @@
 pragma solidity ^0.4.21;
 
 
+import "solidity-shared-lib/contracts/Owned.sol";
 import "./ChronoBankAsset.sol";
-import "../common/Owned.sol";
 
 
 /// @title ChronoBank Asset With Fee implementation contract.

@@ -32,6 +32,7 @@ contract ProxyEventsEmitter {
 ///  Note: all the non constant functions return false instead of throwing in case if state change
 /// didn't happen yet.
 contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
+
     using SafeMath for uint;
 
     uint constant CHRONOBANK_PLATFORM_SCOPE = 15000;

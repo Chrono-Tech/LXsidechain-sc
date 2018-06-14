@@ -6,57 +6,23 @@
 pragma solidity ^0.4.23;
 
 
-import "../common/Object.sol";
+import "solidity-storage-lib/contracts/BaseStorageManager.sol";
 import "../event/MultiEventsHistoryAdapter.sol";
 
 
-contract StorageManager is MultiEventsHistoryAdapter, Object {
+contract StorageManager is BaseStorageManager, MultiEventsHistoryAdapter {
 
-    uint constant ERROR_STORAGE_INVALID_INVOCATION = 5000;
+    address eventsHistory;
 
-    event AccessGiven(address indexed self, address actor, bytes32 role);
-    event AccessBlocked(address indexed self, address actor, bytes32 role);
-    event Error(address indexed self, uint errorCode);
+    function getEventsHistory() public view returns (address) {
+        return eventsHistory != 0x0 ? eventsHistory : this;
+    }
 
-    mapping (address => uint) public authorised;
-    mapping (bytes32 => bool) public accessRights;
-
-    function giveAccess(address _actor, bytes32 _role) onlyContractOwner external returns (uint) {
-        if (!accessRights[keccak256(_actor, _role)]) {
-            accessRights[keccak256(_actor, _role)] = true;
-            authorised[_actor] += 1;
-            emitAccessGiven(_actor, _role);
+    function setupEventsHistory(address _eventsHistory) onlyContractOwner external returns (bool) {
+        if (getEventsHistory() != 0x0) {
+            return false;
         }
-
-        return OK;
-    }
-
-    function blockAccess(address _actor, bytes32 _role) onlyContractOwner external returns (uint) {
-        if (accessRights[keccak256(_actor, _role)]) {
-            delete accessRights[keccak256(_actor, _role)];
-            authorised[_actor] -= 1;
-            if (authorised[_actor] == 0) {
-                delete authorised[_actor];
-            }
-            emitAccessBlocked(_actor, _role);
-        }
-
-        return OK;
-    }
-
-    function isAllowed(address _actor, bytes32 _role) public view returns (bool) {
-        return accessRights[keccak256(_actor, _role)] || (this == _actor);
-    }
-
-    function hasAccess(address _actor) public view returns(bool) {
-        return (authorised[_actor] > 0) || (this == _actor);
-    }
-
-    function emitAccessGiven(address _user, bytes32 _role) public {
-        emit AccessGiven(this, _user, _role);
-    }
-
-    function emitAccessBlocked(address _user, bytes32 _role) public {
-        emit AccessBlocked(this, _user, _role);
+        eventsHistory = _eventsHistory;
+        return true;
     }
 }

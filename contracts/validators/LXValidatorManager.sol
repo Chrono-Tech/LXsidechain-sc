@@ -5,10 +5,9 @@
 
 pragma solidity ^0.4.23;
 
-import "../common/Owned.sol";
+import "solidity-shared-lib/contracts/Owned.sol";
 import "../genesis/validatorset/ILXValidatorSet.sol";
 import "../platform/LXAssetListener.sol";
-import "../common/ERC20.sol";
 import "../platform/ChronoBankPlatform.sol";
 import "../platform/ChronoBankAssetProxyInterface.sol";
 import "../lib/SafeMath.sol";
@@ -128,7 +127,7 @@ contract LXValidatorManager is Owned, LXAssetListener {
         ILXValidatorSet(validatorSet).initiateChange();
     }
 
-    function onTransfer(address _from, address _to, uint /*_value*/, bytes32 _symbol)
+    function onTransfer(address _from, address _to, uint /*_value*/, bytes32 /*_symbol*/)
     public
     onlyPlatform()
     {

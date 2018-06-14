@@ -1,10 +1,10 @@
 const AtomicSwapERC20 = artifacts.require('./AtomicSwapERC20.sol');
 const ChronobankPlatform = artifacts.require('./ChronobankPlatform.sol');
-const ERC20 = artifacts.require('./ERC20.sol');
+const ERC20 = artifacts.require('ERC20Interface');
 
-const utils = require('./helpers/utils');
+// const utils = require('./helpers/utils');
 const Reverter = require('./helpers/reverter');
-const bytes32 = require("./helpers/bytes32");
+// const bytes32 = require("./helpers/bytes32");
 const sha256 = require("sha256");
 
 contract('AtomicSwapERC20', function (accounts) {
