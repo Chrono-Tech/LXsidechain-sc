@@ -5,7 +5,8 @@
   "main": "truffle.js",
   "dependencies": {
     "abi-decoder": "^1.1.0",
-    "sha256": "^0.2.0"
+    "sha256": "^0.2.0",
+    "solidity-storage-lib": "chronobank/solidity-storage-lib"
   },
   "devDependencies": {
     "ganache-cli": "6.1.0",
