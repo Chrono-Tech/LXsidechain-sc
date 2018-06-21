@@ -8,22 +8,17 @@ module.exports = {
         "development": {
             host: "localhost",
             port: 8545,
-            network_id: "*", // Match any network id
+            network_id: "*",
             gas: 4700000,
         },
         "local": {
-            provider: new HDWalletProvider(getWallet(),'QWEpoi123','http://127.0.0.1:8542'),
-            network_id: "*", // Match any network id
-            gas: 4700000
-        },
-        "chronobank-lx-prod": {
-            network_id: 456719, // TODO
-            provider: new HDWalletProvider(getWallet(),'QWEpoi123','https://public-sidechain.chronobank.io'),
+            network_id: "*",
+            provider: function () { return new HDWalletProvider(getWallet(),'QWEpoi123','http://127.0.0.1:8542')},            
             gas: 4700000
         },
         "chronobank-lx-test": {
             network_id: 0x42,
-            provider: new HDWalletProvider(getWallet(),'QWEpoi123','http://35.196.17.40:8546'),
+            provider: function () { return new HDWalletProvider(getWallet(),'QWEpoi123','http://35.196.17.40:8546')},
             gas: 4700000
         }
     },
@@ -34,5 +29,4 @@ module.exports = {
         }
     },
     migrations_directory: './migrations'
-    // migrations_directory: './migrations-genesis'
 };
