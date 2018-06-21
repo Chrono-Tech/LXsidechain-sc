@@ -1,5 +1,5 @@
 const AtomicSwapERC20 = artifacts.require('./AtomicSwapERC20.sol');
-const ChronobankPlatform = artifacts.require('./ChronobankPlatform.sol');
+const ChronobankPlatform = artifacts.require('./ChronoBankPlatform.sol');
 const ERC20 = artifacts.require('ERC20Interface');
 
 // const utils = require('./helpers/utils');
