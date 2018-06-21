@@ -80,7 +80,7 @@ contract('New version of TimeHolder', (accounts) => {
         await timeHolderWallet.init(timeHolder.address);
         await timeHolder.init(shares.address, timeHolderWallet.address, erc20DepositStorage.address);
         await timeHolder.setEventsHistory(multiEventsHistory.address)
-        
+
         await multiEventsHistory.authorize(reward.address);
         await multiEventsHistory.authorize(timeHolder.address);
 
@@ -100,7 +100,7 @@ contract('New version of TimeHolder', (accounts) => {
         })
 
         describe("with updating primary miner", () => {
-            
+
             after('revert', reverter.revert);
 
             it("should NOT allow to set a primary miner by non contract owner with UNAUTHORIZED code", async () => {
@@ -132,7 +132,7 @@ contract('New version of TimeHolder', (accounts) => {
                 const eventTx = await timeHolder.setPrimaryMiner(newMiner, { from: accounts[0], })
                 const event = (await eventsHelper.findEvent([timeHolder,], eventTx, "PrimaryMinerChanged"))[0]
                 assert.isDefined(event)
-                assert.equal(event.address, multiEventsHistory.address)                
+                assert.equal(event.address, multiEventsHistory.address)
                 assert.equal(event.name, 'PrimaryMinerChanged');
                 assert.equal(event.args.from, previousMiner)
                 assert.equal(event.args.to, newMiner)
@@ -335,8 +335,8 @@ contract('New version of TimeHolder', (accounts) => {
 
                 it("should allow anyone to resolve withdrawal request with OK code", async () => {
                     // needs to approve requested amount of shares before resolving a request
-                    const resolver = miner
-                    assert.isAtLeast(await shares.balanceOf(resolver), withdrawalBalance)
+                    const resolver = miner;
+                    assert.isTrue((await shares.balanceOf(resolver)).gte(withdrawalBalance))
                     assert.equal(
                         (await timeHolder.resolveWithdrawSharesRequest.call(withdrawalRegistrationId, { from: resolver, })).toNumber(),
                         ErrorsEnum.OK
@@ -358,12 +358,12 @@ contract('New version of TimeHolder', (accounts) => {
                         (await shares.balanceOf(user)).toString(),
                         userSharesBalance.add(withdrawalBalance).toString()
                     )
-    
+
                     assert.equal(
                         (await shares.balanceOf(timeHolderWallet.address)).toString(),
                         initialWalletSharesBalance.toString()
                     )
-    
+
                     assert.equal(
                         (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
                         initialBalance.toString()
@@ -387,7 +387,7 @@ contract('New version of TimeHolder', (accounts) => {
 
                 it("shouldn't be able to resolve already resolved request with ", async () => {
                     const resolver = accounts[1]
-                    assert.isAtLeast(await shares.balanceOf(resolver), withdrawalBalance)
+                    assert.isTrue((await shares.balanceOf(resolver)).gte(withdrawalBalance))
                     assert.equal(
                         (await timeHolder.resolveWithdrawSharesRequest.call(withdrawalRegistrationId, { from: resolver, })).toNumber(),
                         ErrorsEnum.TIMEHOLDER_NO_REGISTERED_WITHDRAWAL_FOUND
@@ -398,7 +398,7 @@ contract('New version of TimeHolder', (accounts) => {
             context("several deposits", () => {
                 let initialBalance
                 let initialAccountBalance
-                
+
                 before(async () => {
                     initialBalance = await timeHolder.getDepositBalance.call(shares.address, user)
                     initialAccountBalance = await shares.balanceOf(user)
@@ -406,7 +406,7 @@ contract('New version of TimeHolder', (accounts) => {
                     await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user })
                     await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user })
                 })
-                
+
                 after('revert', reverter.revert);
 
                 let accountBalanceAfterDeposit
@@ -464,7 +464,7 @@ contract('New version of TimeHolder', (accounts) => {
                         (await shares.balanceOf(miner)).toString(),
                         totalDeposit.toString()
                     )
-                })  
+                })
 
                 const withdrawalRequestId1 = "0xff"
                 const withdrawalRequestId2 = "0xee"
@@ -511,7 +511,7 @@ contract('New version of TimeHolder', (accounts) => {
                     assert.equal(
                         (await shares.balanceOf(user)).toString(),
                         userSharesBalance.add(withdrawalAmount1).toString()
-                    )    
+                    )
                     assert.equal(
                         (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
                         totalDeposit.sub(withdrawalAmount1).toString()
@@ -539,7 +539,7 @@ contract('New version of TimeHolder', (accounts) => {
                     assert.equal(
                         (await shares.balanceOf(user)).toString(),
                         userSharesBalance.add(withdrawalAmount2).toString()
-                    )    
+                    )
                     assert.equal(
                         (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
                         totalDeposit.sub(totalWithdrawalAmount).toString()
@@ -613,7 +613,7 @@ contract('New version of TimeHolder', (accounts) => {
                     )
                 })
             })
-            
+
             context("emergency request", () => {
                 const depositor = accounts[1]
                 const contractOwner = accounts[0]
