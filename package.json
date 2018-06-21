@@ -7,7 +7,8 @@
     "truffle": "^4.1.12",
     "ganache-cli": "6.1.3",
     "truffle-hdwallet-provider": "mikefluff/truffle-hdwallet-provider#7a2eccca1ba17c235a3ef258914ca74ea5f13014",
-    "solidity-storage-lib": "chronobank/solidity-storage-lib"
+    "solidity-storage-lib": "chronobank/solidity-storage-lib",
+    "solidity-shared-lib": "github:alesanro/solidity-shared-lib#feature/update-to-latest"
   },
   "devDependencies": {
     "babel-polyfill": "^6.26.0",
