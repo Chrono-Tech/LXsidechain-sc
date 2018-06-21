@@ -4,14 +4,19 @@
   "description": "LaborX Sidechain Base Contracts",
   "main": "truffle.js",
   "dependencies": {
-    "abi-decoder": "^1.1.0",
-    "sha256": "^0.2.0",
+    "truffle": "^4.1.12",
+    "ganache-cli": "6.1.3",
+    "truffle-hdwallet-provider": "mikefluff/truffle-hdwallet-provider#7a2eccca1ba17c235a3ef258914ca74ea5f13014",
     "solidity-storage-lib": "chronobank/solidity-storage-lib"
   },
   "devDependencies": {
-    "ganache-cli": "6.1.0",
-    "truffle": "4.1.7",
-    "truffle-hdwallet-provider": "mikefluff/truffle-hdwallet-provider#7a2eccca1ba17c235a3ef258914ca74ea5f13014"
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-flow": "^6.23.0",
+    "babel-register": "^6.26.0",
+    "solidity-coverage": "^0.5.4",
+    "abi-decoder": "^1.1.0",
+    "sha256": "^0.2.0"
   },
   "scripts": {
     "test:all": "./node_modules/truffle/build/cli.bundled.js test",
