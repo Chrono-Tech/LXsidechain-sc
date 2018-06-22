@@ -21,16 +21,8 @@ contract RewardsEmitter is MultiEventsHistoryAdapter {
         emit WithdrawnRewardSuccess(addr, amount);
     }
 
-    function emitWithdrawn(address addr, uint amount, uint total) public {
-        emit WithdrawnSuccess(addr, amount, total);
-    }
-
     function emitPeriodClosed() public {
         emit PeriodClosed();
-    }
-
-    function emitDepositStored(uint _part) public {
-        emit DepositStored(_part);
     }
 
     function emitError(uint error) public {

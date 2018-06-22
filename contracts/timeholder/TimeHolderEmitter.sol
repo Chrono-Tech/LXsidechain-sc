@@ -67,10 +67,6 @@ contract TimeHolderEmitter is MultiEventsHistoryAdapter {
         emit Deposit(token, who, amount);
     }
 
-    function emitWithdrawShares(address token, address who, uint amount, address receiver) public {
-        emit WithdrawShares(token, who, amount, receiver);
-    }
-
     function emitSharesWhiteListChanged(address token, uint limit, bool isAdded) public {
         emit SharesWhiteListChanged(token, limit, isAdded);
     }

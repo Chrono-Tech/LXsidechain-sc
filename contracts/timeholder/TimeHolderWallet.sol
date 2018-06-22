@@ -7,8 +7,6 @@ pragma solidity ^0.4.23;
 
 import "../common/Object.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
-import "./DepositWalletInterface.sol";
-
 
 /**
 * @title TimeHolder's wallet contract defines a basic implementation of DepositWalletInterface
@@ -18,7 +16,7 @@ import "./DepositWalletInterface.sol";
 * @dev Specifies a contract that helps in updating TimeHolder interface by delegating token's ownership
 * to TimeHolderWallet contract
 */
-contract TimeHolderWallet is Object, DepositWalletInterface {
+contract TimeHolderWallet is Object {
 
     address timeHolder;
 
@@ -76,14 +74,5 @@ contract TimeHolderWallet is Object, DepositWalletInterface {
     */
     function withdraw(address _asset, address _to, uint256 _amount) onlyTimeHolder external returns (bool) {
         return ERC20(_asset).transfer(_to, _amount);
-    }
-
-    function withdrawEth(address _to, uint256 _amount) onlyTimeHolder external returns (bool) {
-        return _to.send(_amount);
-    }
-
-    function () payable external {
-        require(msg.value > 0);
-        emit EthReceived(msg.value);
     }
 }

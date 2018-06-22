@@ -8,8 +8,6 @@ pragma solidity ^0.4.23;
 
 import "../common/Object.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
-import "../timeholder/DepositWalletInterface.sol";
-
 
 /**
 * @title TimeHolder's wallet contract defines a basic implementation of DepositWalletInterface
@@ -19,8 +17,9 @@ import "../timeholder/DepositWalletInterface.sol";
 * @dev Specifies a contract that helps in updating TimeHolder interface by delegating token's ownership
 * to TimeHolderWallet contract
 */
-contract RewardsWallet is Object, DepositWalletInterface {
-    
+contract RewardsWallet is Object {
+
+    event EthReceived(address sender, uint value);
     address rewards;
 
     modifier onlyRewards {
@@ -83,8 +82,8 @@ contract RewardsWallet is Object, DepositWalletInterface {
         return _to.send(_amount);
     }
 
-    function () payable external {
+    function () external payable {
         require(msg.value > 0);
-        emit EthReceived(msg.value);
+        emit EthReceived(msg.sender, msg.value);
     }
 }

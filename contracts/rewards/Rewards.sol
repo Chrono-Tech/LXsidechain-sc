@@ -7,19 +7,9 @@ pragma solidity ^0.4.23;
 
 
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
-import "../timeholder/DepositWalletInterface.sol";
+import "./RewardsWallet.sol";
 import "./RewardsEmitter.sol";
 import "./Deposits.sol";
-
-
-/**
-* @title Defines interface for managers that can store any tokens and use for that purpose wallets
-* instead of keeping tokens on their own address. Keeps this contracts updatable with ease.
-*/
-contract WalletBackedManagerInterface {
-    function wallet() public view returns (address);
-}
-
 
 /**
  * @title Universal decentralized ERC20 tokens rewards contract.
@@ -102,12 +92,12 @@ contract Rewards is Deposits, RewardsEmitter {
      * @return result code, @see Errors
      */
     function init(
-        address _wallet, 
+        address _wallet,
         uint _closeIntervalDays
-    ) 
-    onlyContractOwner 
-    external 
-    returns (uint) 
+    )
+    onlyContractOwner
+    external
+    returns (uint)
     {
         uint result = store.get(walletStorage) != 0x0 ? REINITIALIZED : OK;
 
@@ -123,18 +113,13 @@ contract Rewards is Deposits, RewardsEmitter {
         return OK;
     }
 
-
-    function() external payable {
-        revert("Cannot receive Ether");
-    }
-
     /**
     * @dev Gets wallet address used to store tokens
     *
     * @return wallet address
     */
-    function wallet() public view returns (address) {
-        return store.get(walletStorage);
+    function wallet() public view returns (RewardsWallet) {
+        return RewardsWallet(store.get(walletStorage));
     }
 
     function getCloseInterval() public view returns (uint) {
@@ -250,7 +235,7 @@ contract Rewards is Deposits, RewardsEmitter {
             return _emitError(ERROR_REWARD_REWARDS_ALREADY_REGISTERED);
         }
 
-        uint balance = wallet().balance;
+        uint balance = address(wallet()).balance;
         uint left = store.get(rewardsLeft);
         store.set(assetBalances, _period, balance - left);
         store.set(rewardsLeft, balance);
@@ -319,13 +304,12 @@ contract Rewards is Deposits, RewardsEmitter {
         // Assuming that transfer(amount) of unknown asset may not result in exactly
         // amount being taken from rewards contract(i. e. fees taken) we check contracts
         // balance before and after transfer, and proceed with the difference.
-        address _wallet = wallet();
-        uint startBalance = _wallet.balance;
-        if (!DepositWalletInterface(_wallet).withdrawEth(_address, _amount)) {
+        uint startBalance = address(wallet()).balance;
+        if (!wallet().withdrawEth(_address, _amount)) {
             return _emitError(ERROR_REWARD_TRANSFER_FAILED);
         }
 
-        uint endBalance = _wallet.balance;
+        uint endBalance = address(wallet()).balance;
         uint diff = startBalance - endBalance;
         if (rewardsFor(_address) < diff) {
             revert();
@@ -440,14 +424,6 @@ contract Rewards is Deposits, RewardsEmitter {
 
     function _emitWithdrawnReward(address addr, uint amount) internal {
         Rewards(getEventsHistory()).emitWithdrawnReward(addr, amount);
-    }
-
-    function _emitWithdrawn(address addr, uint amount, uint total) internal {
-        Rewards(getEventsHistory()).emitWithdrawn(addr, amount, total);
-    }
-
-    function _emitDepositStored(uint _part) internal {
-        Rewards(getEventsHistory()).emitDepositStored(_part);
     }
 
     function _emitPeriodClosed() internal {

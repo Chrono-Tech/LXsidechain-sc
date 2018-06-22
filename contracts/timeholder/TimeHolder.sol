@@ -9,7 +9,7 @@ pragma solidity ^0.4.23;
 import "../common/BaseManager.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 import "../lib/SafeMath.sol";
-import "./DepositWalletInterface.sol";
+import "./TimeHolderWallet.sol";
 import "./ERC20DepositStorage.sol";
 import "./TimeHolderEmitter.sol";
 
@@ -94,7 +94,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         listeners.init("listeners_v2");
         walletStorage.init("timeHolderWalletStorage");
         erc20DepositStorage.init("erc20DepositStorage");
-        
+
         primaryMiner.init("primaryMiner");
     }
 
@@ -150,12 +150,12 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     }
 
     function getRequestedWithdrawAmount(
-        address _token, 
+        address _token,
         address _depositor
-    ) 
-    public 
-    view 
-    returns (uint) 
+    )
+    public
+    view
+    returns (uint)
     {
         return getDepositStorage().requestedWithdrawAmount(_token, _depositor);
     }
@@ -163,10 +163,10 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     /// @notice Checks state for registered withdraw request
     /// @param _registrationId unique identifier; was created on 'requestWithdrawShares' step
     /// @return {
-    ///     "_token": "token address",   
-    ///     "_amount": "amount of tokens that were registered to be withdrawn",   
-    ///     "_target": "holder address"   
-    ///     "_receiver": "receiver address"   
+    ///     "_token": "token address",
+    ///     "_amount": "amount of tokens that were registered to be withdrawn",
+    ///     "_target": "holder address"
+    ///     "_receiver": "receiver address"
     /// }
     function checkRegisteredWithdrawRequest(bytes32 _registrationId) public view returns (
         address _token,
@@ -270,11 +270,11 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
             return _emitError(ERROR_TIMEHOLDER_LIMIT_EXCEEDED);
         }
 
-        if (!DepositWalletInterface(wallet()).deposit(_token, msg.sender, _amount)) {
+        if (!wallet().deposit(_token, msg.sender, _amount)) {
             return _emitError(ERROR_TIMEHOLDER_TRANSFER_FAILED);
         }
 
-        require(DepositWalletInterface(wallet()).withdraw(_token, _primaryMiner, _amount), "Cannot withdraw from wallet");
+        require(wallet().withdraw(_token, _primaryMiner, _amount), "Cannot withdraw from wallet");
 
         getDepositStorage().depositFor(_token, _target, _amount);
 
@@ -309,7 +309,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     onlyContractOwner
     onlyNotRegisteredWithdrawal(_registrationId)
     public
-    returns (uint resultCode) 
+    returns (uint resultCode)
     {
         resultCode = _registerWithdrawSharesRequest(_registrationId, _token, _amount, _from, contractOwner);
         if (resultCode != OK) {
@@ -337,7 +337,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         address _to
     )
     private
-    returns (uint _resultCode) 
+    returns (uint _resultCode)
     {
         require(_token != 0x0);
         require(_from != 0x0);
@@ -364,8 +364,8 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     /// @return result code of an operation
     function resolveWithdrawSharesRequest(bytes32 _registrationId)
     onlyRegisteredWithdrawal(_registrationId)
-    public 
-    returns (uint) 
+    public
+    returns (uint)
     {
         address _token;
         uint _amount;
@@ -398,8 +398,8 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     /// @return result code of an operation
     function cancelWithdrawSharesRequest(bytes32 _registrationId)
     onlyRegisteredWithdrawal(_registrationId)
-    public 
-    returns (uint) 
+    public
+    returns (uint)
     {
         address _token;
         uint _amount;
@@ -413,11 +413,11 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
         _emitWithdrawalRequestCancelled(_registrationId);
         return OK;
-    }    
+    }
 
     /// @notice Gets an associated wallet for the time holder
-    function wallet() public view returns (address) {
-        return store.get(walletStorage);
+    function wallet() public view returns (TimeHolderWallet) {
+        return TimeHolderWallet(store.get(walletStorage));
     }
 
     /// @notice Total amount of shares for provided symbol
@@ -485,10 +485,6 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
     function _emitDeposit(address _token, address _who, uint _amount) private {
         TimeHolderEmitter(getEventsHistory()).emitDeposit(_token, _who, _amount);
-    }
-
-    function _emitWithdrawShares(address _token, address _who, uint _amount, address _receiver) private {
-        TimeHolderEmitter(getEventsHistory()).emitWithdrawShares(_token, _who, _amount, _receiver);
     }
 
     function _emitSharesWhiteListAdded(address _token, uint _limit) private {
