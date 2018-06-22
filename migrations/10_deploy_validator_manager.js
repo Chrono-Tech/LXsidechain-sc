@@ -4,8 +4,6 @@ const ChronoBankAsset = artifacts.require("ChronoBankAsset")
 const ChronoBankPlatform = artifacts.require("ChronoBankPlatform")
 const LXBlockReward = artifacts.require("LXBlockReward")
 const LXValidatorSet = artifacts.require("LXValidatorSet")
-const LXValidatorSetTestable = artifacts.require("LXValidatorSetTestable")
-const LXBlockRewardTestable = artifacts.require("LXBlockRewardTestable")
 const path = require("path")
 
 module.exports = (deployer, network) => {
@@ -13,8 +11,8 @@ module.exports = (deployer, network) => {
 		const DEFAULT_VALIDATOR_SET_ADDRESS = "0x0000000000000000000000000000000000000011"
 		const DEFAULT_BLOCK_REWARD_ADDRESS = "0x0000000000000000000000000000000000000042"
 
-		let validatorSetAddress = (network == "development") ? LXValidatorSetTestable.address : DEFAULT_VALIDATOR_SET_ADDRESS
-		let blockRewardAddress = (network == "development") ? LXBlockRewardTestable.address : DEFAULT_BLOCK_REWARD_ADDRESS
+		let validatorSetAddress = (network == "development") ? LXValidatorSet.address : DEFAULT_VALIDATOR_SET_ADDRESS
+		let blockRewardAddress = (network == "development") ? LXBlockReward.address : DEFAULT_BLOCK_REWARD_ADDRESS
 
 		const TIME_SYMBOL = 'TIME'
 
