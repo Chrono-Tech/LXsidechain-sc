@@ -1,17 +1,11 @@
 const Rewards = artifacts.require("Rewards")
-const RewardsWallet = artifacts.require("RewardsWallet")
 const TimeHolder = artifacts.require("TimeHolder")
-const TimeHolderWallet = artifacts.require('TimeHolderWallet')
-const ERC20DepositStorage = artifacts.require("ERC20DepositStorage")
-const Storage = artifacts.require("Storage")
-const MultiEventsHistory = artifacts.require('MultiEventsHistory')
 const FakeCoin = artifacts.require("FakeCoin")
-const FakeCoin2 = artifacts.require("FakeCoin2")
-const FakeCoin3 = artifacts.require("FakeCoin3")
-const ManagerMock = artifacts.require('ManagerMock')
+const ChronoBankPlatform = artifacts.require("ChronoBankPlatform")
+const ChronoBankAssetProxy = artifacts.require("ChronoBankAssetProxy")
+const MultiEventsHistory = artifacts.require("MultiEventsHistory")
 
 const Reverter = require('./helpers/reverter')
-const bytes32 = require('./helpers/bytes32')
 const utils = require("./helpers/utils")
 const eventsHelper = require('./helpers/eventsHelper')
 const ErrorsEnum = require("../common/errors")
@@ -20,23 +14,16 @@ contract('New version of TimeHolder', (accounts) => {
     let reverter = new Reverter(web3);
 
     let reward;
-    let rewardsWallet;
     let timeHolder;
-    let erc20DepositStorage;
     let timeHolderWallet
-    let storage;
-    let multiEventsHistory;
     let shares;
     let asset1;
     let asset2;
-    let storageManager
-    let miner = accounts[6]
 
-    const fakeArgs = [0,0,0,0,0,0,0,0];
+    let miner = accounts[9]
+
     const ZERO_INTERVAL = 0;
     const SHARES_BALANCE = 100000000;
-    const CHRONOBANK_PLATFORM_ID = 1;
-    const STUB_PLATFORM_ADDRESS = 0x0
 
     let _withdrawShares = async (sender, amount) => {
         const registrationId = "0x1111"
@@ -52,37 +39,30 @@ contract('New version of TimeHolder', (accounts) => {
     }
 
     before('Setup', async() => {
-        storage = await Storage.new();
-        rewardsWallet = await RewardsWallet.new();
-        reward = await Rewards.new(storage.address, "Deposits");
-        timeHolderWallet = await TimeHolderWallet.new();
-        timeHolder = await TimeHolder.new(storage.address, 'Deposits');
-        erc20DepositStorage = await ERC20DepositStorage.new(storage.address, 'Deposits');
-        multiEventsHistory = await MultiEventsHistory.deployed();
-        shares = await FakeCoin.new();
-        asset1 = await FakeCoin2.new();
-        asset2 = await FakeCoin3.new();
-        storageManager = await ManagerMock.new()
+        reward = await Rewards.deployed()
+        timeHolder = await TimeHolder.deployed()
 
-        await shares.mint(accounts[0], SHARES_BALANCE);
-        await shares.mint(accounts[1], SHARES_BALANCE);
-        await shares.mint(accounts[2], SHARES_BALANCE);
+        timeHolderWallet = await timeHolder.wallet()
+
+        let platform = await ChronoBankPlatform.deployed()
+        shares = ChronoBankAssetProxy.at(await platform.proxies("TIME"))
+
+        await platform.reissueAsset(await shares.symbol(), 3 * SHARES_BALANCE)
+        await shares.transfer(accounts[1], SHARES_BALANCE);
+        await shares.transfer(accounts[2], SHARES_BALANCE);
+
+        await shares.approve(timeHolderWallet, SHARES_BALANCE, {from: accounts[0]})
+        await shares.approve(timeHolderWallet, SHARES_BALANCE, {from: accounts[1]})
+        await shares.approve(timeHolderWallet, SHARES_BALANCE, {from: accounts[2]})
+
+        asset1 = await FakeCoin.new("FAKE2", "FAKE2", 4);
+        asset2 = await FakeCoin.new("FAKE3", "FAKE3", 4);
 
         await asset1.mint(accounts[0], SHARES_BALANCE);
         await asset1.mint(accounts[1], SHARES_BALANCE);
 
         await asset2.mint(accounts[0], SHARES_BALANCE);
         await asset2.mint(accounts[1], SHARES_BALANCE);
-
-        await storage.setManager(storageManager.address);
-        await rewardsWallet.init(reward.address);
-        await reward.init(rewardsWallet.address, ZERO_INTERVAL);
-        await timeHolderWallet.init(timeHolder.address);
-        await timeHolder.init(shares.address, timeHolderWallet.address, erc20DepositStorage.address);
-        await timeHolder.setEventsHistory(multiEventsHistory.address)
-
-        await multiEventsHistory.authorize(reward.address);
-        await multiEventsHistory.authorize(timeHolder.address);
 
         await reverter.promisifySnapshot();
     });
@@ -92,10 +72,9 @@ contract('New version of TimeHolder', (accounts) => {
 
         describe("without primary miner", () => {
             it("should NOT allow to make a deposit with TIMEHOLDER_MINER_REQUIRED code", async () => {
-                assert.equal(
-                    (await timeHolder.deposit.call(shares.address, DEPOSIT_AMOUNT, { from: accounts[0], })).toNumber(),
-                    ErrorsEnum.TIMEHOLDER_MINER_REQUIRED
-                )
+                await timeHolder.setPrimaryMiner(0x0, { from: accounts[0], })
+                let result = await timeHolder.deposit.call(shares.address, DEPOSIT_AMOUNT, { from: accounts[0],})
+                assert.equal(result, ErrorsEnum.TIMEHOLDER_MINER_REQUIRED)
             })
         })
 
@@ -132,7 +111,7 @@ contract('New version of TimeHolder', (accounts) => {
                 const eventTx = await timeHolder.setPrimaryMiner(newMiner, { from: accounts[0], })
                 const event = (await eventsHelper.findEvent([timeHolder,], eventTx, "PrimaryMinerChanged"))[0]
                 assert.isDefined(event)
-                assert.equal(event.address, multiEventsHistory.address)
+                assert.equal(event.address, MultiEventsHistory.address)
                 assert.equal(event.name, 'PrimaryMinerChanged');
                 assert.equal(event.args.from, previousMiner)
                 assert.equal(event.args.to, newMiner)
@@ -238,7 +217,7 @@ contract('New version of TimeHolder', (accounts) => {
                 before(async () => {
                     initialBalance = await timeHolder.getDepositBalance.call(shares.address, user)
                     initialMinerSharesBalance = await shares.balanceOf(miner)
-                    initialWalletSharesBalance = await shares.balanceOf(timeHolderWallet.address)
+                    initialWalletSharesBalance = await shares.balanceOf(timeHolderWallet)
                 })
 
                 after('revert', reverter.revert);
@@ -261,7 +240,7 @@ contract('New version of TimeHolder', (accounts) => {
 
                 it("reward wallet should have initial shares balance", async () => {
                     assert.equal(
-                        (await shares.balanceOf(timeHolderWallet.address)).toString(),
+                        (await shares.balanceOf(timeHolderWallet)).toString(),
                         initialWalletSharesBalance.toString()
                     )
                 })
@@ -360,7 +339,7 @@ contract('New version of TimeHolder', (accounts) => {
                     )
 
                     assert.equal(
-                        (await shares.balanceOf(timeHolderWallet.address)).toString(),
+                        (await shares.balanceOf(timeHolderWallet)).toString(),
                         initialWalletSharesBalance.toString()
                     )
 
