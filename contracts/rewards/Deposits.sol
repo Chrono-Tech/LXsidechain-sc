@@ -10,16 +10,18 @@ import "../common/BaseManager.sol";
 
 
 contract Deposits is BaseManager {
+    StorageInterface.OrderedAddressesSet internal shareholders;
+    StorageInterface.UIntOrderedSetMapping internal deposits;
+    StorageInterface.UInt internal depositsIdCounter;
+    StorageInterface.AddressUIntUIntMapping internal amounts;
+    StorageInterface.AddressUIntUIntMapping internal timestamps;
+    StorageInterface.UInt internal totalSharesStorage;
+    StorageInterface.Address internal sharesContractStorage;
 
-    StorageInterface.OrderedAddressesSet shareholders;
-    StorageInterface.UIntOrderedSetMapping deposits;
-    StorageInterface.UInt depositsIdCounter;
-    StorageInterface.AddressUIntUIntMapping amounts;
-    StorageInterface.AddressUIntUIntMapping timestamps;
-    StorageInterface.UInt totalSharesStorage;
-    StorageInterface.Address sharesContractStorage;
-
-    constructor(Storage _store, bytes32 _crate) BaseManager(_store, _crate) public {
+    constructor(Storage _store, bytes32 _crate)
+    public
+    BaseManager(_store, _crate)
+    {
         shareholders.init("shareholders");
         deposits.init("deposits");
         depositsIdCounter.init("depositsIdCounter");
@@ -36,7 +38,11 @@ contract Deposits is BaseManager {
      *
      * @return shares amount.
      */
-    function depositBalance(address _address) public view returns (uint balance) {
+    function depositBalance(address _address)
+    public
+    view
+    returns (uint balance)
+    {
         StorageInterface.Iterator memory iterator = store.listIterator(deposits, bytes32(_address));
         for(uint i = 0; store.canGetNextWithIterator(deposits, iterator); i++) {
             uint _cur_amount = store.get(amounts, _address, store.getNextWithIterator(deposits, iterator));

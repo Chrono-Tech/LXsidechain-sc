@@ -43,31 +43,34 @@ import "./Deposits.sol";
  */
 contract Rewards is Deposits, RewardsEmitter {
 
-    uint constant ERROR_REWARD_NOT_FOUND = 9000;
-    uint constant ERROR_REWARD_INVALID_PERIOD = 9004;
-    uint constant ERROR_REWARD_NO_REWARDS_LEFT = 9005;
-    uint constant ERROR_REWARD_TRANSFER_FAILED = 9006;
-    uint constant ERROR_REWARD_ALREADY_CALCULATED = 9007;
-    uint constant ERROR_REWARD_CALCULATION_FAILED = 9008;
-    uint constant ERROR_REWARD_CANNOT_CLOSE_PERIOD = 9009;
-    uint constant ERROR_REWARD_REWARDS_ALREADY_REGISTERED = 9010;
+    uint public constant ERROR_REWARD_NOT_FOUND = 9000;
+    uint public constant ERROR_REWARD_INVALID_PERIOD = 9004;
+    uint public constant ERROR_REWARD_NO_REWARDS_LEFT = 9005;
+    uint public constant ERROR_REWARD_TRANSFER_FAILED = 9006;
+    uint public constant ERROR_REWARD_ALREADY_CALCULATED = 9007;
+    uint public constant ERROR_REWARD_CALCULATION_FAILED = 9008;
+    uint public constant ERROR_REWARD_CANNOT_CLOSE_PERIOD = 9009;
+    uint public constant ERROR_REWARD_REWARDS_ALREADY_REGISTERED = 9010;
 
-    StorageInterface.UInt closeInterval;
-    StorageInterface.UInt maxSharesTransfer;
-    StorageInterface.AddressUIntMapping rewards;
-    StorageInterface.UInt rewardsLeft;
-    StorageInterface.UInt periods;
-    StorageInterface.UIntBoolMapping closed;
-    StorageInterface.UIntUIntMapping startDate;
-    StorageInterface.UIntUIntMapping totalShares;
-    StorageInterface.UIntAddressUIntMapping shares;
-    StorageInterface.UIntUIntMapping shareholdersCount;
-    StorageInterface.UIntUIntMapping assetBalances;
-    StorageInterface.UIntAddressBoolMapping calculated;
+    StorageInterface.UInt private closeInterval;
+    StorageInterface.UInt private maxSharesTransfer;
+    StorageInterface.AddressUIntMapping private rewards;
+    StorageInterface.UInt private rewardsLeft;
+    StorageInterface.UInt private periods;
+    StorageInterface.UIntBoolMapping private closed;
+    StorageInterface.UIntUIntMapping private startDate;
+    StorageInterface.UIntUIntMapping private totalShares;
+    StorageInterface.UIntAddressUIntMapping private shares;
+    StorageInterface.UIntUIntMapping private shareholdersCount;
+    StorageInterface.UIntUIntMapping private assetBalances;
+    StorageInterface.UIntAddressBoolMapping private calculated;
 
-    StorageInterface.Address walletStorage;
+    StorageInterface.Address private walletStorage;
 
-    constructor(Storage _store, bytes32 _crate) Deposits(_store, _crate) public {
+    constructor(Storage _store, bytes32 _crate)
+    public
+    Deposits(_store, _crate)
+    {
         closeInterval.init("closeInterval");
         maxSharesTransfer.init("maxSharesTransfer");
         rewards.init("rewards");
@@ -91,12 +94,9 @@ contract Rewards is Deposits, RewardsEmitter {
      *
      * @return result code, @see Errors
      */
-    function init(
-        address _wallet,
-        uint _closeIntervalDays
-    )
-    onlyContractOwner
+    function init(address _wallet, uint _closeIntervalDays)
     external
+    onlyContractOwner
     returns (uint)
     {
         uint result = store.get(walletStorage) != 0x0 ? REINITIALIZED : OK;
@@ -118,37 +118,69 @@ contract Rewards is Deposits, RewardsEmitter {
     *
     * @return wallet address
     */
-    function wallet() public view returns (RewardsWallet) {
+    function wallet()
+    public
+    view
+    returns (RewardsWallet)
+    {
         return RewardsWallet(store.get(walletStorage));
     }
 
-    function getCloseInterval() public view returns (uint) {
+    function getCloseInterval()
+    public
+    view
+    returns (uint)
+    {
         return store.get(closeInterval);
     }
 
-    function setCloseInterval(uint _closeInterval) onlyContractOwner public returns (uint) {
+    function setCloseInterval(uint _closeInterval)
+    public
+    onlyContractOwner
+    returns (uint)
+    {
         store.set(closeInterval, _closeInterval);
         return OK;
     }
 
-    function getMaxSharesTransfer() public view returns (uint) {
+    function getMaxSharesTransfer()
+    public
+    view
+    returns (uint)
+    {
         return store.get(maxSharesTransfer);
     }
 
-    function setMaxSharesTransfer(uint _maxSharesTransfer) onlyContractOwner public returns (uint) {
+    function setMaxSharesTransfer(uint _maxSharesTransfer)
+    public
+    onlyContractOwner
+    returns (uint)
+    {
         store.set(maxSharesTransfer, _maxSharesTransfer);
         return OK;
     }
 
-    function getRewardsLeft() public view returns (uint) {
+    function getRewardsLeft()
+    public
+    view
+    returns (uint)
+    {
         return store.get(rewardsLeft);
     }
 
-    function periodsLength() public view returns (uint) {
+    function periodsLength()
+    public
+    view
+    returns (uint)
+    {
         return store.get(periods);
     }
 
-    function periodUnique(uint _period) public view returns (uint) {
+    function periodUnique(uint _period)
+    public
+    view
+    returns (uint)
+    {
         if (_period == lastPeriod()) {
             return store.count(shareholders);
         } else {
@@ -163,7 +195,11 @@ contract Rewards is Deposits, RewardsEmitter {
      *
      * @return success.
      */
-    function closePeriod() onlyContractOwner public returns (uint resultCode) {
+    function closePeriod()
+    public
+    onlyContractOwner
+    returns (uint resultCode)
+    {
         uint period = lastPeriod();
         if ((store.get(startDate, period) + (store.get(closeInterval) * 1 days)) > now) {
             return _emitError(ERROR_REWARD_CANNOT_CLOSE_PERIOD);
@@ -190,15 +226,183 @@ contract Rewards is Deposits, RewardsEmitter {
         }
     }
 
-    function getPeriodStartDate(uint _period) public view returns (uint) {
+    function getPeriodStartDate(uint _period)
+    public
+    view
+    returns (uint)
+    {
         return store.get(startDate, _period);
+    }
+
+    /**
+     * Returns proven amount of shares possessed by a shareholder in a period.
+     *
+     * @param _address shareholder address.
+     * @param _period period.
+     *
+     * @return shares amount.
+     */
+    function depositBalanceInPeriod(address _address, uint _period)
+    public
+    view
+    returns (uint)
+    {
+        if (_period == lastPeriod()) {
+            return depositBalance(_address);
+        }
+        return store.get(shares, _period, _address);
+    }
+
+    /**
+     * Returns total proven amount of shares possessed by shareholders in a period.
+     *
+     * @param _period period.
+     *
+     * @return shares amount.
+     */
+    function totalDepositInPeriod(uint _period)
+    public
+    view
+    returns (uint)
+    {
+        if (_period == lastPeriod()) {
+            return store.get(totalSharesStorage);
+        }
+        return store.get(totalShares,_period);
+    }
+
+    /**
+     * Returns current active period.
+     *
+     * @return period.
+     */
+    function lastPeriod()
+    public
+    view
+    returns (uint)
+    {
+        return store.get(periods);
+    }
+
+    /**
+     * Returns last closed period.
+     *
+     * @dev throws in case if there is no closed periods yet.
+     *
+     * @return period.
+     */
+    function lastClosedPeriod()
+    public
+    view
+    returns (uint)
+    {
+        if (store.get(periods) == 0) {
+            return ERROR_REWARD_NOT_FOUND;
+        }
+        return store.get(periods) - 1;
+    }
+
+    /**
+     * Check if period is closed or not.
+     *
+     * @param _period period.
+     *
+     * @return period closing state.
+     */
+    function isClosed(uint _period)
+    public
+    view
+    returns (bool)
+    {
+        return store.get(closed,_period);
+    }
+
+    /**
+     * Returns amount of accumulated rewards assets in a period.
+     * Always 0 for active period.
+     *
+     * @param _period period.
+     *
+     * @return assets amount.
+     */
+    function assetBalanceInPeriod(uint _period)
+    public
+    view
+    returns (uint)
+    {
+        return store.get(assetBalances, _period);
+    }
+
+    /**
+     * Check if shareholder have calculated rewards in a period.
+     *
+     * @param _address shareholder address.
+     * @param _period period.
+     *
+     * @return reward calculation state.
+     */
+    function isCalculatedFor(address _address, uint _period)
+    public
+    view
+    returns (bool)
+    {
+        return store.get(calculated, _period, _address);
+    }
+
+    /**
+     * Returns accumulated asset rewards available for withdrawal for shareholder.
+     *
+     * @param _address shareholder address.
+     *
+     * @return rewards amount.
+     */
+    function rewardsFor(address _address)
+    public
+    view
+    returns (uint)
+    {
+        return store.get(rewards, _address);
+    }
+
+    /**
+     * Withdraw accumulated reward of a specified rewards asset.
+     *
+     * Withdrawal is made for caller and total amount.
+     *
+     * @return success.
+     */
+    function withdrawRewardTotal()
+    external
+    returns (uint)
+    {
+        return withdrawRewardFor(msg.sender, rewardsFor(msg.sender));
+    }
+
+    /**
+     * Withdraw accumulated reward of a specified rewards asset.
+     *
+     * Withdrawal is made for caller and specified amount.
+     *
+     * @param _amount amount to withdraw.
+     *
+     * @return success.
+     */
+    function withdrawReward(uint _amount)
+    external
+    returns (uint)
+    {
+        return withdrawRewardFor(msg.sender, _amount);
     }
 
     /**
     *  @return error code and still left shares. `sharesLeft` is actual only
     *  if `errorCode` == OK, otherwise `sharesLeft` must be ignored.
     */
-    function storeDeposits() onlyContractOwner internal returns (uint result) {
+    function storeDeposits()
+    internal
+    onlyContractOwner
+    returns (uint result)
+    {
         uint period = lastClosedPeriod();
         uint period_end = getPeriodStartDate(lastPeriod());
         StorageInterface.Iterator memory iterator = store.listIterator(shareholders);
@@ -229,7 +433,10 @@ contract Rewards is Deposits, RewardsEmitter {
         return OK;
     }
 
-    function registerAsset(uint _period) internal returns (uint) {
+    function registerAsset(uint _period)
+    internal
+    returns (uint)
+    {
         uint period_balance = store.get(assetBalances, _period);
         if (period_balance != 0) {
             return _emitError(ERROR_REWARD_REWARDS_ALREADY_REGISTERED);
@@ -243,7 +450,10 @@ contract Rewards is Deposits, RewardsEmitter {
         return OK;
     }
 
-    function calculateRewardFor(address _address, uint _amount, uint _period) internal returns (uint e) {
+    function calculateRewardFor(address _address, uint _amount, uint _period)
+    internal
+    returns (uint)
+    {
         uint assetBalance = store.get(assetBalances, _period);
         if (assetBalance == 0) {
             return ERROR_REWARD_CALCULATION_FAILED;
@@ -265,30 +475,6 @@ contract Rewards is Deposits, RewardsEmitter {
     /**
      * Withdraw accumulated reward of a specified rewards asset.
      *
-     * Withdrawal is made for caller and total amount.
-     *
-     * @return success.
-     */
-    function withdrawRewardTotal() external returns (uint) {
-        return withdrawRewardFor(msg.sender, rewardsFor(msg.sender));
-    }
-
-    /**
-     * Withdraw accumulated reward of a specified rewards asset.
-     *
-     * Withdrawal is made for caller and specified amount.
-     *
-     * @param _amount amount to withdraw.
-     *
-     * @return success.
-     */
-    function withdrawReward(uint _amount) external returns (uint) {
-        return withdrawRewardFor(msg.sender, _amount);
-    }
-
-    /**
-     * Withdraw accumulated reward of a specified rewards asset.
-     *
      * Withdrawal is made for specified shareholder and specified amount.
      *
      * @param _address shareholder address to withdraw for.
@@ -296,7 +482,10 @@ contract Rewards is Deposits, RewardsEmitter {
      *
      * @return success.
      */
-    function withdrawRewardFor(address _address, uint _amount) internal returns (uint) {
+    function withdrawRewardFor(address _address, uint _amount)
+    internal
+    returns (uint)
+    {
         if (store.get(rewardsLeft) == 0) {
             return _emitError(ERROR_REWARD_NO_REWARDS_LEFT);
         }
@@ -322,115 +511,24 @@ contract Rewards is Deposits, RewardsEmitter {
         return OK;
     }
 
-    /**
-     * Returns proven amount of shares possessed by a shareholder in a period.
-     *
-     * @param _address shareholder address.
-     * @param _period period.
-     *
-     * @return shares amount.
-     */
-    function depositBalanceInPeriod(address _address, uint _period) public view returns (uint) {
-        if (_period == lastPeriod()) {
-            return depositBalance(_address);
-        }
-        return store.get(shares, _period, _address);
-    }
-
-    /**
-     * Returns total proven amount of shares possessed by shareholders in a period.
-     *
-     * @param _period period.
-     *
-     * @return shares amount.
-     */
-    function totalDepositInPeriod(uint _period) public view returns (uint) {
-        if (_period == lastPeriod()) {
-            return store.get(totalSharesStorage);
-        }
-        return store.get(totalShares,_period);
-    }
-
-    /**
-     * Returns current active period.
-     *
-     * @return period.
-     */
-    function lastPeriod() public view returns (uint) {
-        return store.get(periods);
-    }
-
-    /**
-     * Returns last closed period.
-     *
-     * @dev throws in case if there is no closed periods yet.
-     *
-     * @return period.
-     */
-    function lastClosedPeriod() public view returns (uint) {
-        if (store.get(periods) == 0) {
-            return ERROR_REWARD_NOT_FOUND;
-        }
-        return store.get(periods) - 1;
-    }
-
-    /**
-     * Check if period is closed or not.
-     *
-     * @param _period period.
-     *
-     * @return period closing state.
-     */
-    function isClosed(uint _period) public view returns (bool) {
-        return store.get(closed,_period);
-    }
-
-    /**
-     * Returns amount of accumulated rewards assets in a period.
-     * Always 0 for active period.
-     *
-     * @param _period period.
-     *
-     * @return assets amount.
-     */
-    function assetBalanceInPeriod(uint _period) public view returns (uint) {
-        return store.get(assetBalances, _period);
-    }
-
-    /**
-     * Check if shareholder have calculated rewards in a period.
-     *
-     * @param _address shareholder address.
-     * @param _period period.
-     *
-     * @return reward calculation state.
-     */
-    function isCalculatedFor(address _address, uint _period) public view returns (bool) {
-        return store.get(calculated, _period, _address);
-    }
-
-    /**
-     * Returns accumulated asset rewards available for withdrawal for shareholder.
-     *
-     * @param _address shareholder address.
-     *
-     * @return rewards amount.
-     */
-    function rewardsFor(address _address) public view returns (uint) {
-        return store.get(rewards, _address);
-    }
-
     // Even emitter util functions
 
-    function _emitWithdrawnReward(address addr, uint amount) internal {
+    function _emitWithdrawnReward(address addr, uint amount)
+    internal
+    {
         Rewards(getEventsHistory()).emitWithdrawnReward(addr, amount);
     }
 
-    function _emitPeriodClosed() internal {
+    function _emitPeriodClosed()
+    internal
+    {
         Rewards(getEventsHistory()).emitPeriodClosed();
     }
 
-    function _emitError(uint e) internal returns (uint) {
+    function _emitError(uint e)
+    internal
+    returns (uint)
+    {
         Rewards(getEventsHistory()).emitError(e);
         return e;
     }

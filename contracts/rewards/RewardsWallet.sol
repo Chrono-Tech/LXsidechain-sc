@@ -5,9 +5,9 @@
 
 pragma solidity ^0.4.23;
 
-
 import "../common/Object.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
+
 
 /**
 * @title TimeHolder's wallet contract defines a basic implementation of DepositWalletInterface
@@ -18,18 +18,21 @@ import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Inte
 * to TimeHolderWallet contract
 */
 contract RewardsWallet is Object {
-
     event EthReceived(address sender, uint value);
-    address rewards;
+    address public rewards;
 
     modifier onlyRewards {
         require(msg.sender == rewards, "Rewards contract should only call this function");
         _;
     }
 
-    function init(address _rewards) onlyContractOwner external returns (bool) {
+    function init(address _rewards)
+    external
+    onlyContractOwner
+    {
+        require(_rewards != address(0x0));
+
         rewards = _rewards;
-        return true;
     }
 
     /**
@@ -42,10 +45,12 @@ contract RewardsWallet is Object {
     *
     * @return result code of an operation
     */
-    function destroy(address[] tokens) onlyContractOwner public returns (uint) {
+    function destroy(address[] tokens)
+    public
+    onlyContractOwner
+    {
         withdrawTokens(tokens);
         selfdestruct(msg.sender);
-        return OK;
     }
 
     /**
@@ -59,7 +64,11 @@ contract RewardsWallet is Object {
     *
     * @return `true` if all successfuly completed, `false` otherwise
     */
-    function deposit(address _asset, address _from, uint256 _amount) onlyRewards external returns (bool) {
+    function deposit(address _asset, address _from, uint256 _amount)
+    external
+    onlyRewards
+    returns (bool)
+    {
         return ERC20(_asset).transferFrom(_from, this, _amount);
     }
 
@@ -74,15 +83,26 @@ contract RewardsWallet is Object {
     *
     * @return `true` if all successfuly completed, `false` otherwise
     */
-    function withdraw(address _asset, address _to, uint256 _amount) onlyRewards external returns (bool) {
+    function withdraw(address _asset, address _to, uint256 _amount)
+    external
+    onlyRewards
+    returns (bool)
+    {
         return ERC20(_asset).transfer(_to, _amount);
     }
 
-    function withdrawEth(address _to, uint256 _amount) onlyRewards external returns (bool) {
+    function withdrawEth(address _to, uint256 _amount)
+    external
+    onlyRewards
+    returns (bool)
+    {
         return _to.send(_amount);
     }
 
-    function () external payable {
+    function ()
+    external
+    payable
+    {
         require(msg.value > 0);
         emit EthReceived(msg.sender, msg.value);
     }

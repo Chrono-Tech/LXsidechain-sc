@@ -5,27 +5,31 @@
 
 pragma solidity ^0.4.23;
 
-
 import "../event/MultiEventsHistoryAdapter.sol";
 
 
 contract RewardsEmitter is MultiEventsHistoryAdapter {
-
     event WithdrawnSuccess(address addr, uint amount, uint total);
     event WithdrawnRewardSuccess(address addr, uint amountReward);
     event DepositStored(uint _part);
     event PeriodClosed();
     event Error(address indexed self, uint errorCode);
 
-    function emitWithdrawnReward(address addr, uint amount) public {
+    function emitWithdrawnReward(address addr, uint amount)
+    public
+    {
         emit WithdrawnRewardSuccess(addr, amount);
     }
 
-    function emitPeriodClosed() public {
+    function emitPeriodClosed()
+    public
+    {
         emit PeriodClosed();
     }
 
-    function emitError(uint error) public {
+    function emitError(uint error)
+    public
+    {
         emit Error(_self(), error);
     }
 }

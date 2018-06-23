@@ -43,35 +43,51 @@ contract TimeHolderEmitter is MultiEventsHistoryAdapter {
 
     /* Emitting events */
 
-    function emitWithdrawalRequested(bytes32 requestId, address token, uint amount, address requester, address recepient) public {
+    function emitWithdrawalRequested(bytes32 requestId, address token, uint amount, address requester, address recepient)
+    public
+    {
         emit WithdrawalRequested(requestId, token, amount, requester, recepient);
     }
 
-    function emitWithdrawalRequestResolved(bytes32 requestId, address token, uint amount, address requester, address recepient) public {
+    function emitWithdrawalRequestResolved(bytes32 requestId, address token, uint amount, address requester, address recepient)
+    public
+    {
         emit WithdrawalRequestResolved(requestId, token, amount, requester, recepient);
     }
 
-    function emitWithdrawalRequestCancelled(bytes32 requestId) public {
+    function emitWithdrawalRequestCancelled(bytes32 requestId)
+    public
+    {
         emit WithdrawalRequestCancelled(requestId);
     }
 
-    function emitPrimaryMinerChanged(address from, address to) public {
+    function emitPrimaryMinerChanged(address from, address to)
+    public
+    {
         emit PrimaryMinerChanged(from, to);
     }
 
-    function emitMinerDeposited(address token, uint amount, address miner, address sender) public {
+    function emitMinerDeposited(address token, uint amount, address miner, address sender)
+    public
+    {
         emit MinerDeposited(token, amount, miner, sender);
     }
 
-    function emitDeposit(address token, address who, uint amount) public {
+    function emitDeposit(address token, address who, uint amount)
+    public
+    {
         emit Deposit(token, who, amount);
     }
 
-    function emitSharesWhiteListChanged(address token, uint limit, bool isAdded) public {
+    function emitSharesWhiteListChanged(address token, uint limit, bool isAdded)
+    public
+    {
         emit SharesWhiteListChanged(token, limit, isAdded);
     }
 
-    function emitError(uint error) public {
+    function emitError(uint error)
+    public
+    {
         emit Error(_self(), error);
     }
 }

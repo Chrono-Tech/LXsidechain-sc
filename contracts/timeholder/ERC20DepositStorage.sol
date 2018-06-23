@@ -22,40 +22,44 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
 
     /** Storage keys */
 
-    StorageInterface.OrderedAddressesSet shareholders;
-    StorageInterface.UIntOrderedSetMapping deposits;
-    StorageInterface.UInt depositsIdCounter;
-    StorageInterface.AddressUIntUIntMapping amounts;
-    StorageInterface.AddressUIntUIntMapping timestamps;
-    StorageInterface.UInt totalSharesStorage;
-    StorageInterface.Address sharesContractStorage;
+    StorageInterface.OrderedAddressesSet private shareholders;
+    StorageInterface.UIntOrderedSetMapping private deposits;
+    StorageInterface.UInt private depositsIdCounter;
+    StorageInterface.AddressUIntUIntMapping private amounts;
+    StorageInterface.AddressUIntUIntMapping private timestamps;
+    StorageInterface.UInt private totalSharesStorage;
+    StorageInterface.Address private sharesContractStorage;
 
-    StorageInterface.AddressOrderedSetMapping shareholders_v2;
-    StorageInterface.Bytes32UIntMapping depositsIdCounters_v2;
-    StorageInterface.Mapping amounts_v2; // mapping(bytes32(key)=>mapping(bytes32(idx)=>uint(amount))) // to TimeHolder
-    StorageInterface.Mapping timestamps_v2; // mapping(bytes32(key)=>mapping(bytes32(idx)=>uint(time))) // to TimeHolder
-    StorageInterface.AddressUIntMapping totalSharesStorage_v2;
-    StorageInterface.AddressesSet sharesTokenStorage_v2;
-    StorageInterface.AddressUIntMapping limitsStorage_v2; 
+    StorageInterface.AddressOrderedSetMapping private shareholders_v2;
+    StorageInterface.Bytes32UIntMapping private depositsIdCounters_v2;
+    StorageInterface.Mapping private amounts_v2; // mapping(bytes32(key)=>mapping(bytes32(idx)=>uint(amount))) // to TimeHolder
+    StorageInterface.Mapping private timestamps_v2; // mapping(bytes32(key)=>mapping(bytes32(idx)=>uint(time))) // to TimeHolder
+    StorageInterface.AddressUIntMapping private totalSharesStorage_v2;
+    StorageInterface.AddressesSet private sharesTokenStorage_v2;
+    StorageInterface.AddressUIntMapping private limitsStorage_v2;
 
     /// @dev Total amount of locked balances of a token
-    StorageInterface.Bytes32UIntMapping overallWithdrawBalancesStorage_v2; // (composite key => locked amount)
+    StorageInterface.Bytes32UIntMapping private overallWithdrawBalancesStorage_v2; // (composite key => locked amount)
     /// @dev Requested amount of tokens to withdraw
-    StorageInterface.Bytes32UIntMapping registeredWithdrawBalancesStorage_v2; // (registration ID => required withdraw amount)
+    StorageInterface.Bytes32UIntMapping private registeredWithdrawBalancesStorage_v2; // (registration ID => required withdraw amount)
     /// @dev Requested token address to withdraw
-    StorageInterface.Bytes32AddressMapping registeredWithdrawTokenStorage_v2; // (registration ID => token address)
+    StorageInterface.Bytes32AddressMapping private registeredWithdrawTokenStorage_v2; // (registration ID => token address)
     /// @dev Requested recepient to transfer withdrawn tokens
-    StorageInterface.Bytes32AddressMapping registeredWithdrawReceiverStorage_v2; // (registration ID => recepient address)
+    StorageInterface.Bytes32AddressMapping private registeredWithdrawReceiverStorage_v2; // (registration ID => recepient address)
     /// @dev Requested recepient to withdraw tokens
-    StorageInterface.Bytes32AddressMapping registeredWithdrawTargetStorage_v2; // (registration ID => target address)
+    StorageInterface.Bytes32AddressMapping private registeredWithdrawTargetStorage_v2; // (registration ID => target address)
 
     /// @dev Restricts access to functions only for TimeHolder sender
     modifier onlyTimeHolder {
-        require(store.store.manager().isAllowed(msg.sender, store.crate), "Only TimeHolder should be able to perform a call");
+        bool permitted = store.store.manager().isAllowed(msg.sender, store.crate);
+        require(permitted, "Only TimeHolder should be able to perform a call");
         _;
     }
 
-    constructor(Storage _store, bytes32 _crate) StorageAdapter(_store, _crate) public {
+    constructor(Storage _store, bytes32 _crate)
+    public
+    StorageAdapter(_store, _crate)
+    {
         shareholders.init("shareholders");
         deposits.init("deposits");
         depositsIdCounter.init("depositsIdCounter");
@@ -83,19 +87,30 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// @dev Allowed only for TimeHolder call
     ///
     /// @param _sharesContract TIME token address
-    function setSharesContract(address _sharesContract) onlyTimeHolder public {
+    function setSharesContract(address _sharesContract)
+    public
+    onlyTimeHolder
+    {
         require(_sharesContract != 0x0, "No shares address is specified");
         store.set(sharesContractStorage, _sharesContract);
     }
 
     /// @notice Gets address of shares contract
-    function getSharesContract() public view returns (address) {
+    function getSharesContract()
+    public
+    view
+    returns (address)
+    {
         return store.get(sharesContractStorage);
     }
 
     /// @notice Gets total number of deposited tokens provided as parameter
     /// @param _token token address to get info
-    function totalShares(address _token) public view returns (uint) {
+    function totalShares(address _token)
+    public
+    view
+    returns (uint)
+    {
         if (_token == store.get(sharesContractStorage)) {
             return store.get(totalSharesStorage);
         }
@@ -105,7 +120,11 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
 
     /// @notice Number of shareholders for provided token
     /// @return number of shareholders
-    function shareholdersCount(address _token) public view returns (uint) {
+    function shareholdersCount(address _token)
+    public
+    view
+    returns (uint)
+    {
         if (_token == store.get(sharesContractStorage)) {
             return store.count(shareholders);
         }
@@ -119,39 +138,54 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// @param _depositor shareholder address.
     ///
     /// @return shares amount.
-    function depositBalance(address _token, address _depositor) public view returns (uint _balance) {
+    function depositBalance(address _token, address _depositor)
+    public
+    view
+    returns (uint _balance)
+    {
         if (_token != store.get(sharesContractStorage)) {
-            bytes32 _key = _compileCompositeKey(_token, _depositor);
+            bytes32 _key = keccak256(_token, _depositor);
             return _depositBalance(_key);
         }
 
         return _depositBalance(bytes32(_depositor));
     }
 
-    function requestedWithdrawAmount(address _token, address _depositor) public view returns (uint _balance) {
-        bytes32 _key = _compileCompositeKey(_token, _depositor);
+    function requestedWithdrawAmount(address _token, address _depositor)
+    public
+    view
+    returns (uint _balance)
+    {
+        bytes32 _key = keccak256(_token, _depositor);
         return _requestedWithdrawBalance(_key);
     }
 
     /// @notice Checks if provided withdraw was requested
     /// @param _registrationId unique identifier for withdraw two-step operation
-    function isWithdrawRequestRegistered(bytes32 _registrationId) public view returns (bool) {
+    function isWithdrawRequestRegistered(bytes32 _registrationId)
+    public
+    view
+    returns (bool)
+    {
         return store.get(registeredWithdrawBalancesStorage_v2, _registrationId) != 0;
     }
 
     /// @notice Gets details about requested withdraw
     /// @param _registrationId unique identifier for withdraw two-step operation
     /// @return {
-    ///     "_token": "token address",   
-    ///     "_amount": "amount of tokens that were locked",   
-    ///     "_receiver": "holder address"   
+    ///     "_token": "token address",
+    ///     "_amount": "amount of tokens that were locked",
+    ///     "_receiver": "holder address"
     /// }
-    function getRegisteredWithdrawRequest(bytes32 _registrationId) public view returns (
+    function getRegisteredWithdrawRequest(bytes32 _registrationId)
+    public
+    view
+    returns (
         address _token,
         uint _amount,
         address _target,
-        address _receiver
-    ) {
+        address _receiver)
+    {
         return (
             store.get(registeredWithdrawTokenStorage_v2, _registrationId),
             store.get(registeredWithdrawBalancesStorage_v2, _registrationId),
@@ -166,7 +200,10 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// @param _token token to deposit. Should be in a whitelist
     /// @param _target deposit destination
     /// @param _amount amount of deposited tokens
-    function depositFor(address _token, address _target, uint _amount) onlyTimeHolder public {
+    function depositFor(address _token, address _target, uint _amount)
+    public
+    onlyTimeHolder
+    {
         uint id;
         uint prevAmount;
 
@@ -182,7 +219,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         } else {
             store.add(shareholders_v2, bytes32(_token), _target);
 
-            bytes32 key = _compileCompositeKey(_token, _target);
+            bytes32 key = keccak256(_token, _target);
 
             id = store.get(depositsIdCounters_v2, key) + 1;
             store.set(depositsIdCounters_v2, key, id);
@@ -200,7 +237,10 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// @param _account token recepient
     /// @param _amount number of tokens to withdraw
     /// @param _totalBalance total balance of shares
-    function withdrawShares(address _token, address _account, uint _amount, uint _totalBalance) onlyTimeHolder public {
+    function withdrawShares(address _token, address _account, uint _amount, uint _totalBalance)
+    public
+    onlyTimeHolder
+    {
         if (_totalBalance == 0) {
             return;
         }
@@ -215,7 +255,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
             uint prevAmount_v1 = store.get(totalSharesStorage);
             store.set(totalSharesStorage, prevAmount_v1.sub(_amount));
         } else {
-            bytes32 _key = _compileCompositeKey(_token, _account);
+            bytes32 _key = keccak256(_token, _account);
             uint deposits_count_left_v2 = _withdrawShares(_key, _amount);
 
             if (deposits_count_left_v2 == 0) {
@@ -235,15 +275,15 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// @param _receiver user who will receive locked tokens
     function registerWithdrawRequest(
         bytes32 _registrationId,
-        address _token, 
+        address _token,
         uint _amount,
         address _target,
         address _receiver
     )
+    public
     onlyTimeHolder
-    public 
     {
-        bytes32 _key = _compileCompositeKey(_token, _target);
+        bytes32 _key = keccak256(_token, _target);
         uint _requestedWithdrawBalance = store.get(overallWithdrawBalancesStorage_v2, _key);
         store.set(overallWithdrawBalancesStorage_v2, _key, _requestedWithdrawBalance.add(_amount));
         store.set(registeredWithdrawTokenStorage_v2, _registrationId, _token);
@@ -256,15 +296,15 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// right away to a receiver address.
     /// @dev Allowed only for TimeHolder call
     /// @param _registrationId unique identifier to associate this withdraw operation
-    function disposeWithdrawRequest(bytes32 _registrationId) 
-    onlyTimeHolder 
+    function disposeWithdrawRequest(bytes32 _registrationId)
     public
+    onlyTimeHolder
     {
         address _token = store.get(registeredWithdrawTokenStorage_v2, _registrationId);
         uint _amount = store.get(registeredWithdrawBalancesStorage_v2, _registrationId);
         address _target = store.get(registeredWithdrawTargetStorage_v2, _registrationId);
 
-        bytes32 _key = _compileCompositeKey(_token, _target);
+        bytes32 _key = keccak256(_token, _target);
         uint _requestedWithdrawBalance = store.get(overallWithdrawBalancesStorage_v2, _key);
         store.set(overallWithdrawBalancesStorage_v2, _key, _requestedWithdrawBalance.sub(_amount));
 
@@ -272,7 +312,11 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     }
 
     /// @dev Iterates through deposits and calculates a sum
-    function _depositBalance(bytes32 _key) private view returns (uint _balance) {
+    function _depositBalance(bytes32 _key)
+    private
+    view
+    returns (uint _balance)
+    {
         StorageInterface.Iterator memory iterator = store.listIterator(deposits, _key);
         for (uint i = 0; store.canGetNextWithIterator(deposits, iterator); ++i) {
             uint _cur_amount = uint(store.get(amounts_v2, _key, bytes32(store.getNextWithIterator(deposits, iterator))));
@@ -280,7 +324,11 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         }
     }
 
-    function _requestedWithdrawBalance(bytes32 _key) private view returns (uint) {
+    function _requestedWithdrawBalance(bytes32 _key)
+    private
+    view
+    returns (uint)
+    {
         return store.get(overallWithdrawBalancesStorage_v2, _key);
     }
 
@@ -289,7 +337,9 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// @param _key might be a compositeKey or an account address
     /// @param _id index of deposit
     /// @param _amount amount of tokens to deposit
-    function _addDeposit(bytes32 _key, bytes32 _id, uint _amount) private {
+    function _addDeposit(bytes32 _key, bytes32 _id, uint _amount)
+    private
+    {
         store.add(deposits, _key, uint(_id));
         store.set(amounts_v2, _key, _id, bytes32(_amount));
         store.set(timestamps_v2, _key, _id, bytes32(now));
@@ -301,7 +351,10 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// @param _amount amount of tokens to withdraw
     ///
     /// @return _deposits_count_left amount of tokens that is left on deposits
-    function _withdrawShares(bytes32 _key, uint _amount) private returns (uint _deposits_count_left) {
+    function _withdrawShares(bytes32 _key, uint _amount)
+    private
+    returns (uint _deposits_count_left)
+    {
         StorageInterface.Iterator memory iterator = store.listIterator(deposits, _key);
         _deposits_count_left = iterator.count();
         while (store.canGetNextWithIterator(deposits, iterator)) {
@@ -324,7 +377,10 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     ///   updated deposits left,
     ///   updated amount left,
     /// }
-    function _withdrawSharesFromDepositV2(bytes32 _key, uint _id, uint _amount, uint _depositsLeft) private returns (uint, uint) {
+    function _withdrawSharesFromDepositV2(bytes32 _key, uint _id, uint _amount, uint _depositsLeft)
+    private
+    returns (uint, uint)
+    {
         uint _cur_amount = uint(store.get(amounts_v2, _key, bytes32(_id)));
         if (_amount < _cur_amount) {
             store.set(amounts_v2, _key, bytes32(_id), bytes32(_cur_amount.sub(_amount)));
@@ -335,15 +391,12 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         return (_depositsLeft.sub(1), _amount.sub(_cur_amount));
     }
 
-    function _removeRegisteredWithdrawRequest(bytes32 _registrationId) private {
+    function _removeRegisteredWithdrawRequest(bytes32 _registrationId)
+    private
+    {
         store.set(registeredWithdrawTokenStorage_v2, _registrationId, 0x0);
         store.set(registeredWithdrawBalancesStorage_v2, _registrationId, 0);
         store.set(registeredWithdrawTargetStorage_v2, _registrationId, 0x0);
         store.set(registeredWithdrawReceiverStorage_v2, _registrationId, 0x0);
-    }
-
-    /// @dev Gets key combined from token symbol and user's address
-    function _compileCompositeKey(address _token, address _address) private pure returns (bytes32) {
-        return keccak256(_token, _address);
     }
 }

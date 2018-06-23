@@ -8,6 +8,7 @@ pragma solidity ^0.4.23;
 import "../common/Object.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 
+
 /**
 * @title TimeHolder's wallet contract defines a basic implementation of DepositWalletInterface
 * to provide a way to store/deposit/withdraw tokens on this contract according to access rights.
@@ -17,17 +18,20 @@ import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Inte
 * to TimeHolderWallet contract
 */
 contract TimeHolderWallet is Object {
-
-    address timeHolder;
+    address public timeHolder;
 
     modifier onlyTimeHolder {
         require(msg.sender == timeHolder, "Only TimeHolder should make a call");
         _;
     }
 
-    function init(address _timeHolder) onlyContractOwner external returns (bool) {
+    function init(address _timeHolder)
+    external
+    onlyContractOwner
+    {
+        require(_timeHolder != address(0x0));
+
         timeHolder = _timeHolder;
-        return true;
     }
 
     /**
@@ -40,10 +44,12 @@ contract TimeHolderWallet is Object {
     *
     * @return result code of an operation
     */
-    function destroy(address[] tokens) onlyContractOwner external returns (uint) {
+    function destroy(address[] tokens)
+    external
+    onlyContractOwner
+    {
         withdrawTokens(tokens);
         selfdestruct(contractOwner);
-        return OK;
     }
 
     /**
@@ -57,7 +63,11 @@ contract TimeHolderWallet is Object {
     *
     * @return `true` if all successfuly completed, `false` otherwise
     */
-    function deposit(address _asset, address _from, uint256 _amount) onlyTimeHolder external returns (bool) {
+    function deposit(address _asset, address _from, uint256 _amount)
+    external
+    onlyTimeHolder
+    returns (bool)
+    {
         return ERC20(_asset).transferFrom(_from, this, _amount);
     }
 
@@ -72,7 +82,11 @@ contract TimeHolderWallet is Object {
     *
     * @return `true` if all successfuly completed, `false` otherwise
     */
-    function withdraw(address _asset, address _to, uint256 _amount) onlyTimeHolder external returns (bool) {
+    function withdraw(address _asset, address _to, uint256 _amount)
+    external
+    onlyTimeHolder
+    returns (bool)
+    {
         return ERC20(_asset).transfer(_to, _amount);
     }
 }

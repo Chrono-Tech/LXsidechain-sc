@@ -1,63 +1,66 @@
 /**
- * Copyright 2017–2018, LaborX PTY
- * Licensed under the AGPL Version 3 license.
- */
- 
+* Copyright 2017–2018, LaborX PTY
+* Licensed under the AGPL Version 3 license.
+*/
+
 pragma solidity ^0.4.23;
 
 import "solidity-shared-lib/contracts/Owned.sol";
 
+
 contract LXValidatorSetDelegate is Owned {
-  address public validatorSet;
+    address public validatorSet;
 
-  modifier onlyValidatorSet() {
-      require(msg.sender == validatorSet);
-      _;
-  }
+    modifier onlyValidatorSet() {
+        require(msg.sender == validatorSet);
+        _;
+    }
 
-  constructor(address _validatorSet) public {
-    validatorSet = _validatorSet;
-  }
+    constructor(address _validatorSet)
+    public
+    {
+        validatorSet = _validatorSet;
+    }
 
-  function initiateChange()
-  public
-  onlyValidatorSet
-  {
-  }
+    function initiateChange()
+    public
+    onlyValidatorSet
+    {
+    }
 
-  function iinalizeChange()
-  public
-  onlyValidatorSet
-  {
-  }
+    function iinalizeChange()
+    public
+    onlyValidatorSet
+    {
+    }
 
-  function addValidator(address /*_validator*/)
-  public
-  onlyValidatorSet
-  {
-  }
+    function addValidator(address /*_validator*/)
+    public
+    onlyValidatorSet
+    {
+    }
 
-  function removeValidator(address /*_validator*/)
-  public
-  onlyValidatorSet
-  {
-  }
+    function removeValidator(address /*_validator*/)
+    public
+    onlyValidatorSet
+    {
+    }
 
-  function setRecentBlocks(uint /*_recentBlocks*/)
-  public
-  onlyValidatorSet
-  {
-  }
+    function setRecentBlocks(uint /*_recentBlocks*/)
+    public
+    onlyValidatorSet
+    {
+    }
 
-  function reportMalicious(address /*_validator*/, uint /*_blockNumber*/, bytes /*_proof*/)
-  public
-  onlyValidatorSet
-  {
-  }
+    function reportMalicious(address /*_validator*/, uint /*_blockNumber*/, bytes /*_proof*/)
+    public
+    onlyValidatorSet
+    {
+    }
 
-  function reportBenign(address /*_validator*/, uint /*_blockNumber*/)
-  public
-  onlyValidatorSet
-  {
-  }
+    function reportBenign(address /*_validator*/, uint /*_blockNumber*/)
+    public
+    onlyValidatorSet
+    {
+    }
 }
