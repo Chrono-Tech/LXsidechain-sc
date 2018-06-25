@@ -11,13 +11,14 @@
     "solidity-shared-lib": "github:alesanro/solidity-shared-lib#feature/update-to-latest"
   },
   "devDependencies": {
+    "abi-decoder": "^1.1.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-flow": "^6.23.0",
     "babel-register": "^6.26.0",
-    "solidity-coverage": "^0.5.4",
-    "abi-decoder": "^1.1.0",
-    "sha256": "^0.2.0"
+    "minimist": "^1.2.0",
+    "sha256": "^0.2.0",
+    "solidity-coverage": "^0.5.4"
   },
   "scripts": {
     "test:all": "./node_modules/truffle/build/cli.bundled.js test",
