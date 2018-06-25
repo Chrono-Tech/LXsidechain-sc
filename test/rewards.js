@@ -82,16 +82,11 @@ contract('Rewards', (accounts) => {
     }
 
     let _withdrawShares = async (sender, amount) => {
-        const registrationId = "0x1111"
-        await timeHolder.requestWithdrawShares(registrationId, shares.address, amount, { from: sender, })
-        // only for real ERC20
-        // await shares.approve(timeHolder.address, amount, { from: miner, })
-        await timeHolder.resolveWithdrawSharesRequest(registrationId, { from: miner, })
+        await timeHolder.withdrawShares(shares.address, amount, { from: sender, })
     }
 
     let _withdrawSharesCall = async (sender, amount) => {
-        const registrationId = "0x1111"
-        return await timeHolder.requestWithdrawShares.call(registrationId, shares.address, amount, { from: sender, })
+        return await timeHolder.withdrawShares.call(shares.address, amount, { from: sender, })
     }
 
     before('Setup', async () => {
@@ -112,6 +107,7 @@ contract('Rewards', (accounts) => {
         await shares.approve(wallet, SHARES_BALANCE, {from: accounts[0]})
         await shares.approve(wallet, SHARES_BALANCE, {from: accounts[1]})
         await shares.approve(wallet, SHARES_BALANCE, {from: accounts[2]})
+        await shares.approve(wallet, web3.toBigNumber(2).pow(256).sub(1), { from: miner, })
         timeHolder._withdrawShares = _withdrawShares
         timeHolder._withdrawSharesCall = _withdrawSharesCall
 
@@ -269,7 +265,7 @@ contract('Rewards', (accounts) => {
             const minerBalance = await shares.balanceOf(miner)
             await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100, { from: accounts[0], })
             const withdrawResultCode = await timeHolder._withdrawSharesCall(accounts[0], 200)
-            assert.equal(withdrawResultCode.toNumber(), ErrorsEnum.TIMEHOLDER_WITHDRAW_LIMIT_EXCEEDED)
+            assert.equal(withdrawResultCode.toNumber(), ErrorsEnum.TIMEHOLDER_INSUFFICIENT_BALANCE)
 
             await timeHolder._withdrawShares(accounts[0], 200)
             await assertDepositBalance(accounts[0], 100)

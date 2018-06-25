@@ -24,18 +24,14 @@ contract('New version of TimeHolder', (accounts) => {
 
     const ZERO_INTERVAL = 0;
     const SHARES_BALANCE = 100000000;
+    const UINT_MAX = web3.toBigNumber(2).pow(256).sub(1)
 
     let _withdrawShares = async (sender, amount) => {
-        const registrationId = "0x1111"
-        await timeHolder.requestWithdrawShares(registrationId, shares.address, amount, { from: sender, })
-        // only for real ERC20
-        // await shares.approve(timeHolder.address, amount, { from: miner, })
-        await timeHolder.resolveWithdrawSharesRequest(registrationId, { from: miner, })
+        await timeHolder.withdrawShares(shares.address, amount, { from: sender, })
     }
 
     let _withdrawSharesCall = async (sender, amount) => {
-        const registrationId = "0x1111"
-        return await timeHolder.requestWithdrawShares.call(registrationId, shares.address, amount, { from: sender, })
+        return await timeHolder.withdrawShares.call(shares.address, amount, { from: sender, })
     }
 
     before('Setup', async() => {
@@ -201,8 +197,8 @@ contract('New version of TimeHolder', (accounts) => {
             });
         })
 
-        context("withdrawal request with", () => {
-            const user = accounts[0]
+        context("withdrawal with", () => {
+            const user = accounts[1]
             const DEPOSIT_AMOUNT = 100
 
             it("and should have primary miner", async () => {
@@ -215,6 +211,8 @@ contract('New version of TimeHolder', (accounts) => {
                 let initialWalletSharesBalance
 
                 before(async () => {
+                    await shares.approve(timeHolderWallet, UINT_MAX, { from: miner, })
+
                     initialBalance = await timeHolder.getDepositBalance.call(shares.address, user)
                     initialMinerSharesBalance = await shares.balanceOf(miner)
                     initialWalletSharesBalance = await shares.balanceOf(timeHolderWallet)
@@ -228,7 +226,22 @@ contract('New version of TimeHolder', (accounts) => {
                         (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
                         initialBalance.plus(DEPOSIT_AMOUNT).toString()
                     )
-                    // TODO: add event check
+
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "Deposit"))[0]
+                        assert.isDefined(event)
+                        assert.equal(event.args.token, shares.address)
+                        assert.equal(event.args.who, user)
+                        assert.equal(event.args.amount.toString(), DEPOSIT_AMOUNT.toString())
+                    }
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "MinerDeposited"))[0]
+                        assert.isDefined(event)
+                        assert.equal(event.args.token, shares.address)
+                        assert.equal(event.args.amount.toString(), DEPOSIT_AMOUNT.toString())
+                        assert.equal(event.args.miner, miner)
+                        assert.equal(event.args.sender, user)
+                    }
                 })
 
                 it("miner should receive deposited amount of shares", async () => {
@@ -245,90 +258,40 @@ contract('New version of TimeHolder', (accounts) => {
                     )
                 })
 
-                it("should have no requested withdrawal value", async () => {
+                it("should NOT be able to withdraw for more amount than user has with TIMEHOLDER_INSUFFICIENT_BALANCE code", async () => {
+                    const currentBalance = await timeHolder.getDepositBalance.call(shares.address, user)
                     assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, user)).toString(),
-                        '0'
+                        (await timeHolder.withdrawShares.call(shares.address, currentBalance.plus(1), { from: user, })).toString(),
+                        ErrorsEnum.TIMEHOLDER_INSUFFICIENT_BALANCE
                     )
                 })
 
-                const withdrawalRegistrationId = "0xff"
-
-                it("should NOT be able to request withdrawal for more amount than user has with TIMEHOLDER_WITHDRAW_LIMIT_EXCEEDED code", async () => {
+                it("should be able to withdraw for less or equal amount as deposit balance with OK code", async () => {
                     const currentBalance = await timeHolder.getDepositBalance.call(shares.address, user)
                     assert.equal(
-                        (await timeHolder.requestWithdrawShares.call(withdrawalRegistrationId, shares.address, currentBalance.plus(1), { from: user, })).toString(),
-                        ErrorsEnum.TIMEHOLDER_WITHDRAW_LIMIT_EXCEEDED
-                    )
-                })
-
-                it("should be able to request withdrawal for less or equal amount as deposit balance with OK code", async () => {
-                    const currentBalance = await timeHolder.getDepositBalance.call(shares.address, user)
-                    assert.equal(
-                        (await timeHolder.requestWithdrawShares.call(withdrawalRegistrationId, shares.address, currentBalance, { from: user, })).toString(),
+                        (await timeHolder.withdrawShares.call(shares.address, currentBalance, { from: user, })).toString(),
                         ErrorsEnum.OK
                     )
                 })
 
                 let withdrawalBalance
 
-                it("should be able to request withdrawal for less or equal amount as deposit balance", async () => {
+                it("should allow to withdraw", async () => {
                     withdrawalBalance = await timeHolder.getDepositBalance.call(shares.address, user)
-                    const tx = await timeHolder.requestWithdrawShares(withdrawalRegistrationId, shares.address, withdrawalBalance, { from: user, })
-                    assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, user)).toString(),
-                        withdrawalBalance.toString()
-                    )
-                    // TODO: add event check
-                })
-
-                it("shouldn't be able to request withdrawal with already existed registrationId with TIMEHOLDER_REGISTRATION_ID_EXISTS code", async () => {
-                    assert.equal(
-                        (await timeHolder.requestWithdrawShares.call(withdrawalRegistrationId, shares.address, withdrawalBalance, { from: user, })).toString(),
-                        ErrorsEnum.TIMEHOLDER_REGISTRATION_ID_EXISTS
-                    )
-                })
-
-                it("should be able to check withdrawal request by registration id with requested params", async () => {
-                    const [ _tokenAddress, _amount, _target, _receiver, ] = await timeHolder.checkRegisteredWithdrawRequest.call(withdrawalRegistrationId)
-                    assert.equal(_tokenAddress, shares.address)
-                    assert.equal(_amount.toString(), withdrawalBalance.toString())
-                    assert.equal(_target, user)
-                    assert.equal(_receiver, user)
-                })
-
-                it("should have requested withdrawal value equal to withdrawal request", async () => {
-                    assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, user)).toString(),
-                        withdrawalBalance.toString()
-                    )
-                })
-
-                it("should NOT allow anyone to resolve withdrawal request with insufficient shares balance with TIMEHOLDER_INSUFFICIENT_BALANCE code", async () => {
-                    const resolver = accounts[7]
-                    assert.equal(
-                        (await timeHolder.resolveWithdrawSharesRequest.call(withdrawalRegistrationId, { from: resolver, })).toNumber(),
-                        ErrorsEnum.TIMEHOLDER_INSUFFICIENT_BALANCE
-                    )
-                })
-
-                it("should allow anyone to resolve withdrawal request with OK code", async () => {
-                    // needs to approve requested amount of shares before resolving a request
-                    const resolver = miner;
-                    assert.isTrue((await shares.balanceOf(resolver)).gte(withdrawalBalance))
-                    assert.equal(
-                        (await timeHolder.resolveWithdrawSharesRequest.call(withdrawalRegistrationId, { from: resolver, })).toNumber(),
-                        ErrorsEnum.OK
-                    )
-                })
-
-                it("should allow anyone to resolve withdrawal request", async () => {
-                    // needs to approve requested amount of shares before resolving a request
                     const resolver = miner
                     const minerSharesBalance = await shares.balanceOf(resolver)
                     const userSharesBalance = await shares.balanceOf(user)
-                    const tx = await timeHolder.resolveWithdrawSharesRequest(withdrawalRegistrationId, { from: resolver, })
-                    // TODO: add event check
+                    const tx = await timeHolder.withdrawShares(shares.address, withdrawalBalance, { from: user, })
+                    
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "WithdrawShares"))[0]
+                        assert.isDefined(event)
+                        assert.equal(event.args.token, shares.address)
+                        assert.equal(event.args.who, user)
+                        assert.equal(event.args.amount, withdrawalBalance.toString())
+                        assert.equal(event.args.receiver, user)
+                    }
+
                     assert.equal(
                         (await shares.balanceOf(resolver)).toString(),
                         minerSharesBalance.sub(withdrawalBalance).toString()
@@ -348,30 +311,6 @@ contract('New version of TimeHolder', (accounts) => {
                         initialBalance.toString()
                     )
                 })
-
-                it("should have no requested withdrawal value", async () => {
-                    assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, user)).toString(),
-                        '0'
-                    )
-                })
-
-                it("should NOT have resolved withdrawal request", async () => {
-                    const [ _tokenAddress, _amount, _target, _receiver, ] = await timeHolder.checkRegisteredWithdrawRequest.call(withdrawalRegistrationId)
-                    assert.equal(_tokenAddress, utils.zeroAddress)
-                    assert.equal(_amount.toString(), '0')
-                    assert.equal(_target, utils.zeroAddress)
-                    assert.equal(_receiver, utils.zeroAddress)
-                })
-
-                it("shouldn't be able to resolve already resolved request with ", async () => {
-                    const resolver = accounts[1]
-                    assert.isTrue((await shares.balanceOf(resolver)).gte(withdrawalBalance))
-                    assert.equal(
-                        (await timeHolder.resolveWithdrawSharesRequest.call(withdrawalRegistrationId, { from: resolver, })).toNumber(),
-                        ErrorsEnum.TIMEHOLDER_NO_REGISTERED_WITHDRAWAL_FOUND
-                    )
-                })
             })
 
             context("several deposits", () => {
@@ -379,6 +318,8 @@ contract('New version of TimeHolder', (accounts) => {
                 let initialAccountBalance
 
                 before(async () => {
+                    await shares.approve(timeHolderWallet, UINT_MAX, { from: miner, })
+
                     initialBalance = await timeHolder.getDepositBalance.call(shares.address, user)
                     initialAccountBalance = await shares.balanceOf(user)
 
@@ -417,192 +358,17 @@ contract('New version of TimeHolder', (accounts) => {
                 })
             })
 
-            context("several withdrawal requests", () => {
-                let initialBalance
-                let totalDeposit
-
-                before(async () => {
-                    initialBalance = await timeHolder.getDepositBalance.call(shares.address, user)
-                    await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user, })
-                    await timeHolder.deposit(shares.address, 2*DEPOSIT_AMOUNT, { from: user, })
-                    await timeHolder.deposit(shares.address, 3*DEPOSIT_AMOUNT, { from: user, })
-                    totalDeposit = web3.toBigNumber(6*DEPOSIT_AMOUNT)
-                })
-
-                after('revert', reverter.revert);
-
-                it("where user should increase his TimeHolder balance", async () => {
-                    assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
-                        initialBalance.add(totalDeposit).toString()
-                    )
-                })
-
-                it("where miner should have increased balance of shares", async () => {
-                    assert.equal(
-                        (await shares.balanceOf(miner)).toString(),
-                        totalDeposit.toString()
-                    )
-                })
-
-                const withdrawalRequestId1 = "0xff"
-                const withdrawalRequestId2 = "0xee"
-                const withdrawalAmount1 = DEPOSIT_AMOUNT / 2
-                const withdrawalAmount2 = DEPOSIT_AMOUNT * 4
-                const totalWithdrawalAmount = withdrawalAmount1 + withdrawalAmount2
-
-                it("and user should be able to make two withdrawal requests", async () => {
-                    await timeHolder.requestWithdrawShares(withdrawalRequestId1, shares.address, withdrawalAmount1, { from: user, })
-                    await timeHolder.requestWithdrawShares(withdrawalRequestId2, shares.address, withdrawalAmount2, { from: user, })
-                    assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, user)).toString(),
-                        totalWithdrawalAmount.toString()
-                    )
-                })
-
-                it("should be able to check withdrawal requests by registration ids with requested params", async () => {
-                    {
-                        const [ _tokenAddress, _amount, _target, _receiver, ] = await timeHolder.checkRegisteredWithdrawRequest.call(withdrawalRequestId1)
-                        assert.equal(_tokenAddress, shares.address)
-                        assert.equal(_amount.toString(), withdrawalAmount1.toString())
-                        assert.equal(_target, user)
-                        assert.equal(_receiver, user)
-                    }
-                    {
-                        const [ _tokenAddress, _amount, _target, _receiver, ] = await timeHolder.checkRegisteredWithdrawRequest.call(withdrawalRequestId2)
-                        assert.equal(_tokenAddress, shares.address)
-                        assert.equal(_amount.toString(), withdrawalAmount2.toString())
-                        assert.equal(_target, user)
-                        assert.equal(_receiver, user)
-                    }
-                })
-
-                it("should allow anyone to resolve withdrawal request", async () => {
-                    // needs to approve requested amount of shares before resolving a request
-                    const resolver = miner
-                    const minerSharesBalance = await shares.balanceOf(resolver)
-                    const userSharesBalance = await shares.balanceOf(user)
-                    const tx = await timeHolder.resolveWithdrawSharesRequest(withdrawalRequestId1, { from: resolver, })
-                    assert.equal(
-                        (await shares.balanceOf(resolver)).toString(),
-                        minerSharesBalance.sub(withdrawalAmount1).toString()
-                    )
-                    assert.equal(
-                        (await shares.balanceOf(user)).toString(),
-                        userSharesBalance.add(withdrawalAmount1).toString()
-                    )
-                    assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
-                        totalDeposit.sub(withdrawalAmount1).toString()
-                    )
-                })
-
-                it("should NOT be able to overflow withdraw amount when some part of balance is already requested", async () => {
-                    const withdrawalRequestId3 = "0xdd"
-                    assert.equal(
-                        (await timeHolder.requestWithdrawShares.call(withdrawalRequestId3, shares.address, withdrawalAmount2, { from: user, })).toNumber(),
-                        ErrorsEnum.TIMEHOLDER_WITHDRAW_LIMIT_EXCEEDED
-                    )
-                })
-
-                it("should allow anyone to resolve second withdrawal request", async () => {
-                    // needs to approve requested amount of shares before resolving a request
-                    const resolver = miner
-                    const minerSharesBalance = await shares.balanceOf(resolver)
-                    const userSharesBalance = await shares.balanceOf(user)
-                    const tx = await timeHolder.resolveWithdrawSharesRequest(withdrawalRequestId2, { from: resolver, })
-                    assert.equal(
-                        (await shares.balanceOf(resolver)).toString(),
-                        minerSharesBalance.sub(withdrawalAmount2).toString()
-                    )
-                    assert.equal(
-                        (await shares.balanceOf(user)).toString(),
-                        userSharesBalance.add(withdrawalAmount2).toString()
-                    )
-                    assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
-                        totalDeposit.sub(totalWithdrawalAmount).toString()
-                    )
-                })
-            })
-
-            context("cancelling request", () => {
-                let initialBalance
-                let totalDeposit
-
-                const withdrawalRequestId1 = "0xff"
-                const withdrawalRequestId2 = "0xee"
-                const withdrawalAmount1 = DEPOSIT_AMOUNT / 2
-                const withdrawalAmount2 = DEPOSIT_AMOUNT * 4
-                const totalWithdrawalAmount = withdrawalAmount1 + withdrawalAmount2
-
-                before(async () => {
-                    initialBalance = await timeHolder.getDepositBalance.call(shares.address, user)
-                    totalDeposit = web3.toBigNumber(10*DEPOSIT_AMOUNT)
-                    await timeHolder.deposit(shares.address, totalDeposit, { from: user, })
-                    await timeHolder.requestWithdrawShares(withdrawalRequestId1, shares.address, withdrawalAmount1, { from: user, })
-                    await timeHolder.requestWithdrawShares(withdrawalRequestId2, shares.address, withdrawalAmount2, { from: user, })
-                })
-
-                after('revert', reverter.revert);
-
-                it("should have total withdrawal amount for a user", async () => {
-                    assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, user)).toString(),
-                        totalWithdrawalAmount.toString()
-                    )
-                })
-
-                it("should THROW and NOT be allowed for a user who didn't request the withdrawal", async () => {
-                    const stranger = accounts[3]
-                    await timeHolder.cancelWithdrawSharesRequest.call(withdrawalRequestId1, { from: stranger, }).then(assert.fail, () => true)
-                })
-
-                it("should be allowed for a user who requested the withdrawal with OK code", async () => {
-                    assert.equal(
-                        (await timeHolder.cancelWithdrawSharesRequest.call(withdrawalRequestId1, { from: user, })).toNumber(),
-                        ErrorsEnum.OK
-                    )
-                })
-
-                it("should be allowed for a user who requested the withdrawal", async () => {
-                    const tx = await timeHolder.cancelWithdrawSharesRequest(withdrawalRequestId1, { from: user, })
-                    // TODO: add event check
-                })
-
-                it("should NOT have the cancelled withdrawal afterwards", async () => {
-                    const [ _tokenAddress, _amount, _target, _receiver, ] = await timeHolder.checkRegisteredWithdrawRequest.call(withdrawalRequestId1)
-                    assert.equal(_tokenAddress, utils.zeroAddress)
-                    assert.equal(_amount.toString(), '0')
-                    assert.equal(_target, utils.zeroAddress)
-                    assert.equal(_receiver, utils.zeroAddress)
-                })
-
-                it("should have the requested withdraw amount changed afterwards", async () => {
-                    assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, user)).toString(),
-                        (totalWithdrawalAmount - withdrawalAmount1).toString()
-                    )
-                })
-
-                it("should NOT change user's shares balance", async () => {
-                    assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
-                        initialBalance.add(totalDeposit).toString()
-                    )
-                })
-            })
-
-            context("emergency request", () => {
+            context("emergency withdrawal", () => {
                 const depositor = accounts[1]
                 const contractOwner = accounts[0]
-                const withdrawalRequestId1 = "0xff"
                 const withdrawalAmount1 = DEPOSIT_AMOUNT / 2
 
                 let initialBalance
                 let totalDeposit
 
                 before(async () => {
+                    await shares.approve(timeHolderWallet, UINT_MAX, { from: miner, })
+
                     initialBalance = await timeHolder.getDepositBalance.call(shares.address, depositor)
                     totalDeposit = web3.toBigNumber(10*DEPOSIT_AMOUNT)
                     await timeHolder.deposit(shares.address, totalDeposit, { from: depositor, })
@@ -613,59 +379,35 @@ contract('New version of TimeHolder', (accounts) => {
                 it("should NOT allow to force request withdrawal from non contract owner with UNAUTHORIZED code", async () => {
                     const stranger = accounts[3]
                     assert.equal(
-                        (await timeHolder.forceRequestWithdrawShares.call(withdrawalRequestId1, depositor, shares.address, withdrawalAmount1, { from: stranger, })).toNumber(),
+                        (await timeHolder.forceWithdrawShares.call(depositor, shares.address, withdrawalAmount1, { from: stranger, })).toNumber(),
                         ErrorsEnum.UNAUTHORIZED
                     )
                 })
 
                 it("should allow force request withdrawal from contract owner with OK code", async () => {
                     assert.equal(
-                        (await timeHolder.forceRequestWithdrawShares.call(withdrawalRequestId1, depositor, shares.address, withdrawalAmount1, { from: contractOwner, })).toNumber(),
+                        (await timeHolder.forceWithdrawShares.call(depositor, shares.address, withdrawalAmount1, { from: contractOwner, })).toNumber(),
                         ErrorsEnum.OK
                     )
                 })
 
-                it("should allow force request withdrawal from contract owner", async () => {
-                    const tx = await timeHolder.forceRequestWithdrawShares(withdrawalRequestId1, depositor, shares.address, withdrawalAmount1, { from: contractOwner, })
-                    // TODO: add event check
-                })
-
-                it("should have withdrawal amount for a user", async () => {
-                    assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, depositor)).toString(),
-                        withdrawalAmount1.toString()
-                    )
-                })
-
-                it("should have NO withdrawal amount for contract owner", async () => {
-                    assert.equal(
-                        (await timeHolder.getRequestedWithdrawAmount.call(shares.address, contractOwner)).toString(),
-                        '0'
-                    )
-                })
-
-                it("should NOT allow to force request withdrawal with the same registration ID with TIMEHOLDER_REGISTRATION_ID_EXISTS code", async () => {
-                    assert.equal(
-                        (await timeHolder.forceRequestWithdrawShares.call(withdrawalRequestId1, depositor, shares.address, withdrawalAmount1, { from: contractOwner, })).toNumber(),
-                        ErrorsEnum.TIMEHOLDER_REGISTRATION_ID_EXISTS
-                    )
-                })
-
-                it("should be possible to resolve a withdrawal request by anyone with OK code", async () => {
+                it("should allow force withdrawal from contract owner", async () => {
                     const resolver = miner
-                    assert.equal(
-                        (await timeHolder.resolveWithdrawSharesRequest.call(withdrawalRequestId1, { from: resolver, })).toNumber(),
-                        ErrorsEnum.OK
-                    )
-                })
-
-                it("should be possible to resolve a withdrawal request by anyone", async () => {
-                    const resolver = miner
+                    const minerSharesBalance = await shares.balanceOf(resolver)
                     const initialOwnerSharesBalance = await shares.balanceOf(contractOwner)
                     const initialOwnerDepositBalance = await timeHolder.getDepositBalance(shares.address, contractOwner)
                     const initialUserSharesBalance = await shares.balanceOf(depositor)
-                    const tx = timeHolder.resolveWithdrawSharesRequest(withdrawalRequestId1, { from: resolver, })
-                    // TODO: add event check
+                    const tx = await timeHolder.forceWithdrawShares(depositor, shares.address, withdrawalAmount1, { from: contractOwner, })
+                    
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "WithdrawShares"))[0]
+                        assert.isDefined(event)
+                        assert.equal(event.args.token, shares.address)
+                        assert.equal(event.args.who, depositor)
+                        assert.equal(event.args.amount, withdrawalAmount1.toString())
+                        assert.equal(event.args.receiver, contractOwner)
+                    }
+
                     assert.equal(
                         (await shares.balanceOf(contractOwner)).toString(),
                         initialOwnerSharesBalance.add(withdrawalAmount1).toString()
@@ -673,6 +415,10 @@ contract('New version of TimeHolder', (accounts) => {
                     assert.equal(
                         (await shares.balanceOf(depositor)).toString(),
                         initialUserSharesBalance.toString()
+                    )
+                    assert.equal(
+                        (await shares.balanceOf(resolver)).toString(),
+                        minerSharesBalance.sub(withdrawalAmount1).toString()
                     )
                     assert.equal(
                         (await timeHolder.getDepositBalance(shares.address, contractOwner)).toString(),
@@ -683,10 +429,141 @@ contract('New version of TimeHolder', (accounts) => {
                         initialBalance.add(totalDeposit).sub(withdrawalAmount1).toString()
                     )
                 })
-
-
             })
 
+            context("limited allowance", () => {
+
+                before(async () => {
+                    await shares.approve(timeHolderWallet, DEPOSIT_AMOUNT, { from: miner, })
+
+                    await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user })
+                    await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user })
+                })
+
+                after('revert', reverter.revert)
+
+                it("should NOT allow to withdraw more than allowed with TIMEHOLDER_TRANSFER_FAILED code", async () => {
+                    assert.equal(
+                        (await timeHolder.withdrawShares.call(shares.address, DEPOSIT_AMOUNT + 1, { from: user, })).toNumber(),
+                        ErrorsEnum.TIMEHOLDER_TRANSFER_FAILED
+                    )
+                })
+
+                it("should allow to withdraw equal to allowed sum with OK code", async () => {
+                    assert.equal(
+                        (await timeHolder.withdrawShares.call(shares.address, DEPOSIT_AMOUNT, { from: user, })).toNumber(),
+                        ErrorsEnum.OK
+                    )
+                })
+
+                it("should allow to withdraw equal to allowed sum", async () => {
+                    await timeHolder.withdrawShares(shares.address, DEPOSIT_AMOUNT, { from: user, })
+
+                    assert.equal(
+                        (await shares.allowance(miner, timeHolderWallet)).toString(),
+                        '0'
+                    )
+                })
+
+                it("should NOT allow to withdraw deposited than allowed with TIMEHOLDER_TRANSFER_FAILED code", async () => {
+                    assert.equal(
+                        (await timeHolder.withdrawShares.call(shares.address, DEPOSIT_AMOUNT, { from: user, })).toNumber(),
+                        ErrorsEnum.TIMEHOLDER_TRANSFER_FAILED
+                    )
+                })
+            })
+
+            context("unlimited allowance", () => {
+                const HALF_OF_UINT_MAX = UINT_MAX.div(2).truncated()
+
+                before(async () => {
+                    await shares.approve(timeHolderWallet, 0, { from: user, })
+                    await shares.approve(timeHolderWallet, UINT_MAX, { from: miner, })
+
+                    let platform = await ChronoBankPlatform.deployed()
+                    await platform.reissueAsset(await shares.symbol(), HALF_OF_UINT_MAX)
+                    await shares.transfer(user, HALF_OF_UINT_MAX)
+
+                    await shares.approve(timeHolderWallet, HALF_OF_UINT_MAX, { from: user, })
+                    await timeHolder.deposit(shares.address, HALF_OF_UINT_MAX, { from: user })
+                })
+
+                after('revert', reverter.revert)
+
+                it("should allow to withdraw half of max amount of total token from TimeHolder with OK code", async () => {
+                    assert.equal(
+                        (await timeHolder.withdrawShares.call(shares.address, HALF_OF_UINT_MAX, { from: user, })).toNumber(),
+                        ErrorsEnum.OK
+                    )
+                })
+
+                it("should allow to withdraw equal to deposited amount", async () => {
+                    await timeHolder.withdrawShares(shares.address, HALF_OF_UINT_MAX, { from: user, })
+
+                    assert.equal(
+                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
+                        '0'
+                    )
+                    assert.isTrue(
+                        (await shares.allowance(miner, timeHolderWallet)).eq(UINT_MAX)
+                    )
+                })
+
+                it("should allow to deposit the same value (HALF_OF_UINT_MAX) for the second time", async () => {
+                    await shares.approve(timeHolderWallet, HALF_OF_UINT_MAX, { from: user, })
+                    await timeHolder.deposit(shares.address, HALF_OF_UINT_MAX, { from: user })
+                    
+                    assert.isTrue(
+                        (await timeHolder.getDepositBalance.call(shares.address, user)).eq(HALF_OF_UINT_MAX)
+                    )
+                })
+                
+                it("should allow to withdraw (2nd time) half of max amount of total token from TimeHolder with OK code", async () => {
+                    assert.equal(
+                        (await timeHolder.withdrawShares.call(shares.address, HALF_OF_UINT_MAX, { from: user, })).toNumber(),
+                        ErrorsEnum.OK
+                    )
+                })
+
+                it("should allow to withdraw (3rd time) equal to deposited amount", async () => {
+                    await timeHolder.withdrawShares(shares.address, HALF_OF_UINT_MAX, { from: user, })
+
+                    assert.equal(
+                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
+                        '0'
+                    )
+                    assert.isTrue(
+                        (await shares.allowance(miner, timeHolderWallet)).eq(UINT_MAX)
+                    )
+                })
+
+                it("should allow to deposit the same value (HALF_OF_UINT_MAX) for the third time", async () => {
+                    await shares.approve(timeHolderWallet, HALF_OF_UINT_MAX, { from: user, })
+                    await timeHolder.deposit(shares.address, HALF_OF_UINT_MAX, { from: user })
+                    assert.isTrue(
+                        (await timeHolder.getDepositBalance.call(shares.address, user)).eq(HALF_OF_UINT_MAX)
+                    )
+                })
+                
+                it("should allow to withdraw (3nd time) half of max amount of total token from TimeHolder with OK code", async () => {
+                    assert.equal(
+                        (await timeHolder.withdrawShares.call(shares.address, HALF_OF_UINT_MAX, { from: user, })).toNumber(),
+                        ErrorsEnum.OK
+                    )
+                })
+
+                it("should allow to withdraw (3rd time) equal to deposited amount", async () => {
+                    await timeHolder.withdrawShares(shares.address, HALF_OF_UINT_MAX, { from: user, })
+
+                    assert.equal(
+                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
+                        '0'
+                    )
+                    assert.isTrue(
+                        (await shares.allowance(miner, timeHolderWallet)).eq(UINT_MAX)
+                    )
+                })
+            })
         })
     })
 });
