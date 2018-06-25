@@ -52,6 +52,8 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     uint constant CHRONOBANK_PLATFORM_ASSET_IS_NOT_ISSUED = CHRONOBANK_PLATFORM_SCOPE + 13;
     uint constant CHRONOBANK_PLATFORM_INVALID_INVOCATION = CHRONOBANK_PLATFORM_SCOPE + 17;
 
+    uint constant MAX_ALLOWANCE = 2**256 - 1;
+
     /// @title Structure of a particular asset.
     struct Asset {
         uint owner;                       // Asset's owner id.
@@ -419,15 +421,17 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         if (_balanceOf(_fromId, _symbol) < _value) {
             return _error(CHRONOBANK_PLATFORM_INSUFFICIENT_BALANCE);
         }
+
+        uint _holderAllowance = _allowance(_fromId, _senderId, _symbol);
         // Should have enough allowance.
-        if (_fromId != _senderId && _allowance(_fromId, _senderId, _symbol) < _value) {
+        if (_fromId != _senderId && _holderAllowance < _value) {
             return _error(CHRONOBANK_PLATFORM_NOT_ENOUGH_ALLOWANCE);
         }
 
         _transferDirect(_fromId, _toId, _value, _symbol);
-        // Adjust allowance.
-        if (_fromId != _senderId) {
-            assets[_symbol].wallets[_fromId].allowance[_senderId] = assets[_symbol].wallets[_fromId].allowance[_senderId].sub(_value);
+        // Adjust allowance. Use MAX_ALLOWANCE to provide unlimited allowance
+        if (_fromId != _senderId && _holderAllowance != MAX_ALLOWANCE) {
+            assets[_symbol].wallets[_fromId].allowance[_senderId] = _holderAllowance.sub(_value);
         }
         // Internal Out Of Gas/Throw: revert this transaction too;
         // Call Stack Depth Limit reached: n/a after HF 4;
