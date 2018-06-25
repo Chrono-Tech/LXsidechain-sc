@@ -28,9 +28,6 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     uint public constant ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE = 12006;
     uint public constant ERROR_TIMEHOLDER_LIMIT_EXCEEDED = 12007;
     uint public constant ERROR_TIMEHOLDER_MINER_REQUIRED = 12008;
-    uint public constant ERROR_TIMEHOLDER_WITHDRAW_LIMIT_EXCEEDED = 12009;
-    uint public constant ERROR_TIMEHOLDER_REGISTRATION_ID_EXISTS = 12010;
-    uint public constant ERROR_TIMEHOLDER_NO_REGISTERED_WITHDRAWAL_FOUND = 12011;
 
     /** Storage keys */
 
@@ -59,28 +56,6 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         if (store.get(primaryMiner) == 0x0) {
             assembly {
                 mstore(0, 12008) // ERROR_TIMEHOLDER_MINER_REQUIRED
-                return(0, 32)
-            }
-        }
-        _;
-    }
-
-    /// @dev Guards from accessing with registered ID key
-    modifier onlyNotRegisteredWithdrawal(bytes32 _registrationId) {
-        if (getDepositStorage().isWithdrawRequestRegistered(_registrationId)) {
-            assembly {
-                mstore(0, 12010) // ERROR_TIMEHOLDER_REGISTRATION_ID_EXISTS
-                return(0, 32)
-            }
-        }
-        _;
-    }
-
-    /// @dev Guards from accessing with not registered ID key
-    modifier onlyRegisteredWithdrawal(bytes32 _registrationId) {
-        if (!getDepositStorage().isWithdrawRequestRegistered(_registrationId)) {
-            assembly {
-                mstore(0, 12011) // ERROR_TIMEHOLDER_NO_REGISTERED_WITHDRAWAL_FOUND
                 return(0, 32)
             }
         }
@@ -151,34 +126,6 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     returns (uint _balance)
     {
         return getDepositStorage().depositBalance(_token, _depositor);
-    }
-
-    function getRequestedWithdrawAmount(address _token, address _depositor)
-    public
-    view
-    returns (uint)
-    {
-        return getDepositStorage().requestedWithdrawAmount(_token, _depositor);
-    }
-
-    /// @notice Checks state for registered withdraw request
-    /// @param _registrationId unique identifier; was created on 'requestWithdrawShares' step
-    /// @return {
-    ///     "_token": "token address",
-    ///     "_amount": "amount of tokens that were registered to be withdrawn",
-    ///     "_target": "holder address"
-    ///     "_receiver": "receiver address"
-    /// }
-    function checkRegisteredWithdrawRequest(bytes32 _registrationId)
-    public
-    view
-    returns (
-        address _token,
-        uint _amount,
-        address _target,
-        address _receiver)
-    {
-        return getDepositStorage().getRegisteredWithdrawRequest(_registrationId);
     }
 
     function getPrimaryMiner()
@@ -303,95 +250,30 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     /// @param _token token symbol to withdraw from.
     /// @param _amount amount of shares to withdraw.
     /// @return resultCode result code of an operation.
-    function requestWithdrawShares(bytes32 _registrationId, address _token, uint _amount)
+    function withdrawShares(address _token, uint _amount)
     public
-    onlyNotRegisteredWithdrawal(_registrationId)
     returns (uint resultCode)
     {
-        resultCode = _registerWithdrawSharesRequest(_registrationId, _token, _amount, msg.sender, msg.sender);
+        resultCode = _withdrawShares(_token, msg.sender, msg.sender, _amount);
         if (resultCode != OK) {
             return _emitError(resultCode);
         }
 
-        _emitWithdrawalRequested(_registrationId, _token, _amount, msg.sender, msg.sender);
+        _emitWithdrawShares(_token, msg.sender, _amount, msg.sender);
     }
 
     /// @notice Force Withdraw Shares
-    /// Only CBE members are permited to call this function.
-    /// Multisig concensus is required to withdraw shares from shareholder "_from"
-    /// and send it to "_to".
-    function forceRequestWithdrawShares(bytes32 _registrationId, address _from, address _token, uint _amount)
-    public
+    /// Only contract owner is permited to call this function.
+    function forceWithdrawShares(address _from, address _token, uint _amount)
     onlyContractOwner
-    onlyNotRegisteredWithdrawal(_registrationId)
-    returns (uint resultCode)
-    {
-        resultCode = _registerWithdrawSharesRequest(_registrationId, _token, _amount, _from, contractOwner);
+    public
+    returns (uint resultCode) {
+        resultCode = _withdrawShares(_token, _from, contractOwner, _amount);
         if (resultCode != OK) {
             return _emitError(resultCode);
         }
 
-        _emitWithdrawalRequested(_registrationId, _token, _amount, _from, contractOwner);
-    }
-
-    /// @notice Unlocks shares in TimeHolder and deposit them back to user's account.
-    /// Second of two-steps operation of unlocking locked tokens.
-    /// Could be called by anyone: tokens will be transferred only to an actual receiver.
-    /// To perform 'unlock' an amount of locked tokens on this very moment should be greater
-    /// or equal to registered amount of tokens to unlock.
-    /// @param _registrationId unique identifier; was created on 'registerUnlockShares' step
-    /// @return result code of an operation
-    function resolveWithdrawSharesRequest(bytes32 _registrationId)
-    public
-    onlyRegisteredWithdrawal(_registrationId)
-    returns (uint)
-    {
-        address _token;
-        uint _amount;
-        address _target;
-        address _receiver;
-        (_token, _amount, _target, _receiver) = getDepositStorage().getRegisteredWithdrawRequest(_registrationId);
-
-        if (ERC20(_token).allowance(msg.sender, address(this)) < _amount) {
-            return _emitError(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
-        }
-
-        uint _depositBalance = getDepositBalance(_token, _target);
-
-        if (!ERC20(_token).transferFrom(msg.sender, _receiver, _amount)) {
-            return _emitError(ERROR_TIMEHOLDER_TRANSFER_FAILED);
-        }
-
-        getDepositStorage().withdrawShares(_token, _target, _amount, _depositBalance);
-        getDepositStorage().disposeWithdrawRequest(_registrationId);
-
-        _emitWithdrawalRequestResolved(_registrationId, _token, _amount, _target, _receiver);
-        return OK;
-    }
-
-    /// @notice Unregisters (declines) previously registered unlock operation.
-    /// After unregistration no one could perform 'unlockShares'.
-    /// Registration identifier will be released and will be available to 'registerUnlockshares'.
-    /// Should be called only by specific role (middleware actor or root user).
-    /// @param _registrationId unique identifier; was created on 'registerUnlockShares' step
-    /// @return result code of an operation
-    function cancelWithdrawSharesRequest(bytes32 _registrationId)
-    public
-    onlyRegisteredWithdrawal(_registrationId)
-    returns (uint)
-    {
-        address _token;
-        uint _amount;
-        address _target;
-        address _receiver;
-        (_token, _amount, _target, _receiver) = getDepositStorage().getRegisteredWithdrawRequest(_registrationId);
-
-        require(msg.sender == _target, "Only the user who requested this withdrawal");
-
-        getDepositStorage().disposeWithdrawRequest(_registrationId);
-
-        _emitWithdrawalRequestCancelled(_registrationId);
-        return OK;
+        _emitWithdrawShares(_token, _from, _amount, contractOwner);
     }
 
     /// @notice Gets an associated wallet for the time holder
@@ -454,38 +336,38 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         return getDepositStorage().getSharesContract();
     }
 
-    /// @notice Registers receiver to allow to unlock locked tokens.
-    /// First of two-steps operation of unlocking tokens.
-    /// Should be called only by specific role (middleware actor or root user).
-    /// Function execution protected by a multisignature.
-    /// @param _registrationId unique identifier to associate this unlock operation
-    /// @param _token token address which was previously locked for some amount
-    /// @param _amount amount of tokens that is supposed to be unlocked
-    /// @param _from user whose deposites will be withdrawn
-    /// @param _to user who are going to receive locked tokens
-    /// @return _resultCode. result code of an operation
-    function _registerWithdrawSharesRequest(
-        bytes32 _registrationId,
+    /// @notice Withdraws deposited amount of tokens from account to a receiver address.
+    /// Emits its own errorCodes if some will be encountered.
+    ///
+    /// @param _account an address that have deposited tokens
+    /// @param _receiver an address that will receive tokens from _account
+    /// @param _amount amount of tokens to withdraw to the _receiver
+    ///
+    /// @return result code of the operation
+    function _withdrawShares(
         address _token,
-        uint _amount,
-        address _from,
-        address _to
+        address _account,
+        address _receiver,
+        uint _amount
     )
-    private
-    returns (uint _resultCode)
+    onlyWithMiner
+    internal
+    returns (uint)
     {
-        require(_token != 0x0);
-        require(_from != 0x0);
-        require(_to != 0x0);
-        require(_amount != 0);
+        require(_token != 0x0, "No token is specified");
 
-        uint _depositBalance = getDepositBalance(_token, _from);
-        uint _requestedBalance = getRequestedWithdrawAmount(_token, _from);
-        if (_amount > _depositBalance.sub(_requestedBalance)) {
-            return _emitError(ERROR_TIMEHOLDER_WITHDRAW_LIMIT_EXCEEDED);
+        uint _depositBalance = getDepositBalance(_token, _account);
+        if (_amount > _depositBalance) {
+            return _emitError(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
         }
 
-        getDepositStorage().registerWithdrawRequest(_registrationId, _token, _amount, _from, _to);
+        if (!wallet().deposit(_token, store.get(primaryMiner), _amount)) {
+            return _emitError(ERROR_TIMEHOLDER_TRANSFER_FAILED);
+        }
+
+        require(wallet().withdraw(_token, _receiver, _amount));
+
+        getDepositStorage().withdrawShares(_token, _account, _amount, _depositBalance);
 
         return OK;
     }
@@ -506,34 +388,6 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
     /** Event emitting */
 
-    function _emitWithdrawalRequested(
-        bytes32 requestId,
-        address token,
-        uint amount,
-        address requester,
-        address recepient)
-    private
-    {
-        emitter().emitWithdrawalRequested(requestId, token, amount, requester, recepient);
-    }
-
-    function _emitWithdrawalRequestResolved(
-        bytes32 requestId,
-        address token,
-        uint amount,
-        address requester,
-        address recepient)
-    private
-    {
-        emitter().emitWithdrawalRequestResolved(requestId, token, amount, requester, recepient);
-    }
-
-    function _emitWithdrawalRequestCancelled(bytes32 requestId)
-    private
-    {
-        emitter().emitWithdrawalRequestCancelled(requestId);
-    }
-
     function _emitPrimaryMinerChanged(address from, address to)
     private
     {
@@ -550,6 +404,12 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     private
     {
         emitter().emitDeposit(_token, _who, _amount);
+    }
+
+    function _emitWithdrawShares(address _token, address _who, uint _amount, address _receiver) 
+    private
+    {
+        emitter().emitWithdrawShares(_token, _who, _amount, _receiver);
     }
 
     function _emitSharesWhiteListAdded(address _token, uint _limit)

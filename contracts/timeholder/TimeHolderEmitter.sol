@@ -16,12 +16,6 @@ import "../event/MultiEventsHistoryAdapter.sol";
 /// All the functions is meant to be called using delegatecall.
 contract TimeHolderEmitter is MultiEventsHistoryAdapter {
 
-    event WithdrawalRequested(bytes32 requestId, address token, uint amount, address requester, address recepient);
-
-    event WithdrawalRequestResolved(bytes32 requestId, address token, uint amount, address requester, address recepient);
-
-    event WithdrawalRequestCancelled(bytes32 requestId);
-
     event MinerDeposited(address token, uint amount, address miner, address sender);
 
     event PrimaryMinerChanged(address from, address to);
@@ -43,24 +37,6 @@ contract TimeHolderEmitter is MultiEventsHistoryAdapter {
 
     /* Emitting events */
 
-    function emitWithdrawalRequested(bytes32 requestId, address token, uint amount, address requester, address recepient)
-    public
-    {
-        emit WithdrawalRequested(requestId, token, amount, requester, recepient);
-    }
-
-    function emitWithdrawalRequestResolved(bytes32 requestId, address token, uint amount, address requester, address recepient)
-    public
-    {
-        emit WithdrawalRequestResolved(requestId, token, amount, requester, recepient);
-    }
-
-    function emitWithdrawalRequestCancelled(bytes32 requestId)
-    public
-    {
-        emit WithdrawalRequestCancelled(requestId);
-    }
-
     function emitPrimaryMinerChanged(address from, address to)
     public
     {
@@ -77,6 +53,12 @@ contract TimeHolderEmitter is MultiEventsHistoryAdapter {
     public
     {
         emit Deposit(token, who, amount);
+    }
+
+    function emitWithdrawShares(address token, address who, uint amount, address receiver) 
+    public
+    {
+        emit WithdrawShares(token, who, amount, receiver);
     }
 
     function emitSharesWhiteListChanged(address token, uint limit, bool isAdded)

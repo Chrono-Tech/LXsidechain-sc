@@ -114,9 +114,6 @@ const errorsLibrary = {
     TIMEHOLDER_INSUFFICIENT_BALANCE: errorScope.timeholder + 6,
     TIMEHOLDER_LIMIT_EXCEEDED: errorScope.timeholder + 7,
     TIMEHOLDER_MINER_REQUIRED: errorScope.timeholder + 8,
-    TIMEHOLDER_WITHDRAW_LIMIT_EXCEEDED: errorScope.timeholder + 9,
-    TIMEHOLDER_REGISTRATION_ID_EXISTS: errorScope.timeholder + 10,
-    TIMEHOLDER_NO_REGISTERED_WITHDRAWAL_FOUND: errorScope.timeholder + 11,
 
     ERCMANAGER_INVALID_INVOCATION: errorScope.ercmanager + 0,
     ERCMANAGER_INVALID_STATE: errorScope.ercmanager + 1,

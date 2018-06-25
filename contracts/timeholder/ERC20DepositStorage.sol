@@ -38,17 +38,6 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     StorageInterface.AddressesSet private sharesTokenStorage_v2;
     StorageInterface.AddressUIntMapping private limitsStorage_v2;
 
-    /// @dev Total amount of locked balances of a token
-    StorageInterface.Bytes32UIntMapping private overallWithdrawBalancesStorage_v2; // (composite key => locked amount)
-    /// @dev Requested amount of tokens to withdraw
-    StorageInterface.Bytes32UIntMapping private registeredWithdrawBalancesStorage_v2; // (registration ID => required withdraw amount)
-    /// @dev Requested token address to withdraw
-    StorageInterface.Bytes32AddressMapping private registeredWithdrawTokenStorage_v2; // (registration ID => token address)
-    /// @dev Requested recepient to transfer withdrawn tokens
-    StorageInterface.Bytes32AddressMapping private registeredWithdrawReceiverStorage_v2; // (registration ID => recepient address)
-    /// @dev Requested recepient to withdraw tokens
-    StorageInterface.Bytes32AddressMapping private registeredWithdrawTargetStorage_v2; // (registration ID => target address)
-
     /// @dev Restricts access to functions only for TimeHolder sender
     modifier onlyTimeHolder {
         bool permitted = store.store.manager().isAllowed(msg.sender, store.crate);
@@ -75,12 +64,6 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         totalSharesStorage_v2.init("totalSharesStorage_v2");
         sharesTokenStorage_v2.init("sharesContractsStorage_v2");
         limitsStorage_v2.init("limitAmountsStorage_v2");
-
-        overallWithdrawBalancesStorage_v2.init("overallWithdrawBalances_v2");
-        registeredWithdrawBalancesStorage_v2.init("withdrawBalances_v2");
-        registeredWithdrawTokenStorage_v2.init("withdrawToken_v2");
-        registeredWithdrawReceiverStorage_v2.init("withdrawReceiver_v2");
-        registeredWithdrawTargetStorage_v2.init("withdrawTarget_v2");
     }
 
     /// @notice Sets shares token address as default token address. Used for supporting TIME tokens
@@ -149,49 +132,6 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         }
 
         return _depositBalance(bytes32(_depositor));
-    }
-
-    function requestedWithdrawAmount(address _token, address _depositor)
-    public
-    view
-    returns (uint _balance)
-    {
-        bytes32 _key = keccak256(_token, _depositor);
-        return _requestedWithdrawBalance(_key);
-    }
-
-    /// @notice Checks if provided withdraw was requested
-    /// @param _registrationId unique identifier for withdraw two-step operation
-    function isWithdrawRequestRegistered(bytes32 _registrationId)
-    public
-    view
-    returns (bool)
-    {
-        return store.get(registeredWithdrawBalancesStorage_v2, _registrationId) != 0;
-    }
-
-    /// @notice Gets details about requested withdraw
-    /// @param _registrationId unique identifier for withdraw two-step operation
-    /// @return {
-    ///     "_token": "token address",
-    ///     "_amount": "amount of tokens that were locked",
-    ///     "_receiver": "holder address"
-    /// }
-    function getRegisteredWithdrawRequest(bytes32 _registrationId)
-    public
-    view
-    returns (
-        address _token,
-        uint _amount,
-        address _target,
-        address _receiver)
-    {
-        return (
-            store.get(registeredWithdrawTokenStorage_v2, _registrationId),
-            store.get(registeredWithdrawBalancesStorage_v2, _registrationId),
-            store.get(registeredWithdrawTargetStorage_v2, _registrationId),
-            store.get(registeredWithdrawReceiverStorage_v2, _registrationId)
-        );
     }
 
     /// @notice Deposits for a _target for provided _amount of specified tokens
@@ -267,50 +207,6 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         }
     }
 
-    /// @notice Registers a request for withdraw operation
-    /// @dev Allowed only for TimeHolder call
-    /// @param _registrationId unique identifier to associate this withdraw operation
-    /// @param _token token address which was previously locked for some amount
-    /// @param _amount amount of tokens that is supposed to be withdrawn
-    /// @param _receiver user who will receive locked tokens
-    function registerWithdrawRequest(
-        bytes32 _registrationId,
-        address _token,
-        uint _amount,
-        address _target,
-        address _receiver
-    )
-    public
-    onlyTimeHolder
-    {
-        bytes32 _key = keccak256(_token, _target);
-        uint _requestedWithdrawBalance = store.get(overallWithdrawBalancesStorage_v2, _key);
-        store.set(overallWithdrawBalancesStorage_v2, _key, _requestedWithdrawBalance.add(_amount));
-        store.set(registeredWithdrawTokenStorage_v2, _registrationId, _token);
-        store.set(registeredWithdrawBalancesStorage_v2, _registrationId, _amount);
-        store.set(registeredWithdrawTargetStorage_v2, _registrationId, _target);
-        store.set(registeredWithdrawReceiverStorage_v2, _registrationId, _receiver);
-    }
-
-    /// @notice Withdraws token for requested withdraw operation. Withdrawed tokens are deposited
-    /// right away to a receiver address.
-    /// @dev Allowed only for TimeHolder call
-    /// @param _registrationId unique identifier to associate this withdraw operation
-    function disposeWithdrawRequest(bytes32 _registrationId)
-    public
-    onlyTimeHolder
-    {
-        address _token = store.get(registeredWithdrawTokenStorage_v2, _registrationId);
-        uint _amount = store.get(registeredWithdrawBalancesStorage_v2, _registrationId);
-        address _target = store.get(registeredWithdrawTargetStorage_v2, _registrationId);
-
-        bytes32 _key = keccak256(_token, _target);
-        uint _requestedWithdrawBalance = store.get(overallWithdrawBalancesStorage_v2, _key);
-        store.set(overallWithdrawBalancesStorage_v2, _key, _requestedWithdrawBalance.sub(_amount));
-
-        _removeRegisteredWithdrawRequest(_registrationId);
-    }
-
     /// @dev Iterates through deposits and calculates a sum
     function _depositBalance(bytes32 _key)
     private
@@ -322,14 +218,6 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
             uint _cur_amount = uint(store.get(amounts_v2, _key, bytes32(store.getNextWithIterator(deposits, iterator))));
             _balance = _balance.add(_cur_amount);
         }
-    }
-
-    function _requestedWithdrawBalance(bytes32 _key)
-    private
-    view
-    returns (uint)
-    {
-        return store.get(overallWithdrawBalancesStorage_v2, _key);
     }
 
     /// @dev Saves deposit data with provided key
@@ -364,7 +252,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
                 break;
             }
         }
-    }
+    } 
 
     /// @dev Withdraws shares from one of made deposits.
     ///
@@ -389,14 +277,5 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
 
         store.remove(deposits, _key, _id);
         return (_depositsLeft.sub(1), _amount.sub(_cur_amount));
-    }
-
-    function _removeRegisteredWithdrawRequest(bytes32 _registrationId)
-    private
-    {
-        store.set(registeredWithdrawTokenStorage_v2, _registrationId, 0x0);
-        store.set(registeredWithdrawBalancesStorage_v2, _registrationId, 0);
-        store.set(registeredWithdrawTargetStorage_v2, _registrationId, 0x0);
-        store.set(registeredWithdrawReceiverStorage_v2, _registrationId, 0x0);
     }
 }
