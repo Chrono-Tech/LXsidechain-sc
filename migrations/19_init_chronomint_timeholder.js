@@ -12,7 +12,7 @@ module.exports = (deployer, networks, accounts) => {
 		const TIME_SYMBOL = 'TIME'
 
 		let MINER_ADDRESS
-		if (networks == 'development') {
+		if (networks === 'development') {
 			MINER_ADDRESS = accounts[9] // TODO: setup for other networks separatly
 		}
 
@@ -30,7 +30,9 @@ module.exports = (deployer, networks, accounts) => {
 
 		if (MINER_ADDRESS !== undefined) {
 			await timeHolder.setPrimaryMiner(MINER_ADDRESS)
+		}
 
+		if (networks === 'development') {
 			let time = ChronoBankAssetProxy.at(timeAddress)
 			await time.approve(timeHolder.address, web3.toBigNumber(2).pow(255), {from:MINER_ADDRESS});
 		}
