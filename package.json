@@ -1,6 +1,6 @@
 {
   "name": "lxsidechain-sc",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "LaborX Sidechain Base Contracts",
   "main": "truffle.js",
   "dependencies": {
