@@ -6,12 +6,14 @@ const minimist = require('minimist')
 const fs = require("fs");
 
 module.exports = async (callback, arg) => {
-    var argv = minimist(process.argv.slice(2), {string: ['owner', 'validators', 'output']})
+    var argv = minimist(process.argv.slice(2), {string: ['owner', 'validators', 'output', 'system']})
+
+    let system = argv.system ? argv.system : "0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE";
 
     let lxBlockRewardTx = await LXBlockReward.new(argv.owner)
     let lxBlockRewardTxInput = web3.eth.getTransaction(lxBlockRewardTx.transactionHash)
 
-    let lxValidatorSetTx = await LXValidatorSet.new(argv.owner)
+    let lxValidatorSetTx = await LXValidatorSet.new(argv.owner, system)
     let lxValidatorSetTxInput = web3.eth.getTransaction(lxValidatorSetTx.transactionHash)
 
     genesis.accounts["0x0000000000000000000000000000000000000011"].constructor = lxValidatorSetTxInput.input

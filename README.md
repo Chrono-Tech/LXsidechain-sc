@@ -20,14 +20,13 @@ TODO
 
 Usage:
 ```
-genesis_generate.js --owner=<owner> --validators=<validators> --output=<output>
+genesis_generate.js --owner=<owner> --validators=<validators> --output=<output> --system=<system>
 ```
 where
-- `owner` is a deployer and genesis contracts owner,
-- `validators` is an initial list of validators,
-- `output` is an output file name, will be placed in `genesis` dir.
-
-All params are required.
+- `owner` (required): a deployer and genesis contracts owner,
+- `validators` (required): an initial list of validators,
+- `output` (required): an output file name, will be placed in `genesis` dir,
+- `system` (optional): by default the SYSTEM_ADDRESS: 2^160 - 2
 
 ##### Production network genesis generation
 ```

@@ -26,20 +26,19 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
     event Report(address indexed reporter, address indexed reported, bool indexed malicious);
     event ChangeFinalized(address[] current_set);
 
-    // System address, used by the block sealer.
-    address constant SYSTEM_ADDRESS = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;
     uint public recentBlocks = 20;
 
     bool public finalized;
     address public backendAddress;
+    address public systemAddress; // System address, used by the block sealer.
 
     modifier only_system_and_not_finalized() {
-        require(msg.sender != SYSTEM_ADDRESS || finalized); // TODO
+        require(msg.sender == systemAddress && !finalized);
         _;
     }
 
     modifier onlyFinalized() {
-        require(finalized); // TODO
+        require(finalized);
         _;
     }
 
@@ -58,9 +57,12 @@ contract LXValidatorSet is Owned, IValidatorSet, BaseRouter {
         _;
     }
 
-    constructor(address _owner) public {
+    constructor(address _owner, address _system) public {
         require(_owner != 0x0);
+        require(_system != 0x0);
+
         contractOwner = _owner;
+        systemAddress = _system;
     }
 
     // Called to determine the current set of validators.
