@@ -5,7 +5,7 @@
 
 pragma solidity ^0.4.11;
 
-import "../common/Object.sol";
+import "solidity-shared-lib/contracts/Owned.sol";
 
 /**
  * @title Events History universal multi contract.
@@ -16,7 +16,7 @@ import "../common/Object.sol";
  * Note: all the non constant functions return false instead of throwing in case if state change
  * didn't happen yet.
  */
-contract MultiEventsHistory is Object {
+contract MultiEventsHistory is Owned {
     // Authorized calling contracts.
     mapping(address => bool) public isAuthorized;
 
@@ -58,7 +58,7 @@ contract MultiEventsHistory is Object {
      *
      * Throws if call failed.
      */
-    function () public {
+    function () payable external {
         if (!isAuthorized[msg.sender]) {
             return;
         }

@@ -1,17 +1,16 @@
 /**
- * Copyright 2017–2018, LaborX PTY
- * Licensed under the AGPL Version 3 license.
- */
+* Copyright 2017–2018, LaborX PTY
+* Licensed under the AGPL Version 3 license.
+*/
 
 pragma solidity ^0.4.23;
 
-import "../common/Owned.sol";
+import "solidity-shared-lib/contracts/Owned.sol";
 import "../genesis/validatorset/ILXValidatorSet.sol";
 import "../platform/LXAssetListener.sol";
-import "../common/ERC20.sol";
-import "../platform/ChronoBankPlatform.sol";
-import "../platform/ChronoBankAssetProxyInterface.sol";
+import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 import "../lib/SafeMath.sol";
+
 
 contract LXValidatorManager is Owned, LXAssetListener {
     using SafeMath for uint;
@@ -22,29 +21,29 @@ contract LXValidatorManager is Owned, LXAssetListener {
     }
 
     enum RewardKind {
-		Author, /// Reward attributed to the block author.
+        Author, /// Reward attributed to the block author.
         DUMMY1,
         DUMMY2,
-		EmptyStep /// Reward attributed to the author(s) of empty step(s) included in the block (AuthorityRound engine).
-	}
+        EmptyStep /// Reward attributed to the author(s) of empty step(s) included in the block (AuthorityRound engine).
+    }
 
     // 10 LTH / 100 TIME
-    uint constant DEFAULT_REWARD_COEFFICIENT = (10 * (10**18)) / (100 * (10**8));
+    uint constant public DEFAULT_REWARD_COEFFICIENT = (10 * (10**18)) / (100 * (10**8));
     uint public k = DEFAULT_REWARD_COEFFICIENT;
 
     // address => (type => value)
-    mapping (address => bool) rewardBlacklist;
+    mapping (address => bool) public rewardBlacklist;
     mapping (address => bool) public authorised;
 
     address public validatorSet;
-    ChronoBankPlatform public platform;
-    ChronoBankAssetProxyInterface public shares;
+    address public platform;
+    ERC20 public shares;
     address public eventsHistory;
 
     // Current list of addresses entitled to participate in the consensus.
-    address[] validators;
-    address[] pending;
-    mapping(address => AddressStatus) pendingStatus;
+    address[] public validators;
+    address[] public pending;
+    mapping(address => AddressStatus) private pendingStatus;
 
     modifier onlyAuthorised {
         require(msg.sender == contractOwner || authorised[msg.sender]);
@@ -62,31 +61,34 @@ contract LXValidatorManager is Owned, LXAssetListener {
     }
 
     modifier onlyPending(address _someone) {
-        if(pendingStatus[_someone].isIn)
-        _;
+        if (pendingStatus[_someone].isIn) {
+            _;
+        }
     }
 
     modifier onlyNotPending(address _someone) {
-        if(!pendingStatus[_someone].isIn)
-        _;
+        if (!pendingStatus[_someone].isIn) {
+            _;
+        }
     }
 
     constructor(address _validatorSet, address _platform, address _shares)
     public
     {
-        require(_validatorSet != 0x0);
-        require(_platform != 0x0);
-        require(_shares != 0x0);
+        require(_validatorSet != address(0x0));
+        require(_platform != address(0x0));
+        require(_shares != address(0x0));
 
         validatorSet = _validatorSet;
-        platform = ChronoBankPlatform(_platform);
-        shares = ChronoBankAssetProxyInterface(_shares);
+        platform = _platform;
+        shares = ERC20(_shares);
     }
 
     function setupEventsHistory(address _eventsHistory)
     public
     onlyContractOwner
     {
+        require(_eventsHistory != address(0x0));
         eventsHistory = _eventsHistory;
     }
 
@@ -98,9 +100,11 @@ contract LXValidatorManager is Owned, LXAssetListener {
     }
 
     function addValidator(address _validator)
-    private
+    public
     onlyAuthorised
     {
+        require(_validator != address(0x0));
+
         _addValidator(_validator);
         initiateChange();
     }
@@ -122,13 +126,7 @@ contract LXValidatorManager is Owned, LXAssetListener {
         validators = pending;
     }
 
-    function initiateChange()
-    private
-    {
-        ILXValidatorSet(validatorSet).initiateChange();
-    }
-
-    function onTransfer(address _from, address _to, uint _value, bytes32 _symbol)
+    function onTransfer(address _from, address _to, uint /*_value*/, bytes32 /*_symbol*/)
     public
     onlyPlatform()
     {
@@ -156,22 +154,6 @@ contract LXValidatorManager is Owned, LXAssetListener {
         return pendingStatus[_someone].isIn && ILXValidatorSet(validatorSet).finalized();
     }
 
-    function getPending()
-    public
-    view
-    returns (address [])
-    {
-        return pending;
-    }
-
-    function getValidators()
-    public
-    view
-    returns (address [])
-    {
-        return validators;
-    }
-
     function reward(address _benefactor, uint _kind)
     public
     view
@@ -183,6 +165,28 @@ contract LXValidatorManager is Owned, LXAssetListener {
 
         uint balance = shares.balanceOf(_benefactor);
         return balance.mul(k);
+    }
+
+    function getValidators()
+    public
+    view
+    returns (address[])
+    {
+        return validators;
+    }
+
+    function getPending()
+    public
+    view
+    returns (address[])
+    {
+        return pending;
+    }
+
+    function initiateChange()
+    private
+    {
+        ILXValidatorSet(validatorSet).initiateChange();
     }
 
     function _updateValidator(address _someone)

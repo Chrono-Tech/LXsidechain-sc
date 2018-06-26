@@ -5,7 +5,7 @@
 
 pragma solidity ^0.4.11;
 
-import "../common/ERC20.sol";
+import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 
 contract ChronoBankAssetProxyInterface is ERC20 {
     address public chronoBankPlatform;

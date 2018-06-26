@@ -1,18 +1,33 @@
 {
   "name": "lxsidechain-sc",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "LaborX Sidechain Base Contracts",
   "main": "truffle.js",
   "dependencies": {
-    "abi-decoder": "^1.1.0",
-    "ganache-cli": "6.1.0",
-    "sha256": "^0.2.0",
-    "truffle": "4.1.7",
-    "truffle-hdwallet-provider": "mikefluff/truffle-hdwallet-provider#7a2eccca1ba17c235a3ef258914ca74ea5f13014"
+    "truffle": "^4.1.12",
+    "ganache-cli": "6.1.3",
+    "truffle-hdwallet-provider": "mikefluff/truffle-hdwallet-provider#7a2eccca1ba17c235a3ef258914ca74ea5f13014",
+    "solidity-storage-lib": "chronobank/solidity-storage-lib",
+    "solidity-shared-lib": "github:alesanro/solidity-shared-lib#feature/update-to-latest"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "abi-decoder": "^1.1.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-flow": "^6.23.0",
+    "babel-register": "^6.26.0",
+    "minimist": "^1.2.0",
+    "sha256": "^0.2.0",
+    "solidity-coverage": "^0.5.4"
+  },
   "scripts": {
-    "test": "test"
+    "test:all": "./node_modules/truffle/build/cli.bundled.js test",
+    "run:rpc": "./node_modules/ganache-cli/build/cli.node.js -g 1 --gasLimit 4700000 --trace_request true | grep -Ev \"FilterSubprovider|eth_getFilterChanges\"",
+    "compile": "./node_modules/truffle/build/cli.bundled.js compile",
+    "compile:all": "./node_modules/truffle/build/cli.bundled.js compile --all",
+    "migrate": "./node_modules/truffle/build/cli.bundled.js migrate",
+    "migrate:reset": "./node_modules/truffle/build/cli.bundled.js migrate --reset",
+    "console": "./node_modules/truffle/build/cli.bundled.js console --network development"
   },
   "repository": {
     "type": "git",

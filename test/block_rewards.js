@@ -1,17 +1,11 @@
-const AtomicSwapERC20 = artifacts.require('AtomicSwapERC20');
 const ChronoBankPlatform = artifacts.require('ChronoBankPlatform');
 const ChronoBankAsset = artifacts.require('ChronoBankAsset');
 const ChronoBankAssetProxy = artifacts.require('ChronoBankAssetProxy');
 const LXBlockReward = artifacts.require("LXBlockReward")
 const LXValidatorSet = artifacts.require("LXValidatorSet")
-const LXBlockRewardTestable = artifacts.require("LXBlockRewardTestable")
-const LXValidatorSetTestable = artifacts.require("LXValidatorSetTestable")
 const LXValidatorManager = artifacts.require("LXValidatorManager")
-const ERC20 = artifacts.require('./ERC20.sol');
 
-const utils = require('./helpers/utils');
 const Reverter = require('./helpers/reverter');
-const bytes32 = require("./helpers/bytes32");
 
 const RewardKind  = {"Author":0,"EmptyStep":2}
 
@@ -36,8 +30,8 @@ contract('LXBlockReward', function (accounts) {
         TIME = ChronoBankAssetProxy.at(await platform.proxies(TIME_SYMBOL));
         TIME_ASSET = ChronoBankAsset.at(await TIME.getLatestVersion());
 
-        blockReward = await LXBlockRewardTestable.deployed();
-        validatorSet = await LXValidatorSetTestable.deployed();
+        blockReward = await LXBlockReward.deployed();
+        validatorSet = await LXValidatorSet.deployed();
         validatorManager = await LXValidatorManager.deployed();
 
         await reverter.promisifySnapshot();
@@ -99,7 +93,7 @@ contract('LXBlockReward', function (accounts) {
             rewardEmptyStep = await blockReward.reward.call([user], [RewardKind.EmptyStep], {from:SYSTEM_ADDRESS});
             assert.isTrue(rewardEmptyStep[1][0].isZero());
 
-            await platform.revokeAsset(TIME_SYMBOL, TOKEN_AMOUNT, {from: user});            
+            await platform.revokeAsset(TIME_SYMBOL, TOKEN_AMOUNT, {from: user});
 
             rewardAuthor = await blockReward.reward.call([user], [RewardKind.Author], {from:SYSTEM_ADDRESS});
             assert.isTrue((await TIME.balanceOf(user)).eq(0));
