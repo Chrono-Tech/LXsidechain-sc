@@ -114,6 +114,9 @@ const errorsLibrary = {
     TIMEHOLDER_INSUFFICIENT_BALANCE: errorScope.timeholder + 6,
     TIMEHOLDER_LIMIT_EXCEEDED: errorScope.timeholder + 7,
     TIMEHOLDER_MINER_REQUIRED: errorScope.timeholder + 8,
+    TIMEHOLDER_MINING_LIMIT_NOT_REACHED: errorScope.timeholder + 9,
+    TIMEHOLDER_INVALID_MINING_LIMIT: errorScope.timeholder + 10,
+    TIMEHOLDER_NOTHING_TO_UNLOCK: errorScope.timeholder + 11,
 
     ERCMANAGER_INVALID_INVOCATION: errorScope.ercmanager + 0,
     ERCMANAGER_INVALID_STATE: errorScope.ercmanager + 1,
