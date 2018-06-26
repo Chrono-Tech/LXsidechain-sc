@@ -38,6 +38,11 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     StorageInterface.AddressesSet private sharesTokenStorage_v2;
     StorageInterface.AddressUIntMapping private limitsStorage_v2;
 
+    /// Lock mining balance functionality
+
+    /// @dev Locked amount of tokens by a user
+    StorageInterface.AddressAddressUIntMapping lockedDepositsStorage_v2; // (user => token => locked amount)
+
     /// @dev Restricts access to functions only for TimeHolder sender
     modifier onlyTimeHolder {
         bool permitted = store.store.manager().isAllowed(msg.sender, store.crate);
@@ -64,6 +69,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         totalSharesStorage_v2.init("totalSharesStorage_v2");
         sharesTokenStorage_v2.init("sharesContractsStorage_v2");
         limitsStorage_v2.init("limitAmountsStorage_v2");
+        lockedDepositsStorage_v2.init("lockedDepositsStorage_v2");
     }
 
     /// @notice Sets shares token address as default token address. Used for supporting TIME tokens
@@ -134,6 +140,14 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         return _depositBalance(bytes32(_depositor));
     }
 
+    /// @notice TODO:
+    function lockedDepositBalance(address _token, address _depositor)
+    public
+    view
+    returns (uint _balance) {
+        _balance = store.get(lockedDepositsStorage_v2, _depositor, _token);
+    }
+
     /// @notice Deposits for a _target for provided _amount of specified tokens
     /// @dev Allowed only for TimeHolder call
     ///
@@ -168,6 +182,26 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
             prevAmount = store.get(totalSharesStorage_v2, _token);
             store.set(totalSharesStorage_v2, _token, _amount.add(prevAmount));
         }
+    }
+
+    function lock(address _token, address _target, uint _amount)
+    public
+    onlyTimeHolder
+    {
+        uint _total = store.get(lockedDepositsStorage_v2, _target, _token);
+        store.set(lockedDepositsStorage_v2, _target, _token, _total.add(_amount));
+
+        withdrawShares(_token, _target, _amount, depositBalance(_token, _target));
+    }
+
+    function unlock(address _token, address _target, uint _amount)
+    public
+    onlyTimeHolder
+    {
+        uint _total = store.get(lockedDepositsStorage_v2, _target, _token);
+        store.set(lockedDepositsStorage_v2, _target, _token, _total.sub(_amount));
+
+        depositFor(_token, _target, _amount);
     }
 
     /// @notice Withdraws tokens back to provided account

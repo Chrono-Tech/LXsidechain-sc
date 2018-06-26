@@ -28,6 +28,9 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     uint public constant ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE = 12006;
     uint public constant ERROR_TIMEHOLDER_LIMIT_EXCEEDED = 12007;
     uint public constant ERROR_TIMEHOLDER_MINER_REQUIRED = 12008;
+    uint public constant ERROR_TIMEHOLDER_MINING_LIMIT_NOT_REACHED = 12009;
+    uint public constant ERROR_TIMEHOLDER_INVALID_MINING_LIMIT = 12010;
+    uint public constant ERROR_TIMEHOLDER_NOTHING_TO_UNLOCK = 12011;
 
     /** Storage keys */
 
@@ -43,6 +46,9 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     StorageInterface.Address private erc20DepositStorage;
 
     StorageInterface.Address private primaryMiner;
+
+    /// @dev Mapping of (token address => mining deposits limit amount) for storing lower border of deposits that a user should have to be a miner
+    StorageInterface.AddressUIntMapping private miningDepositLimitsStorage;
 
     /// @dev only token registered in whitelist
     modifier onlyAllowedToken(address _token) {
@@ -128,6 +134,19 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         return getDepositStorage().depositBalance(_token, _depositor);
     }
 
+    /// @notice Gets locked amount of tokens for the depositor
+    /// @param _token token address that is used for mining
+    /// @param _depositor user address
+    /// @return _balance total locked balance on a miner's account
+    function getLockedDepositBalance(address _token, address _depositor)
+    public
+    view
+    returns (uint _balance)
+    {
+        return getDepositStorage().lockedDepositBalance(_token, _depositor);
+    }
+
+    /// @notice Gets primary miner address
     function getPrimaryMiner()
     public
     view
@@ -136,6 +155,9 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         return store.get(primaryMiner);
     }
 
+    /// @notice Sets an address as a primary miner
+    /// @param _miner an address of the future miner
+    /// @return result of an operation
     function setPrimaryMiner(address _miner)
     external
     onlyContractOwner
@@ -145,6 +167,30 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         store.set(primaryMiner, _miner);
 
         _emitPrimaryMinerChanged(_oldMiner, _miner);
+        return OK;
+    }
+
+    /// @notice Gets mining deposit limit for a token
+    /// @return minimum amount for tokens that a user will be able to lock to be a miner
+    function getMiningDepositLimits(address _token)
+    public
+    view 
+    returns (uint) {
+        return store.get(miningDepositLimitsStorage, _token);
+    }
+
+    /// @notice Sets mining deposit limit for a token
+    /// @param _token token address
+    /// @param _limit minimum amount for tokens that a user will be able to lock to be a miner
+    /// @return result of an operation
+    function setMiningDepositLimits(address _token, uint _limit)
+    onlyContractOwner
+    external
+    returns (uint) {
+        _emitMiningDepositLimitsChanged(_token, getMiningDepositLimits(_token), _limit);
+
+        store.set(miningDepositLimitsStorage, _token, _limit);
+
         return OK;
     }
 
@@ -243,6 +289,61 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         _emitDeposit(_token, _target, _amount);
         _emitMinerDeposited(_token, _amount, _primaryMiner, _target);
 
+        return OK;
+    }
+
+    /// @notice Locks provided amount of tokens from user's TimeHolder deposit
+    /// and use them to allow a user to be a miner. Could be called more than once
+    /// for a single user, but the first call should provide _amount according to 
+    /// miningDepositLimits value.
+    /// Emits two events: BecomeMiner event - when first lock is performed, 
+    /// and DepositLock - for every lock invocation.
+    /// @param _token token address that is used for mining
+    /// @param _amount amount of tokens to lock. Should be greater or equal to miningDepositLimits value
+    /// @return result of an operation
+    function lockDepositAndBecomeMiner(address _token, uint _amount)
+    external
+    returns (uint) {
+        uint _balance = getDepositBalance(_token, msg.sender);
+        if (_amount > _balance) {
+            return _emitError(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
+        }
+
+        uint _miningDepositLimits = store.get(miningDepositLimitsStorage, _token);
+        if (_miningDepositLimits == 0) {
+            return _emitError(ERROR_TIMEHOLDER_INVALID_MINING_LIMIT);
+        }
+
+        uint _lockedAmount = getDepositStorage().lockedDepositBalance(_token, msg.sender);
+        if (_lockedAmount + _amount < _miningDepositLimits) {
+            return _emitError(ERROR_TIMEHOLDER_MINING_LIMIT_NOT_REACHED);
+        }
+
+        getDepositStorage().lock(_token, msg.sender, _amount);
+
+        _emitDepositLocked(_token, _amount, msg.sender);
+
+        if (_lockedAmount == 0) {
+            _emitBecomeMiner(_token, msg.sender, _amount);
+        }
+        return OK;
+    }
+
+    /// @notice Unlocks deposit and open it for other use cases. Transfers all locked amount to user's TimeHolder record
+    /// Emits ResignMiner event.
+    /// @param _token target token address that is used for mining
+    /// @return result of an operation
+    function unlockDepositAndResignMiner(address _token)
+    external
+    returns (uint) {
+        uint _lockedAmount = getDepositStorage().lockedDepositBalance(_token, msg.sender);
+        if (_lockedAmount == 0) {
+            return _emitError(ERROR_TIMEHOLDER_NOTHING_TO_UNLOCK);
+        }
+
+        getDepositStorage().unlock(_token, msg.sender, _lockedAmount);
+        
+        _emitResignMiner(_token, msg.sender, _lockedAmount);
         return OK;
     }
 
@@ -392,6 +493,30 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     private
     {
         emitter().emitPrimaryMinerChanged(from, to);
+    }
+
+    function _emitMiningDepositLimitsChanged(address _token, uint _from, uint _to)
+    private
+    {
+        emitter().emitMiningDepositLimitsChanged(_token, _from, _to);
+    }
+
+    function _emitDepositLocked(address _token, uint _amount, address _user)
+    private
+    {
+        emitter().emitDepositLocked(_token, _amount, _user);
+    }
+
+    function _emitBecomeMiner(address _token, address _miner, uint _totalDepositLocked)
+    private
+    {
+        emitter().emitBecomeMiner(_token, _miner, _totalDepositLocked);
+    }
+
+    function _emitResignMiner(address _token, address _miner, uint _depositUnlocked)
+    private
+    {
+        emitter().emitResignMiner(_token, _miner, _depositUnlocked);
     }
 
     function _emitMinerDeposited(address token, uint amount, address miner, address sender)
