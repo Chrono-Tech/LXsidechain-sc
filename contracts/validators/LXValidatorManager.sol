@@ -7,12 +7,11 @@ pragma solidity ^0.4.23;
 
 import "solidity-shared-lib/contracts/Owned.sol";
 import "../genesis/validatorset/ILXValidatorSet.sol";
-import "../platform/LXAssetListener.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 import "../lib/SafeMath.sol";
 
 
-contract LXValidatorManager is Owned, LXAssetListener {
+contract LXValidatorManager is Owned {
     using SafeMath for uint;
 
     struct AddressStatus {
@@ -124,18 +123,6 @@ contract LXValidatorManager is Owned, LXAssetListener {
     onlyValidatorSet
     {
         validators = pending;
-    }
-
-    function onTransfer(address _from, address _to, uint /*_value*/, bytes32 /*_symbol*/)
-    public
-    onlyPlatform()
-    {
-        bool updatedFrom = _updateValidator(_from);
-        bool updatedTo = _updateValidator(_to);
-
-        if (updatedFrom || updatedTo) {
-            initiateChange();
-        }
     }
 
     function isPending(address _someone)

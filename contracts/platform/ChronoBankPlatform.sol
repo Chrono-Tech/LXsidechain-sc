@@ -8,7 +8,6 @@ pragma solidity ^0.4.21;
 import "../common/Object.sol";
 import "./ChronoBankPlatformEmitter.sol";
 import "../lib/SafeMath.sol";
-import "./LXAssetListener.sol";
 
 
 contract ProxyEventsEmitter {
@@ -64,7 +63,6 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         uint8 baseUnit;                   // Proposed number of decimals.
         mapping(uint => Wallet) wallets;  // Holders wallets.
         mapping(uint => bool) partowners; // Part-owners of an asset; have less access rights than owner
-        address listener;  // token transfer listener
     }
 
     /// @title Structure of an asset holder wallet for particular asset.
@@ -304,20 +302,6 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         return OK;
     }
 
-    /// @notice Sets Proxy contract address for a particular asset.
-    /// @dev Can be set only once for each asset and only by contract owner.
-    /// @param _listener Token Listener contract address.
-    /// @param _symbol asset symbol.
-    /// @return success.
-    function setListener(address _listener, bytes32 _symbol) public onlyOneOfContractOwners returns (uint) {
-        if (!isCreated(_symbol)) {
-            return CHRONOBANK_PLATFORM_ASSET_IS_NOT_ISSUED;
-        }
-
-        assets[_symbol].listener = _listener;
-        return OK;
-    }
-
     /// @notice Performes asset transfer for multiple destinations
     /// @param addresses list of addresses to receive some amount
     /// @param values list of asset amounts for according addresses
@@ -381,10 +365,6 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
     {
         assets[_symbol].wallets[_fromId].balance = assets[_symbol].wallets[_fromId].balance.sub(_value);
         assets[_symbol].wallets[_toId].balance = assets[_symbol].wallets[_toId].balance.add(_value);
-
-        if (assets[_symbol].listener != address(0x0)) {
-            LXAssetListener(assets[_symbol].listener).onTransfer(holders[_fromId].addr, holders[_toId].addr, _value, _symbol);
-        }
     }
 
     /// @dev Transfers asset balance between holders wallets.
@@ -565,12 +545,8 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         uint creatorId = _account == msg.sender ? holderId : _createHolderId(msg.sender);
 
         symbols.push(_symbol);
-        assets[_symbol] = Asset(creatorId, _value, _name, _description, _isReissuable, _baseUnit, address(0x0));
+        assets[_symbol] = Asset(creatorId, _value, _name, _description, _isReissuable, _baseUnit);
         assets[_symbol].wallets[holderId].balance = _value;
-
-        if (assets[_symbol].listener != address(0x0)) {
-            LXAssetListener(assets[_symbol].listener).onTransfer(address(0x0), _account, _value, _symbol);
-        }
 
         // Internal Out Of Gas/Throw: revert this transaction too;
         // Call Stack Depth Limit reached: n/a after HF 4;
@@ -606,10 +582,6 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         asset.wallets[holderId].balance = asset.wallets[holderId].balance.add(_value);
         asset.totalSupply = asset.totalSupply.add(_value);
 
-        if (assets[_symbol].listener != address(0x0)) {
-            LXAssetListener(assets[_symbol].listener).onTransfer(msg.sender, address(0x0), _value, _symbol);
-        }
-
         // Internal Out Of Gas/Throw: revert this transaction too;
         // Call Stack Depth Limit reached: n/a after HF 4;
         // Recursive Call: safe, all changes already made.
@@ -637,10 +609,6 @@ contract ChronoBankPlatform is Object, ChronoBankPlatformEmitter {
         }
         asset.wallets[holderId].balance = asset.wallets[holderId].balance.sub(_value);
         asset.totalSupply = asset.totalSupply.sub(_value);
-
-        if (assets[_symbol].listener != address(0x0)) {
-            LXAssetListener(assets[_symbol].listener).onTransfer(address(0x0), msg.sender, _value, _symbol);
-        }
 
         // Internal Out Of Gas/Throw: revert this transaction too;
         // Call Stack Depth Limit reached: n/a after HF 4;
