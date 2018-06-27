@@ -16,9 +16,23 @@ import "../event/MultiEventsHistoryAdapter.sol";
 /// All the functions is meant to be called using delegatecall.
 contract TimeHolderEmitter is MultiEventsHistoryAdapter {
 
+    /// @dev Miner address were given a deposit from a user who make a deposit to TimeHolder
     event MinerDeposited(address token, uint amount, address miner, address sender);
 
+    /// @dev Changed an address of primary miner
     event PrimaryMinerChanged(address from, address to);
+
+    /// @dev Changed minimum amount of shares that should be locked to become a miner
+    event MiningDepositLimitsChanged(address token, uint from, uint to);
+
+    /// @dev Shares were locked for a purpose (usualy when a miner adds to a stack)
+    event DepositLocked(address token, uint amount, address user);
+
+    /// @dev Miner role is assigned
+    event BecomeMiner(address token, address miner, uint totalDepositLocked);
+
+    /// @dev Miner role is resigned
+    event ResignMiner(address token, address miner, uint depositUnlocked);
 
     /// @dev User deposited into current period
     event Deposit(address token, address who, uint amount);
@@ -43,10 +57,34 @@ contract TimeHolderEmitter is MultiEventsHistoryAdapter {
         emit PrimaryMinerChanged(from, to);
     }
 
+    function emitMiningDepositLimitsChanged(address _token, uint _from, uint _to)
+    public
+    {
+        emit MiningDepositLimitsChanged(_token, _from, _to);
+    }
+
     function emitMinerDeposited(address token, uint amount, address miner, address sender)
     public
     {
         emit MinerDeposited(token, amount, miner, sender);
+    }
+
+    function emitDepositLocked(address _token, uint _amount, address _user)
+    public
+    {
+        emit DepositLocked(_token, _amount, _user);
+    }
+
+    function emitBecomeMiner(address _token, address _miner, uint _totalDepositLocked)
+    public
+    {
+        emit BecomeMiner(_token, _miner, _totalDepositLocked);
+    }
+
+    function emitResignMiner(address _token, address _miner, uint _depositUnlocked)
+    public
+    {
+        emit ResignMiner(_token, _miner, _depositUnlocked);
     }
 
     function emitDeposit(address token, address who, uint amount)
