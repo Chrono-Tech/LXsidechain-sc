@@ -12,6 +12,7 @@ import "../lib/SafeMath.sol";
 import "./TimeHolderWallet.sol";
 import "./ERC20DepositStorage.sol";
 import "./TimeHolderEmitter.sol";
+import "../validators/LXValidatorManager.sol";
 
 
 /// @title TimeHolder
@@ -47,6 +48,8 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
     StorageInterface.Address private primaryMiner;
 
+    StorageInterface.Address private validatorManager;
+
     /// @dev Mapping of (token address => mining deposits limit amount) for storing lower border of deposits that a user should have to be a miner
     StorageInterface.AddressUIntMapping private miningDepositLimitsStorage;
 
@@ -78,6 +81,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         listeners.init("listeners_v2");
         walletStorage.init("timeHolderWalletStorage");
         erc20DepositStorage.init("erc20DepositStorage");
+        validatorManager.init("validatorManager");
 
         primaryMiner.init("primaryMiner");
     }
@@ -87,7 +91,8 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     function init(
         address _defaultToken,
         address _wallet,
-        address _erc20DepositStorage
+        address _erc20DepositStorage,
+        address _validatorManager
     )
     public
     onlyContractOwner
@@ -102,6 +107,8 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
         store.add(sharesTokenStorage, _defaultToken);
         store.set(limitsStorage, _defaultToken, 2**255);
+
+        store.set(validatorManager, _validatorManager);
 
         ERC20DepositStorage(_erc20DepositStorage).setSharesContract(_defaultToken);
 
@@ -174,7 +181,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     /// @return minimum amount for tokens that a user will be able to lock to be a miner
     function getMiningDepositLimits(address _token)
     public
-    view 
+    view
     returns (uint) {
         return store.get(miningDepositLimitsStorage, _token);
     }
@@ -294,9 +301,9 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
     /// @notice Locks provided amount of tokens from user's TimeHolder deposit
     /// and use them to allow a user to be a miner. Could be called more than once
-    /// for a single user, but the first call should provide _amount according to 
+    /// for a single user, but the first call should provide _amount according to
     /// miningDepositLimits value.
-    /// Emits two events: BecomeMiner event - when first lock is performed, 
+    /// Emits two events: BecomeMiner event - when first lock is performed,
     /// and DepositLock - for every lock invocation.
     /// @param _token token address that is used for mining
     /// @param _amount amount of tokens to lock. Should be greater or equal to miningDepositLimits value
@@ -323,9 +330,12 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
         _emitDepositLocked(_token, _amount, msg.sender);
 
-        if (_lockedAmount == 0) {
+        LXValidatorManager manager = LXValidatorManager(store.get(validatorManager));
+        if (!manager.isPending(msg.sender)) {
+            manager.addValidator(msg.sender);
             _emitBecomeMiner(_token, msg.sender, _amount);
         }
+
         return OK;
     }
 
@@ -342,7 +352,12 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         }
 
         getDepositStorage().unlock(_token, msg.sender, _lockedAmount);
-        
+
+        LXValidatorManager manager = LXValidatorManager(store.get(validatorManager));
+        if (manager.isPending(msg.sender)) {
+            manager.removeValidator(msg.sender);
+        }
+
         _emitResignMiner(_token, msg.sender, _lockedAmount);
         return OK;
     }
@@ -531,7 +546,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         emitter().emitDeposit(_token, _who, _amount);
     }
 
-    function _emitWithdrawShares(address _token, address _who, uint _amount, address _receiver) 
+    function _emitWithdrawShares(address _token, address _who, uint _amount, address _receiver)
     private
     {
         emitter().emitWithdrawShares(_token, _who, _amount, _receiver);

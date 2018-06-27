@@ -7,11 +7,6 @@ pragma solidity ^0.4.23;
 
 
 contract TimeHolderInterface {
-    function wallet() public view returns (address);
-    function totalShares(bytes32 symbol) public view returns (uint);
-    function sharesContract() public view returns (address);
-    function getDefaultShares() public view returns (address);
-    function defaultShareholdersCount() public view returns (uint);
-    function shareholdersCount(address) public view returns (uint);
-    function depositBalance(address _address) public view returns(uint);
+    function getDepositBalance(address _token, address _depositor) public view returns(uint);
+    function getLockedDepositBalance(address _token, address _depositor) public view returns(uint);
 }

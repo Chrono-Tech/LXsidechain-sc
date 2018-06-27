@@ -9,6 +9,7 @@ import "solidity-shared-lib/contracts/Owned.sol";
 import "../genesis/validatorset/ILXValidatorSet.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 import "../lib/SafeMath.sol";
+import "../timeholder/TimeHolderInterface.sol";
 
 
 contract LXValidatorManager is Owned {
@@ -34,8 +35,8 @@ contract LXValidatorManager is Owned {
     mapping (address => bool) public rewardBlacklist;
     mapping (address => bool) public authorised;
 
-    address public validatorSet;
-    address public platform;
+    ILXValidatorSet public validatorSet;
+    TimeHolderInterface public timeHolder;
     ERC20 public shares;
     address public eventsHistory;
 
@@ -44,18 +45,8 @@ contract LXValidatorManager is Owned {
     address[] public pending;
     mapping(address => AddressStatus) private pendingStatus;
 
-    modifier onlyAuthorised {
+    modifier auth {
         require(msg.sender == contractOwner || authorised[msg.sender]);
-        _;
-    }
-
-    modifier onlyPlatform() {
-        require(platform == msg.sender);
-        _;
-    }
-
-    modifier onlyValidatorSet {
-        require(msg.sender == validatorSet || msg.sender == contractOwner);
         _;
     }
 
@@ -71,21 +62,25 @@ contract LXValidatorManager is Owned {
         }
     }
 
-    constructor(address _validatorSet, address _platform, address _shares)
+    constructor(address _validatorSet, address _timeHolder, address _shares)
     public
     {
         require(_validatorSet != address(0x0));
-        require(_platform != address(0x0));
+        require(timeHolder != address(0x0));
         require(_shares != address(0x0));
 
-        validatorSet = _validatorSet;
-        platform = _platform;
+        validatorSet = ILXValidatorSet(_validatorSet);
+        timeHolder = TimeHolderInterface(_timeHolder);
         shares = ERC20(_shares);
+
+        // TODO: rework auth
+        authorised[_timeHolder] = true;
+        authorised[_validatorSet] = true;
     }
 
     function setupEventsHistory(address _eventsHistory)
     public
-    onlyContractOwner
+    auth
     {
         require(_eventsHistory != address(0x0));
         eventsHistory = _eventsHistory;
@@ -93,14 +88,14 @@ contract LXValidatorManager is Owned {
 
     function setupRewardCoefficient(uint _k)
     public
-    onlyContractOwner
+    auth
     {
         k = _k;
     }
 
     function addValidator(address _validator)
     public
-    onlyAuthorised
+    auth
     {
         require(_validator != address(0x0));
 
@@ -111,7 +106,7 @@ contract LXValidatorManager is Owned {
     // Remove a validator.
     function removeValidator(address _validator)
     public
-    onlyAuthorised
+    auth
     {
         _removeValidator(_validator);
         initiateChange();
@@ -120,7 +115,7 @@ contract LXValidatorManager is Owned {
     // callback from validatorSet
     function finalizeChange()
     public
-    onlyValidatorSet
+    auth
     {
         validators = pending;
     }
@@ -138,7 +133,7 @@ contract LXValidatorManager is Owned {
     view
     returns (bool)
     {
-        return pendingStatus[_someone].isIn && ILXValidatorSet(validatorSet).finalized();
+        return pendingStatus[_someone].isIn && validatorSet.finalized();
     }
 
     function reward(address _benefactor, uint _kind)
@@ -150,7 +145,7 @@ contract LXValidatorManager is Owned {
             return 0;
         }
 
-        uint balance = shares.balanceOf(_benefactor);
+        uint balance = timeHolder.getLockedDepositBalance(address(shares), _benefactor);
         return balance.mul(k);
     }
 
@@ -173,30 +168,7 @@ contract LXValidatorManager is Owned {
     function initiateChange()
     private
     {
-        ILXValidatorSet(validatorSet).initiateChange();
-    }
-
-    function _updateValidator(address _someone)
-    private
-    returns (bool updated)
-    {
-        if (_someone == address(0x0)) {
-            return false;
-        }
-
-        if (rewardBlacklist[_someone]) {
-            return false;
-        }
-
-        uint balance = shares.balanceOf(_someone);
-
-        if (balance > 0 && !isPending(_someone)) {
-            _addValidator(_someone);
-            updated = true;
-        } else if (balance == 0 && isPending(_someone)) {
-            _removeValidator(_someone);
-            updated = true;
-        }
+        validatorSet.initiateChange();
     }
 
     function _addValidator(address _validator)
@@ -206,6 +178,8 @@ contract LXValidatorManager is Owned {
         pendingStatus[_validator].isIn = true;
         pendingStatus[_validator].index = pending.length;
         pending.push(_validator);
+
+        // TODO: emit event
     }
 
     // Remove a validator.
@@ -220,5 +194,7 @@ contract LXValidatorManager is Owned {
 
         delete pendingStatus[_validator].index;
         pendingStatus[_validator].isIn = false;
+
+        // TODO: emit event
     }
 }
