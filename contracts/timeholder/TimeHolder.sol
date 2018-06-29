@@ -32,6 +32,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     uint public constant ERROR_TIMEHOLDER_MINING_LIMIT_NOT_REACHED = 12009;
     uint public constant ERROR_TIMEHOLDER_INVALID_MINING_LIMIT = 12010;
     uint public constant ERROR_TIMEHOLDER_NOTHING_TO_UNLOCK = 12011;
+    uint public constant ERROR_TIMEHOLDER_ALREADY_MINER = 12012;
 
     /** Storage keys */
 
@@ -49,6 +50,12 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     StorageInterface.Address private primaryMiner;
 
     StorageInterface.Address private validatorManager;
+
+    /// depositor -> mining delegate
+    StorageInterface.AddressAddressMapping private delegates;
+
+    /// mining delegate -> delegate
+    StorageInterface.AddressAddressMapping private miners;
 
     /// @dev Mapping of (token address => mining deposits limit amount) for storing lower border of deposits that a user should have to be a miner
     StorageInterface.AddressUIntMapping private miningDepositLimitsStorage;
@@ -82,6 +89,8 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         walletStorage.init("timeHolderWalletStorage");
         erc20DepositStorage.init("erc20DepositStorage");
         validatorManager.init("validatorManager");
+        delegates.init("delegates");
+        miners.init("miners");
 
         primaryMiner.init("primaryMiner");
     }
@@ -151,6 +160,19 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     returns (uint _balance)
     {
         return getDepositStorage().lockedDepositBalance(_token, _depositor);
+    }
+
+    function getLockedDepositBalanceForDelegate(address _token, address _delegate)
+    public
+    view
+    returns (uint _balance)
+    {
+        address depositor = store.get(miners, _delegate);
+        if (depositor == address(0)) {
+            return 0;
+        }
+
+        return getDepositStorage().lockedDepositBalance(_token, depositor);
     }
 
     /// @notice Gets primary miner address
@@ -308,12 +330,17 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     /// @param _token token address that is used for mining
     /// @param _amount amount of tokens to lock. Should be greater or equal to miningDepositLimits value
     /// @return result of an operation
-    function lockDepositAndBecomeMiner(address _token, uint _amount)
+    function lockDepositAndBecomeMiner(address _token, uint _amount, address _delegate)
     external
     returns (uint) {
         uint _balance = getDepositBalance(_token, msg.sender);
         if (_amount > _balance) {
             return _emitError(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
+        }
+
+        if (store.get(miners, _delegate) != address(0x0) ||
+            store.get(delegates, msg.sender) != address(0x0)) {
+            return _emitError(ERROR_TIMEHOLDER_ALREADY_MINER);
         }
 
         uint _miningDepositLimits = store.get(miningDepositLimitsStorage, _token);
@@ -330,11 +357,14 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
         _emitDepositLocked(_token, _amount, msg.sender);
 
+        store.set(delegates, msg.sender, _delegate);
+        store.set(miners, _delegate, msg.sender);
+
         LXValidatorManager manager = LXValidatorManager(store.get(validatorManager));
-        if (!manager.isPending(msg.sender)) {
-            manager.addValidator(msg.sender);
-            _emitBecomeMiner(_token, msg.sender, _amount);
-        }
+        assert(!manager.isPending(_delegate));
+
+        manager.addValidator(_delegate);
+        _emitBecomeMiner(_token, _delegate, _amount);
 
         return OK;
     }
@@ -353,10 +383,16 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
         getDepositStorage().unlock(_token, msg.sender, _lockedAmount);
 
+        address delegate = store.get(delegates, msg.sender);
+        assert(delegate != address(0x0));
+
         LXValidatorManager manager = LXValidatorManager(store.get(validatorManager));
-        if (manager.isPending(msg.sender)) {
-            manager.removeValidator(msg.sender);
+        if (manager.isPending(delegate)) {
+            manager.removeValidator(delegate);
         }
+
+        store.set(delegates, msg.sender, address(0x0));
+        store.set(miners, delegate, address(0x0));
 
         _emitResignMiner(_token, msg.sender, _lockedAmount);
         return OK;
