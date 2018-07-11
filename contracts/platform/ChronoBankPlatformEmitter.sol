@@ -6,7 +6,7 @@
 pragma solidity ^0.4.21;
 
 
-import "../event/MultiEventsHistoryAdapter.sol";
+import "solidity-eventshistory-lib/contracts/MultiEventsHistoryAdapter.sol";
 
 
 /// @title ChronoBank Platform Emitter.
@@ -22,7 +22,6 @@ contract ChronoBankPlatformEmitter is MultiEventsHistoryAdapter {
     event OwnershipChange(address indexed from, address indexed to, bytes32 indexed symbol);
     event Approve(address indexed from, address indexed spender, bytes32 indexed symbol, uint value);
     event Recovery(address indexed from, address indexed to, address by);
-    event Error(uint errorCode);
 
     function emitTransfer(address _from, address _to, bytes32 _symbol, uint _value, string _reference) public {
         emit Transfer(_from, _to, _symbol, _value, _reference);
@@ -46,9 +45,5 @@ contract ChronoBankPlatformEmitter is MultiEventsHistoryAdapter {
 
     function emitRecovery(address _from, address _to, address _by) public {
         emit Recovery(_from, _to, _by);
-    }
-
-    function emitError(uint _errorCode) public {
-        emit Error(_errorCode);
     }
 }

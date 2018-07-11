@@ -26,7 +26,7 @@ module.exports = (deployer, networks, accounts) => {
 
 		const history = await MultiEventsHistory.deployed()
 		await history.authorize(timeHolder.address)
-		await timeHolder.setEventsHistory(history.address);
+		await timeHolder.setupEventsHistory(history.address);
 
 		if (MINER_ADDRESS !== undefined) {
 			await timeHolder.setPrimaryMiner(MINER_ADDRESS)

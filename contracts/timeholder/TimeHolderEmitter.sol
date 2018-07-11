@@ -6,7 +6,7 @@
 pragma solidity ^0.4.23;
 
 
-import "../event/MultiEventsHistoryAdapter.sol";
+import "solidity-eventshistory-lib/contracts/MultiEventsHistoryAdapter.sol";
 
 
 /// @title TimeHolder emitter.
@@ -45,9 +45,6 @@ contract TimeHolderEmitter is MultiEventsHistoryAdapter {
 
     /// @dev Shares is removed from whitelist and stop being available to use
     event SharesWhiteListChanged(address token, uint limit, bool indexed isAdded);
-
-    /// @dev Something went wrong
-    event Error(address indexed self, uint errorCode);
 
     /* Emitting events */
 
@@ -103,11 +100,5 @@ contract TimeHolderEmitter is MultiEventsHistoryAdapter {
     public
     {
         emit SharesWhiteListChanged(token, limit, isAdded);
-    }
-
-    function emitError(uint error)
-    public
-    {
-        emit Error(_self(), error);
     }
 }

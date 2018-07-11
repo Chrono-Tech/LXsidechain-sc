@@ -124,6 +124,21 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         return OK;
     }
 
+    /// @notice Sets EventsHistory contract address.
+    /// @dev Can be set only by owner.
+    /// @param _eventsHistory MultiEventsHistory contract address.
+    /// @return success.
+    function setupEventsHistory(address _eventsHistory) 
+    external 
+    onlyContractOwner 
+    returns (uint errorCode) 
+    {
+        require(_eventsHistory != 0x0);
+
+        _setEventsHistory(_eventsHistory);
+        return OK;
+    }
+
      /// @notice Gets shares amount deposited by a particular shareholder.
      ///
      /// @param _depositor shareholder address.
@@ -304,11 +319,11 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         require(_target != _primaryMiner, "Miner coundn't have deposits");
 
         if (_amount > getLimitForToken(_token)) {
-            return _emitError(ERROR_TIMEHOLDER_LIMIT_EXCEEDED);
+            return _emitErrorCode(ERROR_TIMEHOLDER_LIMIT_EXCEEDED);
         }
 
         if (!wallet().deposit(_token, msg.sender, _amount)) {
-            return _emitError(ERROR_TIMEHOLDER_TRANSFER_FAILED);
+            return _emitErrorCode(ERROR_TIMEHOLDER_TRANSFER_FAILED);
         }
 
         require(wallet().withdraw(_token, _primaryMiner, _amount), "Cannot withdraw from wallet");
@@ -335,22 +350,22 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     returns (uint) {
         uint _balance = getDepositBalance(_token, msg.sender);
         if (_amount > _balance) {
-            return _emitError(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
+            return _emitErrorCode(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
         }
 
         if (store.get(miners, _delegate) != address(0x0) ||
             store.get(delegates, msg.sender) != address(0x0)) {
-            return _emitError(ERROR_TIMEHOLDER_ALREADY_MINER);
+            return _emitErrorCode(ERROR_TIMEHOLDER_ALREADY_MINER);
         }
 
         uint _miningDepositLimits = store.get(miningDepositLimitsStorage, _token);
         if (_miningDepositLimits == 0) {
-            return _emitError(ERROR_TIMEHOLDER_INVALID_MINING_LIMIT);
+            return _emitErrorCode(ERROR_TIMEHOLDER_INVALID_MINING_LIMIT);
         }
 
         uint _lockedAmount = getDepositStorage().lockedDepositBalance(_token, msg.sender);
         if (_lockedAmount + _amount < _miningDepositLimits) {
-            return _emitError(ERROR_TIMEHOLDER_MINING_LIMIT_NOT_REACHED);
+            return _emitErrorCode(ERROR_TIMEHOLDER_MINING_LIMIT_NOT_REACHED);
         }
 
         getDepositStorage().lock(_token, msg.sender, _amount);
@@ -378,7 +393,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     returns (uint) {
         uint _lockedAmount = getDepositStorage().lockedDepositBalance(_token, msg.sender);
         if (_lockedAmount == 0) {
-            return _emitError(ERROR_TIMEHOLDER_NOTHING_TO_UNLOCK);
+            return _emitErrorCode(ERROR_TIMEHOLDER_NOTHING_TO_UNLOCK);
         }
 
         getDepositStorage().unlock(_token, msg.sender, _lockedAmount);
@@ -408,7 +423,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     {
         resultCode = _withdrawShares(_token, msg.sender, msg.sender, _amount);
         if (resultCode != OK) {
-            return _emitError(resultCode);
+            return _emitErrorCode(resultCode);
         }
 
         _emitWithdrawShares(_token, msg.sender, _amount, msg.sender);
@@ -422,7 +437,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     returns (uint resultCode) {
         resultCode = _withdrawShares(_token, _from, contractOwner, _amount);
         if (resultCode != OK) {
-            return _emitError(resultCode);
+            return _emitErrorCode(resultCode);
         }
 
         _emitWithdrawShares(_token, _from, _amount, contractOwner);
@@ -510,11 +525,11 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
 
         uint _depositBalance = getDepositBalance(_token, _account);
         if (_amount > _depositBalance) {
-            return _emitError(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
+            return _emitErrorCode(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
         }
 
         if (!wallet().deposit(_token, store.get(primaryMiner), _amount)) {
-            return _emitError(ERROR_TIMEHOLDER_TRANSFER_FAILED);
+            return _emitErrorCode(ERROR_TIMEHOLDER_TRANSFER_FAILED);
         }
 
         require(wallet().withdraw(_token, _receiver, _amount));
@@ -598,14 +613,6 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     private
     {
         emitter().emitSharesWhiteListChanged(_token, 0, false);
-    }
-
-    function _emitError(uint e)
-    private
-    returns(uint)
-    {
-        emitter().emitError(e);
-        return e;
     }
 
     function emitter()

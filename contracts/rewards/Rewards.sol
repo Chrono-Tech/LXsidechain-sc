@@ -113,6 +113,21 @@ contract Rewards is Deposits, RewardsEmitter {
         return OK;
     }
 
+    /// @notice Sets EventsHistory contract address.
+    /// @dev Can be set only by owner.
+    /// @param _eventsHistory MultiEventsHistory contract address.
+    /// @return success.
+    function setupEventsHistory(address _eventsHistory) 
+    external 
+    onlyContractOwner 
+    returns (uint errorCode) 
+    {
+        require(_eventsHistory != 0x0);
+
+        _setEventsHistory(_eventsHistory);
+        return OK;
+    }
+
     /**
     * @dev Gets wallet address used to store tokens
     *
@@ -202,7 +217,7 @@ contract Rewards is Deposits, RewardsEmitter {
     {
         uint period = lastPeriod();
         if ((store.get(startDate, period) + (store.get(closeInterval) * 1 days)) > now) {
-            return _emitError(ERROR_REWARD_CANNOT_CLOSE_PERIOD);
+            return _emitErrorCode(ERROR_REWARD_CANNOT_CLOSE_PERIOD);
         }
 
         uint _totalSharesPeriod = store.get(totalSharesStorage);
@@ -213,7 +228,7 @@ contract Rewards is Deposits, RewardsEmitter {
         resultCode = registerAsset(period);
         if (OK != resultCode) {
             // do not interrupt, just emit an Event
-            emitError(resultCode);
+            _emitErrorCode(resultCode);
             return resultCode;
         }
 
@@ -422,7 +437,7 @@ contract Rewards is Deposits, RewardsEmitter {
 
             result = calculateRewardFor(shareholder, amount, period);
             if (OK != result) {
-                _emitError(result);
+                _emitErrorCode(result);
             }
 
             store.set(shares, period, shareholder, amount);
@@ -439,7 +454,7 @@ contract Rewards is Deposits, RewardsEmitter {
     {
         uint period_balance = store.get(assetBalances, _period);
         if (period_balance != 0) {
-            return _emitError(ERROR_REWARD_REWARDS_ALREADY_REGISTERED);
+            return _emitErrorCode(ERROR_REWARD_REWARDS_ALREADY_REGISTERED);
         }
 
         uint balance = address(wallet()).balance;
@@ -487,7 +502,7 @@ contract Rewards is Deposits, RewardsEmitter {
     returns (uint)
     {
         if (store.get(rewardsLeft) == 0) {
-            return _emitError(ERROR_REWARD_NO_REWARDS_LEFT);
+            return _emitErrorCode(ERROR_REWARD_NO_REWARDS_LEFT);
         }
 
         // Assuming that transfer(amount) of unknown asset may not result in exactly
@@ -495,7 +510,7 @@ contract Rewards is Deposits, RewardsEmitter {
         // balance before and after transfer, and proceed with the difference.
         uint startBalance = address(wallet()).balance;
         if (!wallet().withdrawEth(_address, _amount)) {
-            return _emitError(ERROR_REWARD_TRANSFER_FAILED);
+            return _emitErrorCode(ERROR_REWARD_TRANSFER_FAILED);
         }
 
         uint endBalance = address(wallet()).balance;
@@ -523,13 +538,5 @@ contract Rewards is Deposits, RewardsEmitter {
     internal
     {
         Rewards(getEventsHistory()).emitPeriodClosed();
-    }
-
-    function _emitError(uint e)
-    internal
-    returns (uint)
-    {
-        Rewards(getEventsHistory()).emitError(e);
-        return e;
     }
 }
