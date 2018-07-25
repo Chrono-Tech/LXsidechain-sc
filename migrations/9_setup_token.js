@@ -1,6 +1,6 @@
 const ChronoBankPlatform = artifacts.require("ChronoBankPlatform")
 const ChronoBankAssetProxy = artifacts.require("ChronoBankAssetProxy")
-const ChronoBankAsset = artifacts.require("ChronoBankAsset")
+const ChronoBankAsset = artifacts.require("ChronoBankAssetERC223")
 const path = require("path")
 
 module.exports = (deployer, network) => {

@@ -1,4 +1,4 @@
-const ChronoBankAsset = artifacts.require("ChronoBankAsset")
+const ChronoBankAsset = artifacts.require("ChronoBankAssetERC223")
 const ChronoBankAssetProxy = artifacts.require("ChronoBankAssetProxy")
 const LXValidatorManager = artifacts.require("LXValidatorManager")
 const path = require("path")

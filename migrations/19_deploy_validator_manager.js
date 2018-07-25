@@ -1,10 +1,12 @@
 const LXValidatorManager = artifacts.require("LXValidatorManager")
 const MultiEventsHistory = artifacts.require("MultiEventsHistory")
-const ChronoBankAsset = artifacts.require("ChronoBankAsset")
+const TimeHolder = artifacts.require("TimeHolder")
+const Storage = artifacts.require("Storage")
+const StorageManager = artifacts.require("StorageManager")
 const ChronoBankPlatform = artifacts.require("ChronoBankPlatform")
 const LXBlockReward = artifacts.require("LXBlockReward")
 const LXValidatorSet = artifacts.require("LXValidatorSet")
-const path = require("path")
+const { basename, } = require("path")
 
 module.exports = (deployer, network) => {
 	deployer.then(async () => {
@@ -19,15 +21,17 @@ module.exports = (deployer, network) => {
 		const platform = await ChronoBankPlatform.deployed()
 		const sharesAddress = await platform.proxies(TIME_SYMBOL);
 
-		await deployer.deploy(LXValidatorManager, validatorSetAddress, platform.address, sharesAddress)
+		await deployer.deploy(LXValidatorManager, Storage.address, "LXValidatorManager")
 
 		const manager = await LXValidatorManager.deployed()
+		const storageManager = await StorageManager.deployed()
+		await storageManager.giveAccess(manager.address, "LXValidatorManager")
 
 		const history = await MultiEventsHistory.deployed()
 		await history.authorize(manager.address)
 		await manager.setupEventsHistory(history.address)
 
-		await platform.setListener(manager.address, TIME_SYMBOL)
+		await manager.init(LXValidatorSet.address, TimeHolder.address, sharesAddress)
 
 		const validatorSet = LXValidatorSet.at(validatorSetAddress)
 		const blockReward = LXBlockReward.at(blockRewardAddress)
@@ -35,6 +39,6 @@ module.exports = (deployer, network) => {
 		await validatorSet.setBackend(LXValidatorManager.address)
 		await blockReward.setDataProvider(LXValidatorManager.address);
 
-		console.log(`[MIGRATION] [${parseInt(path.basename(__filename))}] LXValidatorManager: #done`)
+		console.log(`[MIGRATION] [${parseInt(basename(__filename))}] LXValidatorManager: #done`)
 	})
 }
