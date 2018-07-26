@@ -6,6 +6,7 @@
 pragma solidity ^0.4.23;
 
 import "../common/Object.sol";
+import "../common/ERC223ReceivingContract.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 
 
@@ -88,5 +89,9 @@ contract TimeHolderWallet is Object {
     returns (bool)
     {
         return ERC20(_asset).transfer(_to, _amount);
+    }
+
+    function tokenFallback(address _from, uint _value, bytes _data) external {
+        // do nothing but we know that we support all ERC20 and ERC223 tokens
     }
 }

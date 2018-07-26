@@ -7,6 +7,8 @@ pragma solidity ^0.4.23;
 
 
 import "../common/BaseManager.sol";
+import "../common/ERC223ReceivingContract.sol";
+import "../platform/ChronoBankAsset.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
 import "../lib/SafeMath.sol";
 import "./TimeHolderWallet.sol";
@@ -18,7 +20,7 @@ import "../validators/LXValidatorManager.sol";
 /// @title TimeHolder
 /// @notice Contract allows to block some amount of shares" balance to unlock
 /// functionality inside a system.
-contract TimeHolder is BaseManager, TimeHolderEmitter {
+contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
 
     using SafeMath for uint;
 
@@ -139,11 +141,36 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         return OK;
     }
 
-     /// @notice Gets shares amount deposited by a particular shareholder.
-     ///
-     /// @param _depositor shareholder address.
-     ///
-     /// @return shares amount.
+    /* ERC223 Receiving */
+    function tokenFallback(
+        address _from, 
+        uint _value, 
+        bytes _data
+    ) 
+    external 
+    {
+        // try to check for non-platform based tokens
+        address _token;
+        if (!store.includes(sharesTokenStorage, msg.sender)) {
+            // try to check for platform-based asset
+            address _assetProxy = ChronoBankAsset(msg.sender).proxy();
+            if (!store.includes(sharesTokenStorage, _assetProxy)) {
+                revert();
+            }
+            
+            _token = _assetProxy;
+        }
+        else {
+            _token = msg.sender;
+        }
+
+        require(_token != 0x0, "Caller should be a ERC20 token");
+        require(OK == _depositShares(_token, _from, _value, false), "Cannot deposit provided tokens");
+    }
+
+    /// @notice Gets shares amount deposited by a particular shareholder.
+    /// @param _depositor shareholder address.
+    /// @return shares amount.
     function depositBalance(address _depositor)
     public
     view
@@ -152,8 +179,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         return getDepositBalance(getDefaultShares(), _depositor);
     }
 
-    /// @dev Gets balance of tokens deposited to TimeHolder
-    ///
+    /// @notice Gets balance of tokens deposited to TimeHolder
     /// @param _token token to check
     /// @param _depositor shareholder address
     /// @return _balance shares amount.
@@ -177,6 +203,10 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
         return getDepositStorage().lockedDepositBalance(_token, _depositor);
     }
 
+    /// @notice Gets locked amount of tokens for delegated account
+    /// @param _token token address that is used for mining
+    /// @param _delegate delegate address
+    /// @return _balance total locked balance on a miner's account
     function getLockedDepositBalanceForDelegate(address _token, address _delegate)
     public
     view
@@ -311,29 +341,9 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     function depositFor(address _token, address _target, uint _amount)
     public
     onlyAllowedToken(_token)
-    onlyWithMiner
     returns (uint)
     {
-        require(_token != 0x0, "No token is specified");
-        address _primaryMiner = store.get(primaryMiner);
-        require(_target != _primaryMiner, "Miner coundn't have deposits");
-
-        if (_amount > getLimitForToken(_token)) {
-            return _emitErrorCode(ERROR_TIMEHOLDER_LIMIT_EXCEEDED);
-        }
-
-        if (!wallet().deposit(_token, msg.sender, _amount)) {
-            return _emitErrorCode(ERROR_TIMEHOLDER_TRANSFER_FAILED);
-        }
-
-        require(wallet().withdraw(_token, _primaryMiner, _amount), "Cannot withdraw from wallet");
-
-        getDepositStorage().depositFor(_token, _target, _amount);
-
-        _emitDeposit(_token, _target, _amount);
-        _emitMinerDeposited(_token, _amount, _primaryMiner, _target);
-
-        return OK;
+        return _depositShares(_token, _target, _amount, true);
     }
 
     /// @notice Locks provided amount of tokens from user's TimeHolder deposit
@@ -501,6 +511,45 @@ contract TimeHolder is BaseManager, TimeHolderEmitter {
     returns (address)
     {
         return getDepositStorage().getSharesContract();
+    }
+
+    function _depositShares(address _token, address _target, uint _amount, bool _depositFromWallet)
+    internal
+    onlyWithMiner
+    returns (uint)
+    {
+        require(_token != 0x0, "No token is specified");
+        address _primaryMiner = store.get(primaryMiner);
+        require(_target != _primaryMiner, "Miner coundn't have deposits");
+
+        if (_amount > getLimitForToken(_token)) {
+            return _emitErrorCode(ERROR_TIMEHOLDER_LIMIT_EXCEEDED);
+        }
+
+        if (_depositFromWallet &&
+            !wallet().deposit(_token, msg.sender, _amount)
+        ) {
+            return _emitErrorCode(ERROR_TIMEHOLDER_TRANSFER_FAILED);
+        } 
+        else if (!_depositFromWallet &&
+                 ERC20(_token).balanceOf(address(this)) < _amount
+        ) {
+            return _emitErrorCode(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
+        }
+
+        if (_depositFromWallet) {
+            require(wallet().withdraw(_token, _primaryMiner, _amount), "Cannot withdraw from wallet");
+        } 
+        else {
+            require(ERC20(_token).transfer(_primaryMiner, _amount), "Cannot transfer to primary miner");
+        }
+
+        getDepositStorage().depositFor(_token, _target, _amount);
+
+        _emitDeposit(_token, _target, _amount);
+        _emitMinerDeposited(_token, _amount, _primaryMiner, _target);
+
+        return OK;
     }
 
     /// @notice Withdraws deposited amount of tokens from account to a receiver address.
