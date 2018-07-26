@@ -117,6 +117,7 @@ const errorsLibrary = {
     TIMEHOLDER_MINING_LIMIT_NOT_REACHED: errorScope.timeholder + 9,
     TIMEHOLDER_INVALID_MINING_LIMIT: errorScope.timeholder + 10,
     TIMEHOLDER_NOTHING_TO_UNLOCK: errorScope.timeholder + 11,
+    TIMEHOLDER_ALREADY_MINER: errorScope.timeholder + 12,
 
     ERCMANAGER_INVALID_INVOCATION: errorScope.ercmanager + 0,
     ERCMANAGER_INVALID_STATE: errorScope.ercmanager + 1,
