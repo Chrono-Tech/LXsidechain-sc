@@ -15,6 +15,7 @@ contract('Rewards', (accounts) => {
     let reward
     let rewardsWallet
     let timeHolder
+    let timeHolderWallet
     let shares
     let asset1
 
@@ -90,6 +91,8 @@ contract('Rewards', (accounts) => {
     }
 
     before('Setup', async () => {
+        await reverter.promisifySnapshot()
+
         rewardsWallet = await RewardsWallet.deployed()
         reward = await Rewards.deployed()
         timeHolder = await TimeHolder.deployed()
@@ -103,15 +106,19 @@ contract('Rewards', (accounts) => {
         await shares.transfer(accounts[1], SHARES_BALANCE)
         await shares.transfer(accounts[2], SHARES_BALANCE)
 
-        const wallet = await timeHolder.wallet()
-        await shares.approve(wallet, SHARES_BALANCE, {from: accounts[0]})
-        await shares.approve(wallet, SHARES_BALANCE, {from: accounts[1]})
-        await shares.approve(wallet, SHARES_BALANCE, {from: accounts[2]})
-        await shares.approve(wallet, web3.toBigNumber(2).pow(256).sub(1), { from: miner, })
+        timeHolderWallet = await timeHolder.wallet()
+        await shares.approve(timeHolderWallet, SHARES_BALANCE, {from: accounts[0]})
+        await shares.approve(timeHolderWallet, SHARES_BALANCE, {from: accounts[1]})
+        await shares.approve(timeHolderWallet, SHARES_BALANCE, {from: accounts[2]})
+        await shares.approve(timeHolderWallet, web3.toBigNumber(2).pow(256).sub(1), { from: miner, })
         timeHolder._withdrawShares = _withdrawShares
         timeHolder._withdrawSharesCall = _withdrawSharesCall
 
         await reverter.promisifySnapshot()
+    })
+
+    after(async () => {
+        await reverter.promisifyRevert(1)
     })
 
     describe("standard", () => {
@@ -261,17 +268,19 @@ contract('Rewards', (accounts) => {
             await assertRewardsFor(accounts[0], 150)
         })
 
-        it('should not withdraw more shares than you have', async () => {
+        it('should NOT withdraw more shares than you have', async () => {
             const minerBalance = await shares.balanceOf(miner)
             await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100, { from: accounts[0], })
             const withdrawResultCode = await timeHolder._withdrawSharesCall(accounts[0], 200)
             assert.equal(withdrawResultCode.toNumber(), ErrorsEnum.TIMEHOLDER_INSUFFICIENT_BALANCE)
-
+            
+            const timeHolderWalletBalance = await shares.balanceOf(timeHolderWallet)
             await timeHolder._withdrawShares(accounts[0], 200)
             await assertDepositBalance(accounts[0], 100)
             await assertTotalDepositInPeriod(0, 100)
             await assertSharesBalance(accounts[0], SHARES_BALANCE - 100)
-            await assertSharesBalance(miner, minerBalance.plus(100))
+            await assertSharesBalance(timeHolderWallet, timeHolderWalletBalance)
+            await assertSharesBalance(miner, minerBalance)
         })
 
         it('should withdraw shares without deposit in new period', async () => {
@@ -292,12 +301,15 @@ contract('Rewards', (accounts) => {
         it('should withdraw shares', async () => {
             await timeHolder.deposit(DEFAULT_SHARE_ADDRESS, 100, { from: accounts[0], })
             const minerBalance = await shares.balanceOf(miner)
+
+            const timeHolderWalletBalance = await shares.balanceOf(timeHolderWallet)
             await timeHolder._withdrawShares(accounts[0], 50)
             await assertDepositBalance(accounts[0], 50)
             await assertDepositBalanceInPeriod(accounts[0], 0, 50)
             await assertTotalDepositInPeriod(0, 50)
             await assertSharesBalance(accounts[0], SHARES_BALANCE - 50)
-            await assertSharesBalance(miner, minerBalance.sub(50))
+            await assertSharesBalance(timeHolderWallet, timeHolderWalletBalance.sub(50))
+            await assertSharesBalance(miner, minerBalance)
         })
 
         it('should return false if rewardsLeft == 0', async () => {
