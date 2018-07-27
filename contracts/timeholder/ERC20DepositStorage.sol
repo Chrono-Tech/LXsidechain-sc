@@ -133,7 +133,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     returns (uint _balance)
     {
         if (_token != store.get(sharesContractStorage)) {
-            bytes32 _key = keccak256(_token, _depositor);
+            bytes32 _key = keccak256(abi.encodePacked(_token, _depositor));
             return _depositBalance(_key);
         }
 
@@ -181,7 +181,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         } else {
             store.add(shareholders_v2, bytes32(_token), _target);
 
-            bytes32 key = keccak256(_token, _target);
+            bytes32 key = keccak256(abi.encodePacked(_token, _target));
 
             id = store.get(depositsIdCounters_v2, key) + 1;
             store.set(depositsIdCounters_v2, key, id);
@@ -249,7 +249,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
             uint prevAmount_v1 = store.get(totalSharesStorage);
             store.set(totalSharesStorage, prevAmount_v1.sub(_amount));
         } else {
-            bytes32 _key = keccak256(_token, _account);
+            bytes32 _key = keccak256(abi.encodePacked(_token, _account));
             uint deposits_count_left_v2 = _withdrawShares(_key, _amount);
 
             if (deposits_count_left_v2 == 0) {

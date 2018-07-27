@@ -112,7 +112,7 @@ contract AtomicSwapERC20 is ERC223ReceivingContract {
     return swap.secretKey;
   }
 
-  function tokenFallback(address _from, uint _value, bytes _data) external {
+  function tokenFallback(address, uint, bytes) external {
     // do nothing but we know that we support all ERC20 and ERC223 tokens
   }
 }

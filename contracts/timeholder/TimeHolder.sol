@@ -153,7 +153,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
     function tokenFallback(
         address _from, 
         uint _value, 
-        bytes _data
+        bytes
     ) 
     external 
     {
