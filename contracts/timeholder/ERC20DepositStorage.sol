@@ -41,7 +41,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     /// Lock mining balance functionality
 
     /// @dev Locked amount of tokens by a user
-    StorageInterface.AddressAddressUIntMapping lockedDepositsStorage_v2; // (user => token => locked amount)
+    StorageInterface.Mapping lockedDepositsStorage_v2; // (user => token (or key in some cases) => locked amount)
 
     /// @dev Restricts access to functions only for TimeHolder sender
     modifier onlyTimeHolder {
@@ -145,7 +145,15 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     public
     view
     returns (uint _balance) {
-        _balance = store.get(lockedDepositsStorage_v2, _depositor, _token);
+        _balance = lockedDepositBalanceWithKey(_token, bytes32(_depositor));
+    }
+    
+    /// @notice TODO:
+    function lockedDepositBalanceWithKey(address _token, bytes32 _key)
+    public
+    view
+    returns (uint _balance) {
+        _balance = uint(store.get(lockedDepositsStorage_v2, _key, bytes32(_token)));
     }
 
     /// @notice Deposits for a _target for provided _amount of specified tokens
@@ -184,23 +192,35 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         }
     }
 
+    function unsafeLock(address _token, bytes32 _target, uint _amount)
+    public 
+    onlyTimeHolder
+    {
+        uint _total = uint(store.get(lockedDepositsStorage_v2, _target, bytes32(_token)));
+        store.set(lockedDepositsStorage_v2, _target, bytes32(_token), bytes32(_total.add(_amount)));
+    }
+
     function lock(address _token, address _target, uint _amount)
     public
     onlyTimeHolder
     {
-        uint _total = store.get(lockedDepositsStorage_v2, _target, _token);
-        store.set(lockedDepositsStorage_v2, _target, _token, _total.add(_amount));
-
+        unsafeLock(_token, bytes32(_target), _amount);
         withdrawShares(_token, _target, _amount, depositBalance(_token, _target));
+    }
+
+    function unsafeUnlock(address _token, bytes32 _target, uint _amount)
+    public
+    onlyTimeHolder
+    {
+        uint _total = uint(store.get(lockedDepositsStorage_v2, _target, bytes32(_token)));
+        store.set(lockedDepositsStorage_v2, _target, bytes32(_token), bytes32(_total.sub(_amount)));
     }
 
     function unlock(address _token, address _target, uint _amount)
     public
     onlyTimeHolder
     {
-        uint _total = store.get(lockedDepositsStorage_v2, _target, _token);
-        store.set(lockedDepositsStorage_v2, _target, _token, _total.sub(_amount));
-
+        unsafeUnlock(_token, bytes32(_target), _amount);
         depositFor(_token, _target, _amount);
     }
 

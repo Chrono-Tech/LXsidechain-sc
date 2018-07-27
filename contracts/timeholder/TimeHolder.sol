@@ -36,6 +36,8 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
     uint public constant ERROR_TIMEHOLDER_NOTHING_TO_UNLOCK = 12011;
     uint public constant ERROR_TIMEHOLDER_ALREADY_MINER = 12012;
 
+    bytes32 constant TIMEHOLDER_MINER_KEY = "primary_miner_key";
+
     /** Storage keys */
 
     /// @dev Contains addresses of tokens that are used as shares
@@ -49,7 +51,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
     /// @dev Address of ERC20DepositStorage contract
     StorageInterface.Address private erc20DepositStorage;
 
-    StorageInterface.Address private primaryMiner;
+    StorageInterface.Address private primaryMinerStorage;
 
     StorageInterface.Address private validatorManager;
 
@@ -71,13 +73,19 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
 
     /// @dev TODO
     modifier onlyWithMiner {
-        if (store.get(primaryMiner) == 0x0) {
+        if (store.get(primaryMinerStorage) == 0x0) {
             assembly {
                 mstore(0, 12008) // ERROR_TIMEHOLDER_MINER_REQUIRED
                 return(0, 32)
             }
         }
         _;
+    }
+
+    modifier onlyNotMiner {
+        if (msg.sender != store.get(primaryMinerStorage)) {
+            _;
+        }
     }
 
     /// @notice Constructor
@@ -94,7 +102,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
         delegates.init("delegates");
         miners.init("miners");
 
-        primaryMiner.init("primaryMiner");
+        primaryMinerStorage.init("primaryMiner");
     }
 
     /// @notice Init TimeHolder contract.
@@ -165,7 +173,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
         }
 
         require(_token != 0x0, "Caller should be a ERC20 token");
-        require(OK == _depositShares(_token, _from, _value, false), "Cannot deposit provided tokens");
+        require(OK == _depositShares(_token, _from, _value, true), "Cannot deposit provided tokens");
     }
 
     /// @notice Gets shares amount deposited by a particular shareholder.
@@ -200,6 +208,10 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
     view
     returns (uint _balance)
     {
+        if (_depositor == store.get(primaryMinerStorage)) {
+            return getDepositStorage().lockedDepositBalanceWithKey(_token, TIMEHOLDER_MINER_KEY);
+        }
+
         return getDepositStorage().lockedDepositBalance(_token, _depositor);
     }
 
@@ -226,7 +238,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
     view
     returns (address)
     {
-        return store.get(primaryMiner);
+        return store.get(primaryMinerStorage);
     }
 
     /// @notice Sets an address as a primary miner
@@ -238,7 +250,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
     returns (uint)
     {
         address _oldMiner = getPrimaryMiner();
-        store.set(primaryMiner, _miner);
+        store.set(primaryMinerStorage, _miner);
 
         _emitPrimaryMinerChanged(_oldMiner, _miner);
         return OK;
@@ -343,7 +355,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
     onlyAllowedToken(_token)
     returns (uint)
     {
-        return _depositShares(_token, _target, _amount, true);
+        return _depositShares(_token, _target, _amount, false);
     }
 
     /// @notice Locks provided amount of tokens from user's TimeHolder deposit
@@ -364,7 +376,9 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
         }
 
         if (store.get(miners, _delegate) != address(0x0) ||
-            store.get(delegates, msg.sender) != address(0x0)) {
+            store.get(delegates, msg.sender) != address(0x0) ||
+            _delegate == store.get(primaryMinerStorage)
+        ) {
             return _emitErrorCode(ERROR_TIMEHOLDER_ALREADY_MINER);
         }
 
@@ -378,6 +392,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
             return _emitErrorCode(ERROR_TIMEHOLDER_MINING_LIMIT_NOT_REACHED);
         }
 
+        getDepositStorage().unsafeUnlock(_token, TIMEHOLDER_MINER_KEY, _amount);
         getDepositStorage().lock(_token, msg.sender, _amount);
 
         _emitDepositLocked(_token, _amount, msg.sender);
@@ -400,6 +415,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
     /// @return result of an operation
     function unlockDepositAndResignMiner(address _token)
     external
+    onlyNotMiner
     returns (uint) {
         uint _lockedAmount = getDepositStorage().lockedDepositBalance(_token, msg.sender);
         if (_lockedAmount == 0) {
@@ -407,6 +423,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
         }
 
         getDepositStorage().unlock(_token, msg.sender, _lockedAmount);
+        getDepositStorage().unsafeLock(_token, TIMEHOLDER_MINER_KEY, _lockedAmount);
 
         address delegate = store.get(delegates, msg.sender);
         assert(delegate != address(0x0));
@@ -513,40 +530,34 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
         return getDepositStorage().getSharesContract();
     }
 
-    function _depositShares(address _token, address _target, uint _amount, bool _depositFromWallet)
+    function _depositShares(address _token, address _target, uint _amount, bool _direct)
     internal
     onlyWithMiner
     returns (uint)
     {
         require(_token != 0x0, "No token is specified");
-        address _primaryMiner = store.get(primaryMiner);
+        address _primaryMiner = store.get(primaryMinerStorage);
         require(_target != _primaryMiner, "Miner coundn't have deposits");
 
         if (_amount > getLimitForToken(_token)) {
             return _emitErrorCode(ERROR_TIMEHOLDER_LIMIT_EXCEEDED);
         }
 
-        if (_depositFromWallet &&
-            !wallet().deposit(_token, msg.sender, _amount)
+        if (_direct && 
+            !ERC20(_token).transfer(wallet(), _amount)
         ) {
             return _emitErrorCode(ERROR_TIMEHOLDER_TRANSFER_FAILED);
         } 
-        else if (!_depositFromWallet &&
-                 ERC20(_token).balanceOf(address(this)) < _amount
+        else if (!_direct && 
+                 !wallet().deposit(_token, msg.sender, _amount)
         ) {
-            return _emitErrorCode(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
-        }
-
-        if (_depositFromWallet) {
-            require(wallet().withdraw(_token, _primaryMiner, _amount), "Cannot withdraw from wallet");
-        } 
-        else {
-            require(ERC20(_token).transfer(_primaryMiner, _amount), "Cannot transfer to primary miner");
+            return _emitErrorCode(ERROR_TIMEHOLDER_TRANSFER_FAILED);
         }
 
         getDepositStorage().depositFor(_token, _target, _amount);
-
         _emitDeposit(_token, _target, _amount);
+
+        getDepositStorage().unsafeLock(_token, TIMEHOLDER_MINER_KEY, _amount);
         _emitMinerDeposited(_token, _amount, _primaryMiner, _target);
 
         return OK;
@@ -577,9 +588,7 @@ contract TimeHolder is BaseManager, TimeHolderEmitter, ERC223ReceivingContract {
             return _emitErrorCode(ERROR_TIMEHOLDER_INSUFFICIENT_BALANCE);
         }
 
-        if (!wallet().deposit(_token, store.get(primaryMiner), _amount)) {
-            return _emitErrorCode(ERROR_TIMEHOLDER_TRANSFER_FAILED);
-        }
+        getDepositStorage().unsafeUnlock(_token, TIMEHOLDER_MINER_KEY, _amount);
 
         require(wallet().withdraw(_token, _receiver, _amount));
 
