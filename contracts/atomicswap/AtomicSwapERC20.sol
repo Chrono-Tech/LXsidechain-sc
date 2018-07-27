@@ -1,8 +1,9 @@
 pragma solidity ^0.4.21;
 
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
+import "../common/ERC223ReceivingContract.sol";
 
-contract AtomicSwapERC20 {
+contract AtomicSwapERC20 is ERC223ReceivingContract {
 
   struct Swap {
     uint256 timelock;
@@ -109,5 +110,9 @@ contract AtomicSwapERC20 {
   function checkSecretKey(bytes32 _swapID) public view onlyClosedSwaps(_swapID) returns (bytes secretKey) {
     Swap memory swap = swaps[_swapID];
     return swap.secretKey;
+  }
+
+  function tokenFallback(address, uint, bytes) external {
+    // do nothing but we know that we support all ERC20 and ERC223 tokens
   }
 }
