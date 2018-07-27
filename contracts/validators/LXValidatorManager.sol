@@ -5,20 +5,21 @@
 
 pragma solidity ^0.4.23;
 
+
 import "solidity-shared-lib/contracts/Owned.sol";
-import "../genesis/validatorset/ILXValidatorSet.sol";
+import "solidity-storage-lib/contracts/StorageAdapter.sol";
+import "solidity-eventshistory-lib/contracts/MultiEventsHistoryAdapter.sol";
 import { ERC20Interface as ERC20 } from "solidity-shared-lib/contracts/ERC20Interface.sol";
+import "../genesis/validatorset/ILXValidatorSet.sol";
 import "../lib/SafeMath.sol";
 import "../timeholder/TimeHolderInterface.sol";
 
 
-contract LXValidatorManager is Owned {
+contract LXValidatorManager is Owned, StorageAdapter, MultiEventsHistoryAdapter {
     using SafeMath for uint;
 
-    struct AddressStatus {
-        bool isIn;
-        uint index;
-    }
+    event ValidatorAdded(address indexed self, address indexed validator);
+    event ValidatorRemoved(address indexed self, address indexed validator);
 
     enum RewardKind {
         Author, /// Reward attributed to the block author.
@@ -29,53 +30,159 @@ contract LXValidatorManager is Owned {
 
     // 10 LTH / 100 TIME
     uint constant public DEFAULT_REWARD_COEFFICIENT = (10 * (10**18)) / (100 * (10**8));
-    uint public k = DEFAULT_REWARD_COEFFICIENT;
 
-    // address => (type => value)
-    mapping (address => bool) public rewardBlacklist;
-    mapping (address => bool) public authorised;
+    StorageInterface.UInt private kStorage;
+    StorageInterface.AddressBoolMapping private rewardBlacklistStorage;
+    StorageInterface.AddressBoolMapping private authorisedStorage;
 
-    ILXValidatorSet public validatorSet;
-    TimeHolderInterface public timeHolder;
-    ERC20 public shares;
-    address public eventsHistory;
+    StorageInterface.Address private validatorSetStorage;
+    StorageInterface.Address private timeHolderStorage;
+    StorageInterface.Address private sharesStorage;
 
-    // Current list of addresses entitled to participate in the consensus.
-    address[] public validators;
-    address[] public pending;
-    mapping(address => AddressStatus) private pendingStatus;
+    StorageInterface.AddressesSet private validatorsStorage;
+    StorageInterface.AddressesSet private pendingStorage;
+
+    string public version = "v0.0.1";
 
     modifier auth {
-        require(msg.sender == contractOwner || authorised[msg.sender]);
+        require(msg.sender == contractOwner || authorized(msg.sender));
         _;
     }
 
     modifier onlyPending(address _someone) {
-        if (pendingStatus[_someone].isIn) {
+        if (isPending(_someone)) {
             _;
         }
     }
 
     modifier onlyNotPending(address _someone) {
-        if (!pendingStatus[_someone].isIn) {
+        if (!isPending(_someone)) {
             _;
         }
     }
 
-    constructor(address _validatorSet, address _timeHolder, address _shares)
+    constructor(Storage _storage, bytes32 _crate) StorageAdapter(_storage, _crate)
     public
     {
+        kStorage.init("kStorage");
+        rewardBlacklistStorage.init("rewardBlacklistStorage");
+        authorisedStorage.init("authorisedStorage");
+        validatorSetStorage.init("validatorSetStorage");
+        timeHolderStorage.init("timeHolderStorage");
+        sharesStorage.init("sharesStorage");
+        validatorsStorage.init("validatorsStorage");
+        pendingStorage.init("pendingStorage");
+    }
+
+    function init(address _validatorSet, address _timeHolder, address _shares)
+    external
+    onlyContractOwner
+    returns (bool)
+    {
         require(_validatorSet != address(0x0));
-        require(timeHolder != address(0x0));
+        require(_timeHolder != address(0x0));
         require(_shares != address(0x0));
 
-        validatorSet = ILXValidatorSet(_validatorSet);
-        timeHolder = TimeHolderInterface(_timeHolder);
-        shares = ERC20(_shares);
+        if (store.get(sharesStorage) != 0x0) {
+            require(store.get(sharesStorage) == _shares);
+        } else {
+            store.set(sharesStorage, _shares);
+        }
+
+        if (store.get(kStorage) == 0) {
+            store.set(kStorage, DEFAULT_REWARD_COEFFICIENT);
+        }
+
+        address _oldValidatorSet = store.get(validatorSetStorage);
+        if (_oldValidatorSet != 0x0 && _oldValidatorSet != _validatorSet) {
+            store.set(authorisedStorage, _oldValidatorSet, false);
+        }
+
+        address _oldTimeHolder = store.get(timeHolderStorage);
+        if (_oldTimeHolder != 0x0 && _oldTimeHolder != _timeHolder) {
+            store.set(authorisedStorage, _oldTimeHolder, false);
+        }
+
+        store.set(validatorSetStorage, _validatorSet);
+        store.set(timeHolderStorage, _timeHolder);
 
         // TODO: rework auth
-        authorised[_timeHolder] = true;
-        authorised[_validatorSet] = true;
+        store.set(authorisedStorage, _validatorSet, true);
+        store.set(authorisedStorage, _timeHolder, true);
+
+        return true;
+    }
+
+    function rewardsBlacklist(address _address) 
+    public 
+    view 
+    returns (bool) 
+    {
+        return store.get(rewardBlacklistStorage, _address);
+    }
+
+    function authorized(address _address)
+    public
+    view
+    returns (bool)
+    {
+        return store.get(authorisedStorage, _address);
+    }
+
+    function validatorSet()
+    public
+    view 
+    returns (ILXValidatorSet)
+    {
+        return ILXValidatorSet(store.get(validatorSetStorage));
+    }
+
+    function timeHolder()
+    public
+    view 
+    returns (TimeHolderInterface)
+    {
+        return TimeHolderInterface(store.get(timeHolderStorage));
+    }
+
+    function shares()
+    public
+    view 
+    returns (ERC20)
+    {
+        return ERC20(store.get(sharesStorage));
+    }
+
+    function validators(uint _idx)
+    public
+    view
+    returns (address)
+    {
+        return store.get(validatorsStorage, _idx);
+    }
+
+    function getValidators()
+    public
+    view
+    returns (address[] _validators)
+    {
+        _validators = store.get(validatorsStorage);
+    }
+
+    function pending(uint _idx)
+    public
+    view
+    returns (address)
+    {
+        return store.get(pendingStorage, _idx);
+    }
+
+    function getPending()
+    public
+    view
+    returns (address[] _pending)
+    {
+        _pending = store.get(pendingStorage);
     }
 
     function setupEventsHistory(address _eventsHistory)
@@ -83,14 +190,24 @@ contract LXValidatorManager is Owned {
     auth
     {
         require(_eventsHistory != address(0x0));
-        eventsHistory = _eventsHistory;
+        _setEventsHistory(_eventsHistory);
     }
 
     function setupRewardCoefficient(uint _k)
     public
     auth
     {
-        k = _k;
+        store.set(kStorage, _k);
+    }
+
+    function setTimeHolder(address _timeHolder)
+    public
+    auth
+    {
+        require(_timeHolder != 0x0);
+        store.set(authorisedStorage, store.get(timeHolderStorage), false);
+        store.set(timeHolderStorage, _timeHolder);
+        store.set(authorisedStorage, _timeHolder, true);
     }
 
     function addValidator(address _validator)
@@ -117,7 +234,7 @@ contract LXValidatorManager is Owned {
     public
     auth
     {
-        validators = pending;
+        store.copy(pendingStorage, validatorsStorage);
     }
 
     function isPending(address _someone)
@@ -125,7 +242,7 @@ contract LXValidatorManager is Owned {
     view
     returns (bool)
     {
-        return pendingStatus[_someone].isIn;
+        return store.includes(pendingStorage, _someone);
     }
 
     function isValidator(address _someone)
@@ -133,7 +250,7 @@ contract LXValidatorManager is Owned {
     view
     returns (bool)
     {
-        return pendingStatus[_someone].isIn && validatorSet.finalized();
+        return isPending(_someone) && validatorSet().finalized();
     }
 
     function reward(address _benefactor, uint _kind)
@@ -145,41 +262,23 @@ contract LXValidatorManager is Owned {
             return 0;
         }
 
-        uint balance = timeHolder.getLockedDepositBalance(address(shares), _benefactor);
-        return balance.mul(k);
-    }
-
-    function getValidators()
-    public
-    view
-    returns (address[])
-    {
-        return validators;
-    }
-
-    function getPending()
-    public
-    view
-    returns (address[])
-    {
-        return pending;
+        uint balance = timeHolder().getLockedDepositBalance(store.get(sharesStorage), _benefactor);
+        return balance.mul(store.get(kStorage));
     }
 
     function initiateChange()
     private
     {
-        validatorSet.initiateChange();
+        validatorSet().initiateChange();
     }
 
     function _addValidator(address _validator)
     private
     onlyNotPending(_validator)
     {
-        pendingStatus[_validator].isIn = true;
-        pendingStatus[_validator].index = pending.length;
-        pending.push(_validator);
+        store.add(pendingStorage, _validator);
 
-        // TODO: emit event
+        _emitter().emitValidatorAdded(_validator);
     }
 
     // Remove a validator.
@@ -187,14 +286,24 @@ contract LXValidatorManager is Owned {
     private
     onlyPending(_validator)
     {
-        pending[pendingStatus[_validator].index] = pending[pending.length - 1];
-        pendingStatus[pending[pendingStatus[_validator].index]].index = pendingStatus[_validator].index;
-        delete pending[pending.length - 1];
-        pending.length--;
+        store.remove(pendingStorage, _validator);
 
-        delete pendingStatus[_validator].index;
-        pendingStatus[_validator].isIn = false;
+        _emitter().emitValidatorRemoved(_validator);
+    }
 
-        // TODO: emit event
+    function _emitter()
+    private
+    view
+    returns (LXValidatorManager)
+    {
+        return LXValidatorManager(getEventsHistory());
+    }
+
+    function emitValidatorAdded(address _validator) public {
+        emit ValidatorAdded(_self(), _validator);
+    }
+
+    function emitValidatorRemoved(address _validator) public {
+        emit ValidatorRemoved(_self(), _validator);
     }
 }
