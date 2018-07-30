@@ -1,0 +1,823 @@
+{
+  "contractName": "TimeHolderInterface",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_token",
+          "type": "address"
+        },
+        {
+          "name": "_depositor",
+          "type": "address"
+        }
+      ],
+      "name": "getDepositBalance",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_token",
+          "type": "address"
+        },
+        {
+          "name": "_depositor",
+          "type": "address"
+        }
+      ],
+      "name": "getLockedDepositBalance",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_token",
+          "type": "address"
+        },
+        {
+          "name": "_delegate",
+          "type": "address"
+        }
+      ],
+      "name": "getLockedDepositBalanceForDelegate",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "/**\n * Copyright 2017–2018, LaborX PTY\n * Licensed under the AGPL Version 3 license.\n */\n\npragma solidity ^0.4.23;\n\n\ncontract TimeHolderInterface {\n    function getDepositBalance(address _token, address _depositor) public view returns(uint);\n    function getLockedDepositBalance(address _token, address _depositor) public view returns(uint);\n    function getLockedDepositBalanceForDelegate(address _token, address _delegate) public view returns(uint);\n}\n",
+  "sourcePath": "/Users/alesanro/Documents/Projects/ChronoBank/LXsidechain-sc/contracts/timeholder/TimeHolderInterface.sol",
+  "ast": {
+    "absolutePath": "/Users/alesanro/Documents/Projects/ChronoBank/LXsidechain-sc/contracts/timeholder/TimeHolderInterface.sol",
+    "exportedSymbols": {
+      "TimeHolderInterface": [
+        9434
+      ]
+    },
+    "id": 9435,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 9406,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "92:24:31"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 9434,
+        "linearizedBaseContracts": [
+          9434
+        ],
+        "name": "TimeHolderInterface",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "id": 9415,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getDepositBalance",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 9411,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9408,
+                  "name": "_token",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9415,
+                  "src": "181:14:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9407,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "181:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 9410,
+                  "name": "_depositor",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9415,
+                  "src": "197:18:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9409,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "197:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "180:36:31"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 9414,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9413,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9415,
+                  "src": "237:4:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 9412,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "237:4:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "236:6:31"
+            },
+            "scope": 9434,
+            "src": "154:89:31",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 9424,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getLockedDepositBalance",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 9420,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9417,
+                  "name": "_token",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9424,
+                  "src": "281:14:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9416,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "281:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 9419,
+                  "name": "_depositor",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9424,
+                  "src": "297:18:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9418,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "297:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "280:36:31"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 9423,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9422,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9424,
+                  "src": "337:4:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 9421,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "337:4:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "336:6:31"
+            },
+            "scope": 9434,
+            "src": "248:95:31",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 9433,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getLockedDepositBalanceForDelegate",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 9429,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9426,
+                  "name": "_token",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9433,
+                  "src": "392:14:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9425,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "392:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 9428,
+                  "name": "_delegate",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9433,
+                  "src": "408:17:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9427,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "408:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "391:35:31"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 9432,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9431,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9433,
+                  "src": "447:4:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 9430,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "447:4:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "446:6:31"
+            },
+            "scope": 9434,
+            "src": "348:105:31",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 9435,
+        "src": "119:336:31"
+      }
+    ],
+    "src": "92:364:31"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/alesanro/Documents/Projects/ChronoBank/LXsidechain-sc/contracts/timeholder/TimeHolderInterface.sol",
+    "exportedSymbols": {
+      "TimeHolderInterface": [
+        9434
+      ]
+    },
+    "id": 9435,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 9406,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "92:24:31"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 9434,
+        "linearizedBaseContracts": [
+          9434
+        ],
+        "name": "TimeHolderInterface",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "id": 9415,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getDepositBalance",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 9411,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9408,
+                  "name": "_token",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9415,
+                  "src": "181:14:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9407,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "181:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 9410,
+                  "name": "_depositor",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9415,
+                  "src": "197:18:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9409,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "197:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "180:36:31"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 9414,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9413,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9415,
+                  "src": "237:4:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 9412,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "237:4:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "236:6:31"
+            },
+            "scope": 9434,
+            "src": "154:89:31",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 9424,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getLockedDepositBalance",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 9420,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9417,
+                  "name": "_token",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9424,
+                  "src": "281:14:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9416,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "281:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 9419,
+                  "name": "_depositor",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9424,
+                  "src": "297:18:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9418,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "297:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "280:36:31"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 9423,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9422,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9424,
+                  "src": "337:4:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 9421,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "337:4:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "336:6:31"
+            },
+            "scope": 9434,
+            "src": "248:95:31",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 9433,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getLockedDepositBalanceForDelegate",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 9429,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9426,
+                  "name": "_token",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9433,
+                  "src": "392:14:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9425,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "392:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 9428,
+                  "name": "_delegate",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9433,
+                  "src": "408:17:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 9427,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "408:7:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "391:35:31"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 9432,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 9431,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 9433,
+                  "src": "447:4:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 9430,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "447:4:31",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "446:6:31"
+            },
+            "scope": 9434,
+            "src": "348:105:31",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 9435,
+        "src": "119:336:31"
+      }
+    ],
+    "src": "92:364:31"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.24+commit.e67f0147.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "2.0.1",
+  "updatedAt": "2018-07-27T20:15:18.666Z"
+}

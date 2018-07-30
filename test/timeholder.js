@@ -35,6 +35,8 @@ contract('New version of TimeHolder', (accounts) => {
     }
 
     before('Setup', async() => {
+        await reverter.promisifySnapshot();
+
         reward = await Rewards.deployed()
         timeHolder = await TimeHolder.deployed()
 
@@ -62,6 +64,10 @@ contract('New version of TimeHolder', (accounts) => {
 
         await reverter.promisifySnapshot();
     });
+
+    after(async () => {
+        await reverter.promisifyRevert(1);
+    })
 
     context("initial state", () => {
         const DEPOSIT_AMOUNT = 100
@@ -133,6 +139,15 @@ contract('New version of TimeHolder', (accounts) => {
                 )
             })
         })
+
+        describe("with default mining deposit limit", () => {
+            it("should be equal to 0", async () => {
+                assert.equal(
+                    (await timeHolder.getMiningDepositLimits.call(shares.address)).toNumber(),
+                    '0'
+                )
+            })
+        })
     })
 
     context("main functionality as", () => {
@@ -195,6 +210,28 @@ contract('New version of TimeHolder', (accounts) => {
                 assert.equal(await timeHolder.deposit.call(asset1.address, DEPOSIT_AMOUNT1), ErrorsEnum.UNAUTHORIZED);
                 assert.equal(await timeHolder.deposit.call(asset2.address, DEPOSIT_AMOUNT2), ErrorsEnum.UNAUTHORIZED);
             });
+
+            describe("ERC223 support", () => {
+                const DEPOSIT_AMOUNT = 200;
+                
+                it("should allow to transfer ERC223 token and immediately deposit", async () => {
+    
+                    assert.equal(await timeHolder.getDepositBalance(shares.address, accounts[0]), 0);
+                    assert.isTrue((await shares.transfer.call(timeHolder.address, DEPOSIT_AMOUNT, { from: accounts[0], })));
+    
+                    await shares.transfer(timeHolder.address, DEPOSIT_AMOUNT, { from: accounts[0], })
+                    assert.equal(await timeHolder.getDepositBalance(shares.address, accounts[0]), DEPOSIT_AMOUNT);
+                })
+
+                it("timeholder wallet should support ERC223 token transfer", async () => {
+                    assert.isTrue((await shares.transfer.call(timeHolderWallet, DEPOSIT_AMOUNT, { from: accounts[0], })));
+                })
+
+                it("rewards should NOT support ERC223 token transfer", async () => {
+                    await shares.transfer.call(reward.address, DEPOSIT_AMOUNT, { from: accounts[0], }).then(assert.fail, () => true)
+                })
+            })
+
         })
 
         context("withdrawal with", () => {
@@ -208,6 +245,8 @@ contract('New version of TimeHolder', (accounts) => {
             context("success flow", () => {
                 let initialBalance
                 let initialMinerSharesBalance
+                let initialMinerDepositBalance
+                let initialMinerLockedBalance
                 let initialWalletSharesBalance
 
                 before(async () => {
@@ -215,6 +254,8 @@ contract('New version of TimeHolder', (accounts) => {
 
                     initialBalance = await timeHolder.getDepositBalance.call(shares.address, user)
                     initialMinerSharesBalance = await shares.balanceOf(miner)
+                    initialMinerDepositBalance = await timeHolder.getDepositBalance(shares.address, miner)
+                    initialMinerLockedBalance = await timeHolder.getLockedDepositBalance(shares.address, miner)
                     initialWalletSharesBalance = await shares.balanceOf(timeHolderWallet)
                 })
 
@@ -223,8 +264,8 @@ contract('New version of TimeHolder', (accounts) => {
                 it("should allow to deposit", async () => {
                     const tx = await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user, })
                     assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
-                        initialBalance.plus(DEPOSIT_AMOUNT).toString()
+                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(16),
+                        initialBalance.plus(DEPOSIT_AMOUNT).toString(16)
                     )
 
                     {
@@ -244,17 +285,31 @@ contract('New version of TimeHolder', (accounts) => {
                     }
                 })
 
-                it("miner should receive deposited amount of shares", async () => {
+                it("miner should NOT receive deposited amount of shares", async () => {
                     assert.equal(
-                        (await shares.balanceOf(miner)).toString(),
-                        initialMinerSharesBalance.add(DEPOSIT_AMOUNT)
+                        (await shares.balanceOf(miner)).toString(16),
+                        initialMinerSharesBalance.toString(16)
+                    )
+                })
+                
+                it("miner should NOT receive deposit amount of shares", async () => {
+                    assert.equal(
+                        (await timeHolder.getDepositBalance.call(shares.address, miner)).toString(16),
+                        initialMinerDepositBalance.toString(16)
+                    )
+                })
+                
+                it("miner should receive additional locked balance in time holder", async () => {
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalance.call(shares.address, miner)).toString(16),
+                        initialMinerLockedBalance.add(DEPOSIT_AMOUNT).toString(16)
                     )
                 })
 
-                it("reward wallet should have initial shares balance", async () => {
+                it("reward wallet should receive deposited shares balance", async () => {
                     assert.equal(
                         (await shares.balanceOf(timeHolderWallet)).toString(),
-                        initialWalletSharesBalance.toString()
+                        initialWalletSharesBalance.add(DEPOSIT_AMOUNT).toString()
                     )
                 })
 
@@ -293,22 +348,24 @@ contract('New version of TimeHolder', (accounts) => {
                     }
 
                     assert.equal(
-                        (await shares.balanceOf(resolver)).toString(),
-                        minerSharesBalance.sub(withdrawalBalance).toString()
+                        (await shares.balanceOf(resolver)).toString(16),
+                        minerSharesBalance.toString(16)
                     )
                     assert.equal(
-                        (await shares.balanceOf(user)).toString(),
-                        userSharesBalance.add(withdrawalBalance).toString()
+                        (await shares.balanceOf(user)).toString(16),
+                        userSharesBalance.add(withdrawalBalance).toString(16)
                     )
-
                     assert.equal(
-                        (await shares.balanceOf(timeHolderWallet)).toString(),
-                        initialWalletSharesBalance.toString()
+                        (await shares.balanceOf(timeHolderWallet)).toString(16),
+                        initialWalletSharesBalance.toString(16)
                     )
-
                     assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
-                        initialBalance.toString()
+                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(16),
+                        initialBalance.toString(16)
+                    )
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalance.call(shares.address, miner)).toString(16),
+                        initialMinerLockedBalance.toString(16)
                     )
                 })
             })
@@ -394,6 +451,7 @@ contract('New version of TimeHolder', (accounts) => {
                 it("should allow force withdrawal from contract owner", async () => {
                     const resolver = miner
                     const minerSharesBalance = await shares.balanceOf(resolver)
+                    const initialMinerLockedBalance = await timeHolder.getLockedDepositBalance(shares.address, resolver)
                     const initialOwnerSharesBalance = await shares.balanceOf(contractOwner)
                     const initialOwnerDepositBalance = await timeHolder.getDepositBalance(shares.address, contractOwner)
                     const initialUserSharesBalance = await shares.balanceOf(depositor)
@@ -409,160 +467,805 @@ contract('New version of TimeHolder', (accounts) => {
                     }
 
                     assert.equal(
-                        (await shares.balanceOf(contractOwner)).toString(),
-                        initialOwnerSharesBalance.add(withdrawalAmount1).toString()
+                        (await shares.balanceOf(contractOwner)).toString(16),
+                        initialOwnerSharesBalance.add(withdrawalAmount1).toString(16)
                     )
                     assert.equal(
-                        (await shares.balanceOf(depositor)).toString(),
-                        initialUserSharesBalance.toString()
+                        (await shares.balanceOf(depositor)).toString(16),
+                        initialUserSharesBalance.toString(16)
                     )
                     assert.equal(
-                        (await shares.balanceOf(resolver)).toString(),
-                        minerSharesBalance.sub(withdrawalAmount1).toString()
+                        (await shares.balanceOf(resolver)).toString(16),
+                        minerSharesBalance.toString(16)
                     )
                     assert.equal(
-                        (await timeHolder.getDepositBalance(shares.address, contractOwner)).toString(),
-                        initialOwnerDepositBalance.toString()
+                        (await timeHolder.getLockedDepositBalance(shares.address, resolver)).toString(16),
+                        initialMinerLockedBalance.sub(withdrawalAmount1).toString(16)
                     )
                     assert.equal(
-                        (await timeHolder.getDepositBalance(shares.address, depositor)).toString(),
-                        initialBalance.add(totalDeposit).sub(withdrawalAmount1).toString()
+                        (await timeHolder.getDepositBalance(shares.address, contractOwner)).toString(16),
+                        initialOwnerDepositBalance.toString(16)
+                    )
+                    assert.equal(
+                        (await timeHolder.getDepositBalance(shares.address, depositor)).toString(16),
+                        initialBalance.add(totalDeposit).sub(withdrawalAmount1).toString(16)
                     )
                 })
             })
+        })
 
-            context("limited allowance", () => {
+        context("locking deposits and becoming a miner", () => {
+            const user = accounts[1]
+            const DEPOSIT_AMOUNT = 100
+            var contextSnapshotId
+
+            context("without set up mining deposit limit", () => {
 
                 before(async () => {
-                    await shares.approve(timeHolderWallet, DEPOSIT_AMOUNT, { from: miner, })
-
-                    await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user })
-                    await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user })
+                    await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user, })
                 })
 
-                after('revert', reverter.revert)
+                after('revert', reverter.revert);
 
-                it("should NOT allow to withdraw more than allowed with TIMEHOLDER_TRANSFER_FAILED code", async () => {
+                it("should have deposited balance in TimeHolder", async () => {
                     assert.equal(
-                        (await timeHolder.withdrawShares.call(shares.address, DEPOSIT_AMOUNT + 1, { from: user, })).toNumber(),
-                        ErrorsEnum.TIMEHOLDER_TRANSFER_FAILED
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        DEPOSIT_AMOUNT.toString(16)
                     )
                 })
 
-                it("should allow to withdraw equal to allowed sum with OK code", async () => {
+                it("should NOT allow to lock with TIMEHOLDER_INVALID_MINING_LIMIT code", async () => {
                     assert.equal(
-                        (await timeHolder.withdrawShares.call(shares.address, DEPOSIT_AMOUNT, { from: user, })).toNumber(),
-                        ErrorsEnum.OK
+                        (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, DEPOSIT_AMOUNT, user, { from: user, })).toNumber(),
+                        ErrorsEnum.TIMEHOLDER_INVALID_MINING_LIMIT
                     )
                 })
 
-                it("should allow to withdraw equal to allowed sum", async () => {
-                    await timeHolder.withdrawShares(shares.address, DEPOSIT_AMOUNT, { from: user, })
+                it("should NOT allow to lock", async () => {
+                    const tx = await timeHolder.lockDepositAndBecomeMiner(shares.address, DEPOSIT_AMOUNT, user, { from: user, })
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "DepositLocked"))[0]
+                        assert.isUndefined(event)
+                    }
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "BecomeMiner"))[0]
+                        assert.isUndefined(event)
+                    }
 
                     assert.equal(
-                        (await shares.allowance(miner, timeHolderWallet)).toString(),
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        DEPOSIT_AMOUNT.toString(16)
+                    )
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
                         '0'
-                    )
-                })
-
-                it("should NOT allow to withdraw deposited than allowed with TIMEHOLDER_TRANSFER_FAILED code", async () => {
-                    assert.equal(
-                        (await timeHolder.withdrawShares.call(shares.address, DEPOSIT_AMOUNT, { from: user, })).toNumber(),
-                        ErrorsEnum.TIMEHOLDER_TRANSFER_FAILED
                     )
                 })
             })
+            
+            context("with set up mining deposit limits", () => {
+                const MINING_DEPOSIT_LIMITS = 150
+                
+                before(async () => {
+                    await timeHolder.setMiningDepositLimits(shares.address, MINING_DEPOSIT_LIMITS, { from: accounts[0], })
+                    contextSnapshotId = reverter.snapshotId
+                    await reverter.promisifySnapshot()
+                })
 
-            context("unlimited allowance", () => {
-                const HALF_OF_UINT_MAX = UINT_MAX.div(2).truncated()
+                after(async () => {
+                    await reverter.promisifyRevert(contextSnapshotId)
+                })
+
+                it(`should have set up mining deposit limits = ${MINING_DEPOSIT_LIMITS}`, async () => {
+                    assert.equal(
+                        (await timeHolder.getMiningDepositLimits(shares.address)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+
+                describe("and without enough deposit", () => {
+
+                    before(async () => {
+                        await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user, })
+                    })
+        
+                    after('revert', reverter.revert);
+
+                    it("should have deposited balance in TimeHolder", async () => {
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            DEPOSIT_AMOUNT.toString(16)
+                        )
+                    })
+
+                    it("should NOT allow to lock with TIMEHOLDER_MINING_LIMIT_NOT_REACHED code", async () => {
+                        assert.equal(
+                            (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, DEPOSIT_AMOUNT, user, { from: user, })).toNumber(),
+                            ErrorsEnum.TIMEHOLDER_MINING_LIMIT_NOT_REACHED
+                        )
+                    })
+
+                    it("should NOT allow to lock", async () => {
+                        const tx = await timeHolder.lockDepositAndBecomeMiner(shares.address, DEPOSIT_AMOUNT, user, { from: user, })
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "DepositLocked"))[0]
+                            assert.isUndefined(event)
+                        }
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "BecomeMiner"))[0]
+                            assert.isUndefined(event)
+                        }
+    
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            DEPOSIT_AMOUNT.toString(16)
+                        )
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                            '0'
+                        )
+                    })
+
+                })
+
+                describe("and with enough deposit", () => {
+
+                    before(async () => {
+                        await timeHolder.deposit(shares.address, MINING_DEPOSIT_LIMITS, { from: user, })
+                    })
+        
+                    after('revert', reverter.revert);
+
+                    it("should have deposited balance in TimeHolder", async () => {
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                    })
+
+                    it("should allow to lock with OK code", async () => {
+                        assert.equal(
+                            (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, MINING_DEPOSIT_LIMITS, user, { from: user, })).toNumber(),
+                            ErrorsEnum.OK
+                        )
+                    })
+
+                    it("should allow to lock", async () => {
+                        const tx = await timeHolder.lockDepositAndBecomeMiner(shares.address, MINING_DEPOSIT_LIMITS, user, { from: user, })
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "DepositLocked"))[0]
+                            assert.isDefined(event)
+                            assert.equal(event.args.token, shares.address)
+                            assert.equal(web3.toBigNumber(event.args.amount).toString(16), MINING_DEPOSIT_LIMITS.toString(16))
+                            assert.equal(event.args.user, user)
+                        }
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "BecomeMiner"))[0]
+                            assert.isDefined(event)
+                            assert.equal(event.args.token, shares.address)
+                            assert.equal(event.args.miner, user)
+                            assert.equal(web3.toBigNumber(event.args.totalDepositLocked).toString(16), MINING_DEPOSIT_LIMITS.toString(16))
+                        }
+    
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            '0'
+                        )
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                    })
+
+                    it("should allow to deposit more", async () => {
+                        await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user, })
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            DEPOSIT_AMOUNT.toString(16)
+                        )
+                    })
+
+                    it("should NOT allow to lock more tokens with TIMEHOLDER_ALREADY_MINER code", async () => {
+                        assert.equal(
+                            (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, DEPOSIT_AMOUNT, user, { from: user, })).toNumber(),
+                            ErrorsEnum.TIMEHOLDER_ALREADY_MINER
+                        )
+                    })
+
+                    it("should NOT allow to lock more tokens", async () => {
+                        const tx = await timeHolder.lockDepositAndBecomeMiner(shares.address, DEPOSIT_AMOUNT, user, { from: user, })
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "DepositLocked"))[0]
+                            assert.isUndefined(event)
+                        }
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "BecomeMiner"))[0]
+                            assert.isUndefined(event)
+                        }
+
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            DEPOSIT_AMOUNT.toString(16)
+                        )    
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, user)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                    })
+                })
+            })
+        })
+        
+        context("unlocking deposits and resigning a miner", () => {
+            const MINING_DEPOSIT_LIMITS = 150
+            const user = accounts[1]
+            const DEPOSIT_AMOUNT = 100
+
+            describe('with no locked deposits', () => {
 
                 before(async () => {
-                    await shares.approve(timeHolderWallet, 0, { from: user, })
-                    await shares.approve(timeHolderWallet, UINT_MAX, { from: miner, })
+                    await timeHolder.setMiningDepositLimits(shares.address, MINING_DEPOSIT_LIMITS, { from: accounts[0], })
 
-                    let platform = await ChronoBankPlatform.deployed()
-                    await platform.reissueAsset(await shares.symbol(), HALF_OF_UINT_MAX)
-                    await shares.transfer(user, HALF_OF_UINT_MAX)
-
-                    await shares.approve(timeHolderWallet, HALF_OF_UINT_MAX, { from: user, })
-                    await timeHolder.deposit(shares.address, HALF_OF_UINT_MAX, { from: user })
+                    await timeHolder.deposit(shares.address, MINING_DEPOSIT_LIMITS, { from: user, })
                 })
 
-                after('revert', reverter.revert)
+                after('revert', reverter.revert);
 
-                it("should allow to withdraw half of max amount of total token from TimeHolder with OK code", async () => {
+                it("should NOT have locked deposit balance in TimeHolder", async () => {
                     assert.equal(
-                        (await timeHolder.withdrawShares.call(shares.address, HALF_OF_UINT_MAX, { from: user, })).toNumber(),
-                        ErrorsEnum.OK
+                        (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                        '0'.toString(16)
                     )
                 })
 
-                it("should allow to withdraw equal to deposited amount", async () => {
-                    await timeHolder.withdrawShares(shares.address, HALF_OF_UINT_MAX, { from: user, })
-
+                it("should NOT be able to resign a miner with TIMEHOLDER_NOTHING_TO_UNLOCK code", async () => {
                     assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
-                        '0'
-                    )
-                    assert.isTrue(
-                        (await shares.allowance(miner, timeHolderWallet)).eq(UINT_MAX)
+                        (await timeHolder.unlockDepositAndResignMiner.call(shares.address, { from: user, })).toNumber(),
+                        ErrorsEnum.TIMEHOLDER_NOTHING_TO_UNLOCK
                     )
                 })
-
-                it("should allow to deposit the same value (HALF_OF_UINT_MAX) for the second time", async () => {
-                    await shares.approve(timeHolderWallet, HALF_OF_UINT_MAX, { from: user, })
-                    await timeHolder.deposit(shares.address, HALF_OF_UINT_MAX, { from: user })
+                
+                it("should NOT be able to resign a miner", async () => {
+                    const tx = await timeHolder.unlockDepositAndResignMiner(shares.address, { from: user, })
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "ResignMiner"))[0]
+                        assert.isUndefined(event)
+                    }
+                })
+                
+                it("should NOT change deposited balance", async () => {
+                    assert.equal(
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+            })
+            
+            describe("when already a miner", () => {
+                
+                before(async () => {
+                    await timeHolder.setMiningDepositLimits(shares.address, MINING_DEPOSIT_LIMITS, { from: accounts[0], })
                     
-                    assert.isTrue(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).eq(HALF_OF_UINT_MAX)
+                    await timeHolder.deposit(shares.address, MINING_DEPOSIT_LIMITS, { from: user, })
+                    await timeHolder.lockDepositAndBecomeMiner(shares.address, MINING_DEPOSIT_LIMITS, user, { from: user, })
+                })
+                
+                after('revert', reverter.revert);
+                
+                it(`should have set up mining deposit limits = ${MINING_DEPOSIT_LIMITS}`, async () => {
+                    assert.equal(
+                        (await timeHolder.getMiningDepositLimits(shares.address)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
                     )
                 })
                 
-                it("should allow to withdraw (2nd time) half of max amount of total token from TimeHolder with OK code", async () => {
+                it("should NOT have deposited balance in TimeHolder", async () => {
                     assert.equal(
-                        (await timeHolder.withdrawShares.call(shares.address, HALF_OF_UINT_MAX, { from: user, })).toNumber(),
-                        ErrorsEnum.OK
-                    )
-                })
-
-                it("should allow to withdraw (3rd time) equal to deposited amount", async () => {
-                    await timeHolder.withdrawShares(shares.address, HALF_OF_UINT_MAX, { from: user, })
-
-                    assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
                         '0'
-                    )
-                    assert.isTrue(
-                        (await shares.allowance(miner, timeHolderWallet)).eq(UINT_MAX)
-                    )
-                })
-
-                it("should allow to deposit the same value (HALF_OF_UINT_MAX) for the third time", async () => {
-                    await shares.approve(timeHolderWallet, HALF_OF_UINT_MAX, { from: user, })
-                    await timeHolder.deposit(shares.address, HALF_OF_UINT_MAX, { from: user })
-                    assert.isTrue(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).eq(HALF_OF_UINT_MAX)
                     )
                 })
                 
-                it("should allow to withdraw (3nd time) half of max amount of total token from TimeHolder with OK code", async () => {
+                it("should have locked deposit balance in TimeHolder", async () => {
                     assert.equal(
-                        (await timeHolder.withdrawShares.call(shares.address, HALF_OF_UINT_MAX, { from: user, })).toNumber(),
+                        (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+    
+                it("should allow to unlock deposited balance with OK code", async () => {
+                    assert.equal(
+                        (await timeHolder.unlockDepositAndResignMiner.call(shares.address, { from: user, })).toNumber(),
                         ErrorsEnum.OK
                     )
                 })
-
-                it("should allow to withdraw (3rd time) equal to deposited amount", async () => {
-                    await timeHolder.withdrawShares(shares.address, HALF_OF_UINT_MAX, { from: user, })
-
+    
+                it("should allow to unlock deposited balance", async () => {
+                    const tx = await timeHolder.unlockDepositAndResignMiner(shares.address, { from: user, })
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "ResignMiner"))[0]
+                        assert.isDefined(event)
+                        assert.equal(event.args.token, shares.address)
+                        assert.equal(event.args.miner, user)
+                        assert.equal(web3.toBigNumber(event.args.depositUnlocked).toString(16), MINING_DEPOSIT_LIMITS.toString(16))
+                    }
                     assert.equal(
-                        (await timeHolder.getDepositBalance.call(shares.address, user)).toString(),
+                        (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
                         '0'
                     )
-                    assert.isTrue(
-                        (await shares.allowance(miner, timeHolderWallet)).eq(UINT_MAX)
+                })
+    
+                it("should have its deposit back", async () => {
+                    assert.equal(
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
                     )
                 })
+
+                it("should NOT be able to lock less then mining deposit limit when the deposit is unlocked with TIMEHOLDER_MINING_LIMIT_NOT_REACHED code", async () => {
+                    assert.isAtLeast(MINING_DEPOSIT_LIMITS, DEPOSIT_AMOUNT)
+                    assert.equal(
+                        (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, DEPOSIT_AMOUNT, user, { from: user, })).toNumber(),
+                        ErrorsEnum.TIMEHOLDER_MINING_LIMIT_NOT_REACHED
+                    )
+                })
+            })
+        })
+
+        context("locking deposits for a delegate", () => {
+            const user = accounts[1]
+            const DEPOSIT_AMOUNT = 100
+            const delegates = {
+                delegate1: accounts[8],
+                delegate2: accounts[9],
+            }
+            var contextSnapshotId
+            
+            context("without set up mining deposit limit", () => {
+
+                before(async () => {
+                    await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user, })
+                })
+
+                after('revert', reverter.revert);
+
+                it("should have deposited balance in TimeHolder", async () => {
+                    assert.equal(
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        DEPOSIT_AMOUNT.toString(16)
+                    )
+                })
+                
+                it("should NOT have any locked deposited balance for a delegate", async () => {
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, delegates.delegate1)).toString(16),
+                        '0',
+                        "should not have deposit for delegate1"
+                    )
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, delegates.delegate2)).toString(16),
+                        '0',
+                        "should not have deposit for delegate2"
+                    )
+                    
+                })
+
+                it("should NOT allow to lock with TIMEHOLDER_INVALID_MINING_LIMIT code", async () => {
+                    assert.equal(
+                        (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, DEPOSIT_AMOUNT, delegates.delegate1, { from: user, })).toNumber(),
+                        ErrorsEnum.TIMEHOLDER_INVALID_MINING_LIMIT
+                    )
+                })
+
+                it("should NOT allow to lock", async () => {
+                    const tx = await timeHolder.lockDepositAndBecomeMiner(shares.address, DEPOSIT_AMOUNT, delegates.delegate1, { from: user, })
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "DepositLocked"))[0]
+                        assert.isUndefined(event)
+                    }
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "BecomeMiner"))[0]
+                        assert.isUndefined(event)
+                    }
+
+                    assert.equal(
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        DEPOSIT_AMOUNT.toString(16)
+                    )
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                        '0'
+                    )
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, delegates.delegate1)).toString(16),
+                        '0'
+                    )
+                })
+            })
+            
+            context("with set up mining deposit limits", () => {
+                const MINING_DEPOSIT_LIMITS = 150
+                
+                before(async () => {
+                    await timeHolder.setMiningDepositLimits(shares.address, MINING_DEPOSIT_LIMITS, { from: accounts[0], })
+                    contextSnapshotId = reverter.snapshotId
+                    await reverter.promisifySnapshot()
+                })
+
+                after(async () => {
+                    await reverter.promisifyRevert(contextSnapshotId)
+                })
+
+                it(`should have set up mining deposit limits = ${MINING_DEPOSIT_LIMITS}`, async () => {
+                    assert.equal(
+                        (await timeHolder.getMiningDepositLimits(shares.address)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+
+                describe("and without enough deposit", () => {
+
+                    before(async () => {
+                        await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user, })
+                    })
+        
+                    after('revert', reverter.revert);
+
+                    it("should have deposited balance in TimeHolder", async () => {
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            DEPOSIT_AMOUNT.toString(16)
+                        )
+                    })
+
+                    it("should NOT allow to lock with TIMEHOLDER_MINING_LIMIT_NOT_REACHED code", async () => {
+                        assert.equal(
+                            (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, DEPOSIT_AMOUNT, delegates.delegate1, { from: user, })).toNumber(),
+                            ErrorsEnum.TIMEHOLDER_MINING_LIMIT_NOT_REACHED
+                        )
+                    })
+
+                    it("should NOT allow to lock", async () => {
+                        const tx = await timeHolder.lockDepositAndBecomeMiner(shares.address, DEPOSIT_AMOUNT, delegates.delegate1, { from: user, })
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "DepositLocked"))[0]
+                            assert.isUndefined(event)
+                        }
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "BecomeMiner"))[0]
+                            assert.isUndefined(event)
+                        }
+    
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            DEPOSIT_AMOUNT.toString(16)
+                        )
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                            '0'
+                        )
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, delegates.delegate1)).toString(16),
+                            '0'
+                        )
+                    })
+
+                })
+
+                describe("and with enough deposit", () => {
+
+                    before(async () => {
+                        await timeHolder.deposit(shares.address, MINING_DEPOSIT_LIMITS, { from: user, })
+                    })
+        
+                    after('revert', reverter.revert);
+
+                    it("should have deposited balance in TimeHolder", async () => {
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                    })
+
+                    it("should allow to lock with OK code", async () => {
+                        assert.equal(
+                            (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, MINING_DEPOSIT_LIMITS, delegates.delegate1, { from: user, })).toNumber(),
+                            ErrorsEnum.OK
+                        )
+                    })
+
+                    it("should allow to lock", async () => {
+                        const tx = await timeHolder.lockDepositAndBecomeMiner(shares.address, MINING_DEPOSIT_LIMITS, delegates.delegate1, { from: user, })
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "DepositLocked"))[0]
+                            assert.isDefined(event)
+                            assert.equal(event.args.token, shares.address)
+                            assert.equal(web3.toBigNumber(event.args.amount).toString(16), MINING_DEPOSIT_LIMITS.toString(16))
+                            assert.equal(event.args.user, user)
+                        }
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "BecomeMiner"))[0]
+                            assert.isDefined(event)
+                            assert.equal(event.args.token, shares.address)
+                            assert.equal(event.args.miner, delegates.delegate1)
+                            assert.equal(web3.toBigNumber(event.args.totalDepositLocked).toString(16), MINING_DEPOSIT_LIMITS.toString(16))
+                        }
+    
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            '0'
+                        )
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, delegates.delegate1)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                    })
+
+                    it("should allow to deposit more", async () => {
+                        await timeHolder.deposit(shares.address, DEPOSIT_AMOUNT, { from: user, })
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            DEPOSIT_AMOUNT.toString(16)
+                        )
+                    })
+
+                    it("should NOT allow to lock more tokens with TIMEHOLDER_ALREADY_MINER code", async () => {
+                        assert.equal(
+                            (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, DEPOSIT_AMOUNT, delegates.delegate1, { from: user, })).toNumber(),
+                            ErrorsEnum.TIMEHOLDER_ALREADY_MINER
+                        )
+                    })
+
+                    it("should NOT allow to lock more tokens", async () => {
+                        const tx = await timeHolder.lockDepositAndBecomeMiner(shares.address, DEPOSIT_AMOUNT, delegates.delegate1, { from: user, })
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "DepositLocked"))[0]
+                            assert.isUndefined(event)
+                        }
+                        {
+                            const event = (await eventsHelper.findEvent([timeHolder,], tx, "BecomeMiner"))[0]
+                            assert.isUndefined(event)
+                        }
+
+                        assert.equal(
+                            (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                            DEPOSIT_AMOUNT.toString(16)
+                        )    
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                        assert.equal(
+                            (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, delegates.delegate1)).toString(16),
+                            MINING_DEPOSIT_LIMITS.toString(16)
+                        )
+                    })
+                })
+            })
+        })
+
+        context("unlocking deposits for a delegate", () => {
+            const MINING_DEPOSIT_LIMITS = 150
+            const user = accounts[1]
+            const DEPOSIT_AMOUNT = 100
+            const delegates = {
+                delegate1: accounts[8],
+                delegate2: accounts[9],
+            }
+
+            describe('with no locked deposits', () => {
+
+                before(async () => {
+                    await timeHolder.setMiningDepositLimits(shares.address, MINING_DEPOSIT_LIMITS, { from: accounts[0], })
+
+                    await timeHolder.deposit(shares.address, MINING_DEPOSIT_LIMITS, { from: user, })
+                })
+
+                after('revert', reverter.revert);
+
+                it("should NOT have locked deposit balance in TimeHolder", async () => {
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                        '0'.toString(16)
+                    )
+                })
+
+                it("should NOT be able to resign a miner with TIMEHOLDER_NOTHING_TO_UNLOCK code", async () => {
+                    assert.equal(
+                        (await timeHolder.unlockDepositAndResignMiner.call(shares.address, { from: user, })).toNumber(),
+                        ErrorsEnum.TIMEHOLDER_NOTHING_TO_UNLOCK
+                    )
+                })
+                
+                it("should NOT be able to resign a miner", async () => {
+                    const tx = await timeHolder.unlockDepositAndResignMiner(shares.address, { from: user, })
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "ResignMiner"))[0]
+                        assert.isUndefined(event)
+                    }
+                })
+                
+                it("should NOT change deposited balance", async () => {
+                    assert.equal(
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+            })
+            
+            describe("when already a miner", () => {
+                
+                before(async () => {
+                    await timeHolder.setMiningDepositLimits(shares.address, MINING_DEPOSIT_LIMITS, { from: accounts[0], })
+                    
+                    await timeHolder.deposit(shares.address, MINING_DEPOSIT_LIMITS, { from: user, })
+                    await timeHolder.lockDepositAndBecomeMiner(shares.address, MINING_DEPOSIT_LIMITS, delegates.delegate1, { from: user, })
+                })
+                
+                after('revert', reverter.revert);
+                
+                it(`should have set up mining deposit limits = ${MINING_DEPOSIT_LIMITS}`, async () => {
+                    assert.equal(
+                        (await timeHolder.getMiningDepositLimits(shares.address)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+                
+                it("should NOT have deposited balance in TimeHolder", async () => {
+                    assert.equal(
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        '0'
+                    )
+                })
+                
+                it("should have locked deposit balance in TimeHolder", async () => {
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+                
+                it("should have locked deposit balance for a delegate", async () => {
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, delegates.delegate1)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+    
+                it("should allow to unlock deposited balance with OK code", async () => {
+                    assert.equal(
+                        (await timeHolder.unlockDepositAndResignMiner.call(shares.address, { from: user, })).toNumber(),
+                        ErrorsEnum.OK
+                    )
+                })
+    
+                it("should allow to unlock deposited balance", async () => {
+                    const tx = await timeHolder.unlockDepositAndResignMiner(shares.address, { from: user, })
+                    {
+                        const event = (await eventsHelper.findEvent([timeHolder,], tx, "ResignMiner"))[0]
+                        assert.isDefined(event)
+                        assert.equal(event.args.token, shares.address)
+                        assert.equal(event.args.miner, user)
+                        assert.equal(web3.toBigNumber(event.args.depositUnlocked).toString(16), MINING_DEPOSIT_LIMITS.toString(16))
+                    }
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalance(shares.address, user)).toString(16),
+                        '0'
+                    )
+                    assert.equal(
+                        (await timeHolder.getLockedDepositBalanceForDelegate(shares.address, delegates.delegate1)).toString(16),
+                        '0'
+                    )
+                })
+    
+                it("should have its deposit back", async () => {
+                    assert.equal(
+                        (await timeHolder.getDepositBalance(shares.address, user)).toString(16),
+                        MINING_DEPOSIT_LIMITS.toString(16)
+                    )
+                })
+
+                it("should NOT be able to lock less then mining deposit limit when the deposit is unlocked with TIMEHOLDER_MINING_LIMIT_NOT_REACHED code", async () => {
+                    assert.isAtLeast(MINING_DEPOSIT_LIMITS, DEPOSIT_AMOUNT)
+                    assert.equal(
+                        (await timeHolder.lockDepositAndBecomeMiner.call(shares.address, DEPOSIT_AMOUNT, user, { from: user, })).toNumber(),
+                        ErrorsEnum.TIMEHOLDER_MINING_LIMIT_NOT_REACHED
+                    )
+                })
+            })
+        })
+
+        context("setup of primary miner", () => {
+            const MINING_DEPOSIT_LIMITS = 150
+            const user = accounts[1]
+            const otherMiner = accounts[7]
+
+            before(async () => {
+                await timeHolder.setMiningDepositLimits(shares.address, MINING_DEPOSIT_LIMITS, { from: accounts[0], })
+                await timeHolder.deposit(shares.address, MINING_DEPOSIT_LIMITS, { from: user, })
+            })
+
+            after(async () => {
+                await reverter.promisifyRevert()
+            })
+
+            it("should have set up miner", async () => {
+                assert.equal(
+                    await timeHolder.getPrimaryMiner(),
+                    miner
+                )
+            })
+
+            it("miner should have locked balance", async () => {
+                assert.equal(
+                    (await timeHolder.getLockedDepositBalance(shares.address, miner)).toString(16),
+                    MINING_DEPOSIT_LIMITS.toString(16)
+                )
+            })
+
+            it("miner should NOT have locked balance", async () => {
+                assert.equal(
+                    (await timeHolder.getDepositBalance(shares.address, miner)).toString(16),
+                    '0'
+                )
+            })
+
+            it("miner should NOT be able to unlock locked balance with UNAUTHORIZED code", async () => {
+                assert.equal(
+                    (await timeHolder.unlockDepositAndResignMiner.call(shares.address, { from: miner, })).toString(16),
+                    ErrorsEnum.UNAUTHORIZED.toString(16)
+                )
+            })
+
+            it("miner should NOT be able to unlock locked balance", async () => {
+                await timeHolder.unlockDepositAndResignMiner(shares.address, { from: miner, })
+                assert.equal(
+                    (await timeHolder.getDepositBalance(shares.address, miner)).toString(16),
+                    '0'
+                )
+                assert.equal(
+                    (await timeHolder.getLockedDepositBalance(shares.address, miner)).toString(16),
+                    MINING_DEPOSIT_LIMITS.toString(16)
+                )
+            })
+
+            it("should allow to change primary miner to contract owner", async () => {
+                assert.equal(
+                    (await timeHolder.setPrimaryMiner.call(otherMiner, { from: accounts[0], })).toString(16),
+                    ErrorsEnum.OK.toString(16)
+                )
+
+                await timeHolder.setPrimaryMiner(otherMiner, { from: accounts[0], })
+                assert.equal(
+                    await timeHolder.getPrimaryMiner(),
+                    otherMiner
+                )
+            })
+
+            it("old miner should NOT have any locked balances nor deposits", async () => {
+                assert.equal(
+                    (await timeHolder.getLockedDepositBalance(shares.address, miner)).toString(16),
+                    '0'
+                )
+                assert.equal(
+                    (await timeHolder.getDepositBalance(shares.address, miner)).toString(16),
+                    '0'
+                )
+            })
+
+            it("new miner should have locked balance", async () => {
+                assert.equal(
+                    (await timeHolder.getLockedDepositBalance(shares.address, otherMiner)).toString(16),
+                    MINING_DEPOSIT_LIMITS.toString(16)
+                )
             })
         })
     })

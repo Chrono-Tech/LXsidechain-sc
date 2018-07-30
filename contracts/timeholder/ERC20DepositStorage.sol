@@ -38,6 +38,11 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     StorageInterface.AddressesSet private sharesTokenStorage_v2;
     StorageInterface.AddressUIntMapping private limitsStorage_v2;
 
+    /// Lock mining balance functionality
+
+    /// @dev Locked amount of tokens by a user
+    StorageInterface.Mapping lockedDepositsStorage_v2; // (user => token (or key in some cases) => locked amount)
+
     /// @dev Restricts access to functions only for TimeHolder sender
     modifier onlyTimeHolder {
         bool permitted = store.store.manager().isAllowed(msg.sender, store.crate);
@@ -64,6 +69,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         totalSharesStorage_v2.init("totalSharesStorage_v2");
         sharesTokenStorage_v2.init("sharesContractsStorage_v2");
         limitsStorage_v2.init("limitAmountsStorage_v2");
+        lockedDepositsStorage_v2.init("lockedDepositsStorage_v2");
     }
 
     /// @notice Sets shares token address as default token address. Used for supporting TIME tokens
@@ -127,11 +133,27 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
     returns (uint _balance)
     {
         if (_token != store.get(sharesContractStorage)) {
-            bytes32 _key = keccak256(_token, _depositor);
+            bytes32 _key = keccak256(abi.encodePacked(_token, _depositor));
             return _depositBalance(_key);
         }
 
         return _depositBalance(bytes32(_depositor));
+    }
+
+    /// @notice TODO:
+    function lockedDepositBalance(address _token, address _depositor)
+    public
+    view
+    returns (uint _balance) {
+        _balance = lockedDepositBalanceWithKey(_token, bytes32(_depositor));
+    }
+    
+    /// @notice TODO:
+    function lockedDepositBalanceWithKey(address _token, bytes32 _key)
+    public
+    view
+    returns (uint _balance) {
+        _balance = uint(store.get(lockedDepositsStorage_v2, _key, bytes32(_token)));
     }
 
     /// @notice Deposits for a _target for provided _amount of specified tokens
@@ -159,7 +181,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
         } else {
             store.add(shareholders_v2, bytes32(_token), _target);
 
-            bytes32 key = keccak256(_token, _target);
+            bytes32 key = keccak256(abi.encodePacked(_token, _target));
 
             id = store.get(depositsIdCounters_v2, key) + 1;
             store.set(depositsIdCounters_v2, key, id);
@@ -168,6 +190,38 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
             prevAmount = store.get(totalSharesStorage_v2, _token);
             store.set(totalSharesStorage_v2, _token, _amount.add(prevAmount));
         }
+    }
+
+    function unsafeLock(address _token, bytes32 _target, uint _amount)
+    public 
+    onlyTimeHolder
+    {
+        uint _total = uint(store.get(lockedDepositsStorage_v2, _target, bytes32(_token)));
+        store.set(lockedDepositsStorage_v2, _target, bytes32(_token), bytes32(_total.add(_amount)));
+    }
+
+    function lock(address _token, address _target, uint _amount)
+    public
+    onlyTimeHolder
+    {
+        unsafeLock(_token, bytes32(_target), _amount);
+        withdrawShares(_token, _target, _amount, depositBalance(_token, _target));
+    }
+
+    function unsafeUnlock(address _token, bytes32 _target, uint _amount)
+    public
+    onlyTimeHolder
+    {
+        uint _total = uint(store.get(lockedDepositsStorage_v2, _target, bytes32(_token)));
+        store.set(lockedDepositsStorage_v2, _target, bytes32(_token), bytes32(_total.sub(_amount)));
+    }
+
+    function unlock(address _token, address _target, uint _amount)
+    public
+    onlyTimeHolder
+    {
+        unsafeUnlock(_token, bytes32(_target), _amount);
+        depositFor(_token, _target, _amount);
     }
 
     /// @notice Withdraws tokens back to provided account
@@ -195,7 +249,7 @@ contract ERC20DepositStorage is Owned, StorageAdapter {
             uint prevAmount_v1 = store.get(totalSharesStorage);
             store.set(totalSharesStorage, prevAmount_v1.sub(_amount));
         } else {
-            bytes32 _key = keccak256(_token, _account);
+            bytes32 _key = keccak256(abi.encodePacked(_token, _account));
             uint deposits_count_left_v2 = _withdrawShares(_key, _amount);
 
             if (deposits_count_left_v2 == 0) {

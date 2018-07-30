@@ -14,6 +14,7 @@ module.exports = deployer => {
 
 		const history = await MultiEventsHistory.deployed()
 		await history.authorize(Rewards.address)
+		await rewards.setupEventsHistory(history.address)
 
 		console.log(`[MIGRATION] [${parseInt(path.basename(__filename))}] Rewards setup: #done`)
 	})

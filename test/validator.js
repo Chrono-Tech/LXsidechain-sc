@@ -4,6 +4,7 @@ const ChronoBankAssetProxy = artifacts.require('ChronoBankAssetProxy');
 const LXBlockReward = artifacts.require("LXBlockReward")
 const LXValidatorSet = artifacts.require("LXValidatorSet")
 const LXValidatorManager = artifacts.require("LXValidatorManager")
+const TimeHolder = artifacts.require("TimeHolder")
 
 const Reverter = require('./helpers/reverter');
 
@@ -13,6 +14,7 @@ contract('LXValidatorManager', function (accounts) {
     let reverter = new Reverter(web3);
     const TIME_SYMBOL = 'TIME';
     const SYSTEM_ADDRESS = "0xfffffffffffffffffffffffffffffffffffffffe";
+    const MINER_TOKEN_DEPOSIT_LIMIT = web3.toBigNumber("10000000")
     let TIME;
     let TIME_ASSET;
 
@@ -20,11 +22,15 @@ contract('LXValidatorManager', function (accounts) {
     let blockReward;
     let validatorSet;
     let validatorManager;
+    let timeHolder
+    let timeHolderWallet
     let system = accounts[4];
 
     afterEach('revert', reverter.revert);
 
     before('before', async () => {
+        await reverter.promisifySnapshot();
+
         platform = await ChronoBankPlatform.deployed();
         TIME = ChronoBankAssetProxy.at(await platform.proxies(TIME_SYMBOL));
         TIME_ASSET = ChronoBankAsset.at(await TIME.getLatestVersion());
@@ -32,12 +38,20 @@ contract('LXValidatorManager', function (accounts) {
         blockReward = await LXBlockReward.deployed();
         validatorSet = await LXValidatorSet.deployed();
         validatorManager = await LXValidatorManager.deployed();
+        timeHolder = await TimeHolder.deployed()
+        timeHolderWallet = await timeHolder.wallet()
+
+        await timeHolder.setMiningDepositLimits(TIME.address, MINER_TOKEN_DEPOSIT_LIMIT)
 
         await reverter.promisifySnapshot();
     })
 
+    after(async () => {
+        await reverter.promisifyRevert(1)
+    })
+
     context("in sidechain", async () => {
-        it('should automatically add an account to the validators if an account has TIME', async () => {
+        it('should automatically add an account to the validators if an account has locked TIME (in timeholder)', async () => {
             let user = accounts[5];
             const TOKEN_AMOUNT = 100 * Math.pow(10, 8);
 
@@ -48,8 +62,10 @@ contract('LXValidatorManager', function (accounts) {
 
             await platform.reissueAsset(TIME_SYMBOL, TOKEN_AMOUNT);
 
-            await TIME.transfer(user, TOKEN_AMOUNT, {from: accounts[0]});
-            assert.isTrue((await TIME.balanceOf(user)).eq(TOKEN_AMOUNT));
+            await TIME.approve(timeHolderWallet, TOKEN_AMOUNT, {from: accounts[0]});
+            await timeHolder.depositFor(TIME.address, user, TOKEN_AMOUNT, { from: accounts[0], })
+            await timeHolder.lockDepositAndBecomeMiner(TIME.address, TOKEN_AMOUNT, user, { from: user, })
+            assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, user)).toString(16), TOKEN_AMOUNT.toString(16))
 
             assert.isTrue(await validatorManager.isPending(user));
             assert.isFalse(await validatorManager.isValidator(user));
@@ -78,13 +94,12 @@ contract('LXValidatorManager', function (accounts) {
 
             await platform.reissueAsset(TIME_SYMBOL, TOKEN_AMOUNT * 3);
 
-            await TIME.transfer(user1, TOKEN_AMOUNT, {from: accounts[0]});
-            await TIME.transfer(user2, TOKEN_AMOUNT, {from: accounts[0]});
-            await TIME.transfer(user3, TOKEN_AMOUNT, {from: accounts[0]});
-
-            assert.isFalse((await TIME.balanceOf(user1)).isZero());
-            assert.isFalse((await TIME.balanceOf(user2)).isZero());
-            assert.isFalse((await TIME.balanceOf(user3)).isZero());
+            for (var _user of [ user1, user2, user3, ]) {
+                await TIME.approve(timeHolderWallet, TOKEN_AMOUNT, {from: accounts[0]});
+                await timeHolder.depositFor(TIME.address, _user, TOKEN_AMOUNT, { from: accounts[0], })
+                await timeHolder.lockDepositAndBecomeMiner(TIME.address, TOKEN_AMOUNT, _user, { from: _user, })
+                assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, _user)).toString(16), TOKEN_AMOUNT.toString(16))
+            }
 
             await validatorSet.finalizeChange({from:system});
 
@@ -108,16 +123,20 @@ contract('LXValidatorManager', function (accounts) {
 
             await platform.reissueAsset(TIME_SYMBOL, TOKEN_AMOUNT);
 
-            await TIME.transfer(user1, TOKEN_AMOUNT, {from: accounts[0]});
+            await TIME.approve(timeHolderWallet, TOKEN_AMOUNT, {from: accounts[0]});
+            await timeHolder.depositFor(TIME.address, user1, TOKEN_AMOUNT, { from: accounts[0], })
+            await timeHolder.lockDepositAndBecomeMiner(TIME.address, TOKEN_AMOUNT, user1, { from: user1, })
+            assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, user1)).toString(16), TOKEN_AMOUNT.toString(16))
+
             await validatorSet.finalizeChange({from:system});
 
-            assert.isFalse((await TIME.balanceOf(user1)).isZero());
+            assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, user1)).toString(16), TOKEN_AMOUNT.toString(16))
             assert.isTrue(await validatorManager.isValidator(user1));
 
-            await TIME.transfer(accounts[0], TOKEN_AMOUNT, {from: user1});
+            await timeHolder.unlockDepositAndResignMiner(TIME.address, { from: user1, })
             await validatorSet.finalizeChange({from:system});
 
-            assert.isTrue((await TIME.balanceOf(user1)).isZero());
+            assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, user1)).toString(16), '0')
             assert.isFalse(await validatorManager.isValidator(user1));
         })
 
@@ -135,83 +154,31 @@ contract('LXValidatorManager', function (accounts) {
 
             await platform.reissueAsset(TIME_SYMBOL, TOKEN_AMOUNT * 2);
 
-            await TIME.transfer(user1, TOKEN_AMOUNT, {from: accounts[0]});
-            await TIME.transfer(user2, TOKEN_AMOUNT, {from: accounts[0]});
+            for (var _user of [ user1, user2, ]) {
+                await TIME.approve(timeHolderWallet, TOKEN_AMOUNT, {from: accounts[0]});
+                await timeHolder.depositFor(TIME.address, _user, TOKEN_AMOUNT, { from: accounts[0], })
+                await timeHolder.lockDepositAndBecomeMiner(TIME.address, TOKEN_AMOUNT, _user, { from: _user, })
+                assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, _user)).toString(16), TOKEN_AMOUNT.toString(16))
+            }
+
             await validatorSet.finalizeChange({from:system});
 
-            assert.isFalse((await TIME.balanceOf(user1)).isZero());
+            assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, user1)).toString(16), TOKEN_AMOUNT.toString(16))
             assert.isTrue(await validatorManager.isValidator(user1));
 
-            assert.isFalse((await TIME.balanceOf(user2)).isZero());
+            assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, user2)).toString(16), TOKEN_AMOUNT.toString(16))
             assert.isTrue(await validatorManager.isValidator(user2));
 
-            await TIME.transfer(accounts[0], TOKEN_AMOUNT, {from: user1});
-            await TIME.transfer(accounts[0], TOKEN_AMOUNT, {from: user2});
+            for (var _user of [ user1, user2, ]) {
+                await timeHolder.unlockDepositAndResignMiner(TIME.address, { from: _user, })
+            }
+
             await validatorSet.finalizeChange({from:system});
 
-            assert.isTrue((await TIME.balanceOf(user1)).isZero());
+            assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, user1)).toString(16), '0')
             assert.isFalse(await validatorManager.isValidator(user1));
-
-            assert.isTrue((await TIME.balanceOf(user2)).isZero());
-            assert.isFalse(await validatorManager.isValidator(user2));
-        })
-
-        it('should automatically remove an account from validators if an account burned all his tokens', async () => {
-            let user1 = accounts[5];
-
-            const TOKEN_AMOUNT = 100 * Math.pow(10, 8);
-
-            assert.isTrue((await TIME.balanceOf(user1)).isZero());
-            assert.isFalse(await validatorManager.isValidator(user1));
-
-            await platform.reissueAsset(TIME_SYMBOL, TOKEN_AMOUNT);
-
-            await TIME.transfer(user1, TOKEN_AMOUNT, {from: accounts[0]});
-            await validatorSet.finalizeChange({from:system});
-
-            assert.isFalse((await TIME.balanceOf(user1)).isZero());
-            assert.isTrue(await validatorManager.isValidator(user1));
-
-            await platform.revokeAsset(TIME_SYMBOL, TOKEN_AMOUNT, {from: user1});
-            await validatorSet.finalizeChange({from:system});
-
-            assert.isTrue((await TIME.balanceOf(user1)).isZero());
-            assert.isFalse(await validatorManager.isValidator(user1));
-        })
-
-        it('should automatically remove multiple accounts from validators if the accounts burned all his tokens', async () => {
-            let user1 = accounts[5];
-            let user2 = accounts[6];
-
-            const TOKEN_AMOUNT = 100 * Math.pow(10, 8);
-
-            assert.isTrue((await TIME.balanceOf(user1)).isZero());
-            assert.isFalse(await validatorManager.isValidator(user1));
-
-            assert.isTrue((await TIME.balanceOf(user2)).isZero());
-            assert.isFalse(await validatorManager.isValidator(user2));
-
-            await platform.reissueAsset(TIME_SYMBOL, TOKEN_AMOUNT * 2);
-
-            await TIME.transfer(user1, TOKEN_AMOUNT, {from: accounts[0]});
-            await TIME.transfer(user2, TOKEN_AMOUNT, {from: accounts[0]});
-            await validatorSet.finalizeChange({from:system});
-
-            assert.isFalse((await TIME.balanceOf(user1)).isZero());
-            assert.isTrue(await validatorManager.isValidator(user1));
-
-            assert.isFalse((await TIME.balanceOf(user2)).isZero());
-            assert.isTrue(await validatorManager.isValidator(user2));
-
-            await platform.revokeAsset(TIME_SYMBOL, TOKEN_AMOUNT, {from: user1});
-            await validatorSet.finalizeChange({from:system});
-
-            await platform.revokeAsset(TIME_SYMBOL, TOKEN_AMOUNT, {from: user2});
-            await validatorSet.finalizeChange({from:system});
-
-            assert.isTrue((await TIME.balanceOf(user1)).isZero());
-            assert.isFalse(await validatorManager.isValidator(user1));
-            assert.isTrue((await TIME.balanceOf(user2)).isZero());
+            
+            assert.equal((await timeHolder.getLockedDepositBalance(TIME.address, user2)).toString(16), '0')
             assert.isFalse(await validatorManager.isValidator(user2));
         })
     });
