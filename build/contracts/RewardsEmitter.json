@@ -1,0 +1,1195 @@
+{
+  "contractName": "RewardsEmitter",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_errorCode",
+          "type": "uint256"
+        }
+      ],
+      "name": "emitErrorCode",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getEventsHistory",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "addr",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "total",
+          "type": "uint256"
+        }
+      ],
+      "name": "WithdrawnSuccess",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "addr",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "amountReward",
+          "type": "uint256"
+        }
+      ],
+      "name": "WithdrawnRewardSuccess",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "_part",
+          "type": "uint256"
+        }
+      ],
+      "name": "DepositStored",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [],
+      "name": "PeriodClosed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "self",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "errorCode",
+          "type": "uint256"
+        }
+      ],
+      "name": "ErrorCode",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "addr",
+          "type": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "emitWithdrawnReward",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "emitPeriodClosed",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5061023b806100206000396000f3006080604052600436106100615763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416631d5e0d6d81146100665780638834277e14610099578063e29065d6146100b1578063fff10aba146100c6575b600080fd5b34801561007257600080fd5b5061009773ffffffffffffffffffffffffffffffffffffffff60043516602435610104565b005b3480156100a557600080fd5b50610097600435610159565b3480156100bd57600080fd5b506100976101b1565b3480156100d257600080fd5b506100db6101dc565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b6040805173ffffffffffffffffffffffffffffffffffffffff841681526020810183905281517f67df9380edc0ab1841c8d72784f09679a2bb1f9d29105814e079b68f80ed8d47929181900390910190a15050565b61016161020b565b73ffffffffffffffffffffffffffffffffffffffff167f09e0713b45664e161c202b19bb4574ee83dfa056f9bfdee56847b3971d968221826040518082815260200191505060405180910390a250565b6040517f3a273a3330d1f4c56aa39bf2b3df76adde3fd94f62ce06e19d173e66af02fa6390600090a1565b6000805473ffffffffffffffffffffffffffffffffffffffff168015156102035730610205565b805b91505090565b33905600a165627a7a72305820d6315fe4acba16ff6bcc28941a0fccfa76c5f22b39bf70b432a8eac402bbdddb0029",
+  "deployedBytecode": "0x6080604052600436106100615763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416631d5e0d6d81146100665780638834277e14610099578063e29065d6146100b1578063fff10aba146100c6575b600080fd5b34801561007257600080fd5b5061009773ffffffffffffffffffffffffffffffffffffffff60043516602435610104565b005b3480156100a557600080fd5b50610097600435610159565b3480156100bd57600080fd5b506100976101b1565b3480156100d257600080fd5b506100db6101dc565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b6040805173ffffffffffffffffffffffffffffffffffffffff841681526020810183905281517f67df9380edc0ab1841c8d72784f09679a2bb1f9d29105814e079b68f80ed8d47929181900390910190a15050565b61016161020b565b73ffffffffffffffffffffffffffffffffffffffff167f09e0713b45664e161c202b19bb4574ee83dfa056f9bfdee56847b3971d968221826040518082815260200191505060405180910390a250565b6040517f3a273a3330d1f4c56aa39bf2b3df76adde3fd94f62ce06e19d173e66af02fa6390600090a1565b6000805473ffffffffffffffffffffffffffffffffffffffff168015156102035730610205565b805b91505090565b33905600a165627a7a72305820d6315fe4acba16ff6bcc28941a0fccfa76c5f22b39bf70b432a8eac402bbdddb0029",
+  "sourceMap": "197:473:26:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;197:473:26;;;;;;;",
+  "deployedSourceMap": "197:473:26:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;454:129;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;454:129:26;;;;;;;;;;;517:99:36;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;517:99:36;;;;;589:79:26;;8:9:-1;5:2;;;30:1;27;20:12;5:2;589:79:26;;;;311:200:36;;8:9:-1;5:2;;;30:1;27;20:12;5:2;311:200:36;;;;;;;;;;;;;;;;;;;;;;;454:129:26;540:36;;;;;;;;;;;;;;;;;;;;;;;;;;;454:129;;:::o;517:99:36:-;589:7;:5;:7::i;:::-;579:30;;;598:10;579:30;;;;;;;;;;;;;;;;;;517:99;:::o;589:79:26:-;647:14;;;;;;;589:79::o;311:200:36:-;375:7;424:18;;;;459:21;;;:45;;500:4;459:45;;;483:14;459:45;452:52;;311:200;;:::o;867:103::-;953:10;867:103;:::o",
+  "source": "/**\n * Copyright 2017–2018, LaborX PTY\n * Licensed under the AGPL Version 3 license.\n */\n\npragma solidity ^0.4.23;\n\nimport \"solidity-eventshistory-lib/contracts/MultiEventsHistoryAdapter.sol\";\n\n\ncontract RewardsEmitter is MultiEventsHistoryAdapter {\n    event WithdrawnSuccess(address addr, uint amount, uint total);\n    event WithdrawnRewardSuccess(address addr, uint amountReward);\n    event DepositStored(uint _part);\n    event PeriodClosed();\n\n    function emitWithdrawnReward(address addr, uint amount)\n    public\n    {\n        emit WithdrawnRewardSuccess(addr, amount);\n    }\n\n    function emitPeriodClosed()\n    public\n    {\n        emit PeriodClosed();\n    }\n}\n",
+  "sourcePath": "/Users/alesanro/Documents/Projects/ChronoBank/LXsidechain-sc/contracts/rewards/RewardsEmitter.sol",
+  "ast": {
+    "absolutePath": "/Users/alesanro/Documents/Projects/ChronoBank/LXsidechain-sc/contracts/rewards/RewardsEmitter.sol",
+    "exportedSymbols": {
+      "RewardsEmitter": [
+        6551
+      ]
+    },
+    "id": 6552,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6507,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "92:24:26"
+      },
+      {
+        "absolutePath": "solidity-eventshistory-lib/contracts/MultiEventsHistoryAdapter.sol",
+        "file": "solidity-eventshistory-lib/contracts/MultiEventsHistoryAdapter.sol",
+        "id": 6508,
+        "nodeType": "ImportDirective",
+        "scope": 6552,
+        "sourceUnit": 10544,
+        "src": "118:76:26",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 6509,
+              "name": "MultiEventsHistoryAdapter",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 10543,
+              "src": "224:25:26",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_MultiEventsHistoryAdapter_$10543",
+                "typeString": "contract MultiEventsHistoryAdapter"
+              }
+            },
+            "id": 6510,
+            "nodeType": "InheritanceSpecifier",
+            "src": "224:25:26"
+          }
+        ],
+        "contractDependencies": [
+          10543
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 6551,
+        "linearizedBaseContracts": [
+          6551,
+          10543
+        ],
+        "name": "RewardsEmitter",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 6518,
+            "name": "WithdrawnSuccess",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 6517,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6512,
+                  "indexed": false,
+                  "name": "addr",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6518,
+                  "src": "279:12:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6511,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "279:7:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6514,
+                  "indexed": false,
+                  "name": "amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6518,
+                  "src": "293:11:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6513,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "293:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6516,
+                  "indexed": false,
+                  "name": "total",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6518,
+                  "src": "306:10:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6515,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "306:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "278:39:26"
+            },
+            "src": "256:62:26"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 6524,
+            "name": "WithdrawnRewardSuccess",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 6523,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6520,
+                  "indexed": false,
+                  "name": "addr",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6524,
+                  "src": "352:12:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6519,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "352:7:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6522,
+                  "indexed": false,
+                  "name": "amountReward",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6524,
+                  "src": "366:17:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6521,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "366:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "351:33:26"
+            },
+            "src": "323:62:26"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 6528,
+            "name": "DepositStored",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 6527,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6526,
+                  "indexed": false,
+                  "name": "_part",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6528,
+                  "src": "410:10:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6525,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "410:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "409:12:26"
+            },
+            "src": "390:32:26"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 6530,
+            "name": "PeriodClosed",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 6529,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "445:2:26"
+            },
+            "src": "427:21:26"
+          },
+          {
+            "body": {
+              "id": 6542,
+              "nodeType": "Block",
+              "src": "525:58:26",
+              "statements": [
+                {
+                  "eventCall": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 6538,
+                        "name": "addr",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 6532,
+                        "src": "563:4:26",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 6539,
+                        "name": "amount",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 6534,
+                        "src": "569:6:26",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      ],
+                      "id": 6537,
+                      "name": "WithdrawnRewardSuccess",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 6524,
+                      "src": "540:22:26",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$_t_address_$_t_uint256_$returns$__$",
+                        "typeString": "function (address,uint256)"
+                      }
+                    },
+                    "id": 6540,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "540:36:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6541,
+                  "nodeType": "EmitStatement",
+                  "src": "535:41:26"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 6543,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "emitWithdrawnReward",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6535,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6532,
+                  "name": "addr",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6543,
+                  "src": "483:12:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6531,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "483:7:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6534,
+                  "name": "amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6543,
+                  "src": "497:11:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6533,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "497:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "482:27:26"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6536,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "525:0:26"
+            },
+            "scope": 6551,
+            "src": "454:129:26",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6549,
+              "nodeType": "Block",
+              "src": "632:36:26",
+              "statements": [
+                {
+                  "eventCall": {
+                    "argumentTypes": null,
+                    "arguments": [],
+                    "expression": {
+                      "argumentTypes": [],
+                      "id": 6546,
+                      "name": "PeriodClosed",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 6530,
+                      "src": "647:12:26",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$__$returns$__$",
+                        "typeString": "function ()"
+                      }
+                    },
+                    "id": 6547,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "647:14:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6548,
+                  "nodeType": "EmitStatement",
+                  "src": "642:19:26"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 6550,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "emitPeriodClosed",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6544,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "614:2:26"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6545,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "632:0:26"
+            },
+            "scope": 6551,
+            "src": "589:79:26",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 6552,
+        "src": "197:473:26"
+      }
+    ],
+    "src": "92:579:26"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/alesanro/Documents/Projects/ChronoBank/LXsidechain-sc/contracts/rewards/RewardsEmitter.sol",
+    "exportedSymbols": {
+      "RewardsEmitter": [
+        6551
+      ]
+    },
+    "id": 6552,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6507,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".23"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "92:24:26"
+      },
+      {
+        "absolutePath": "solidity-eventshistory-lib/contracts/MultiEventsHistoryAdapter.sol",
+        "file": "solidity-eventshistory-lib/contracts/MultiEventsHistoryAdapter.sol",
+        "id": 6508,
+        "nodeType": "ImportDirective",
+        "scope": 6552,
+        "sourceUnit": 10544,
+        "src": "118:76:26",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 6509,
+              "name": "MultiEventsHistoryAdapter",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 10543,
+              "src": "224:25:26",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_MultiEventsHistoryAdapter_$10543",
+                "typeString": "contract MultiEventsHistoryAdapter"
+              }
+            },
+            "id": 6510,
+            "nodeType": "InheritanceSpecifier",
+            "src": "224:25:26"
+          }
+        ],
+        "contractDependencies": [
+          10543
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 6551,
+        "linearizedBaseContracts": [
+          6551,
+          10543
+        ],
+        "name": "RewardsEmitter",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 6518,
+            "name": "WithdrawnSuccess",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 6517,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6512,
+                  "indexed": false,
+                  "name": "addr",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6518,
+                  "src": "279:12:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6511,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "279:7:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6514,
+                  "indexed": false,
+                  "name": "amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6518,
+                  "src": "293:11:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6513,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "293:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6516,
+                  "indexed": false,
+                  "name": "total",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6518,
+                  "src": "306:10:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6515,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "306:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "278:39:26"
+            },
+            "src": "256:62:26"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 6524,
+            "name": "WithdrawnRewardSuccess",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 6523,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6520,
+                  "indexed": false,
+                  "name": "addr",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6524,
+                  "src": "352:12:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6519,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "352:7:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6522,
+                  "indexed": false,
+                  "name": "amountReward",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6524,
+                  "src": "366:17:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6521,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "366:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "351:33:26"
+            },
+            "src": "323:62:26"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 6528,
+            "name": "DepositStored",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 6527,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6526,
+                  "indexed": false,
+                  "name": "_part",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6528,
+                  "src": "410:10:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6525,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "410:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "409:12:26"
+            },
+            "src": "390:32:26"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 6530,
+            "name": "PeriodClosed",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 6529,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "445:2:26"
+            },
+            "src": "427:21:26"
+          },
+          {
+            "body": {
+              "id": 6542,
+              "nodeType": "Block",
+              "src": "525:58:26",
+              "statements": [
+                {
+                  "eventCall": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 6538,
+                        "name": "addr",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 6532,
+                        "src": "563:4:26",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 6539,
+                        "name": "amount",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 6534,
+                        "src": "569:6:26",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      ],
+                      "id": 6537,
+                      "name": "WithdrawnRewardSuccess",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 6524,
+                      "src": "540:22:26",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$_t_address_$_t_uint256_$returns$__$",
+                        "typeString": "function (address,uint256)"
+                      }
+                    },
+                    "id": 6540,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "540:36:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6541,
+                  "nodeType": "EmitStatement",
+                  "src": "535:41:26"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 6543,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "emitWithdrawnReward",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6535,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6532,
+                  "name": "addr",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6543,
+                  "src": "483:12:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 6531,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "483:7:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 6534,
+                  "name": "amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6543,
+                  "src": "497:11:26",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6533,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "497:4:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "482:27:26"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6536,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "525:0:26"
+            },
+            "scope": 6551,
+            "src": "454:129:26",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 6549,
+              "nodeType": "Block",
+              "src": "632:36:26",
+              "statements": [
+                {
+                  "eventCall": {
+                    "argumentTypes": null,
+                    "arguments": [],
+                    "expression": {
+                      "argumentTypes": [],
+                      "id": 6546,
+                      "name": "PeriodClosed",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 6530,
+                      "src": "647:12:26",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$__$returns$__$",
+                        "typeString": "function ()"
+                      }
+                    },
+                    "id": 6547,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "647:14:26",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6548,
+                  "nodeType": "EmitStatement",
+                  "src": "642:19:26"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 6550,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "emitPeriodClosed",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6544,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "614:2:26"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 6545,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "632:0:26"
+            },
+            "scope": 6551,
+            "src": "589:79:26",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 6552,
+        "src": "197:473:26"
+      }
+    ],
+    "src": "92:579:26"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.24+commit.e67f0147.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "2.0.1",
+  "updatedAt": "2018-07-27T20:15:18.654Z"
+}
