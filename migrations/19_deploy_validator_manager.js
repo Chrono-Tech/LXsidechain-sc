@@ -6,20 +6,15 @@ const StorageManager = artifacts.require("StorageManager")
 const ChronoBankPlatform = artifacts.require("ChronoBankPlatform")
 const LXBlockReward = artifacts.require("LXBlockReward")
 const LXValidatorSet = artifacts.require("LXValidatorSet")
+const deployConfig = require("../deploy-config")
 const { basename, } = require("path")
 
-module.exports = (deployer, network) => {
+module.exports = (deployer, network, accounts) => {
+	const config = deployConfig({ artifacts: artifacts, web3: web3, network: network, accounts: accounts })
+	
 	deployer.then(async () => {
-		const DEFAULT_VALIDATOR_SET_ADDRESS = "0x0000000000000000000000000000000000000011"
-		const DEFAULT_BLOCK_REWARD_ADDRESS = "0x0000000000000000000000000000000000000042"
-
-		let validatorSetAddress = (network == "development") ? LXValidatorSet.address : DEFAULT_VALIDATOR_SET_ADDRESS
-		let blockRewardAddress = (network == "development") ? LXBlockReward.address : DEFAULT_BLOCK_REWARD_ADDRESS
-
-		const TIME_SYMBOL = 'TIME'
-
 		const platform = await ChronoBankPlatform.deployed()
-		const sharesAddress = await platform.proxies(TIME_SYMBOL);
+		const sharesAddress = await platform.proxies(config.mining.tokenSymbol);
 
 		await deployer.deploy(LXValidatorManager, Storage.address, "LXValidatorManager")
 
@@ -31,13 +26,13 @@ module.exports = (deployer, network) => {
 		await history.authorize(manager.address)
 		await manager.setupEventsHistory(history.address)
 
-		await manager.init(LXValidatorSet.address, TimeHolder.address, sharesAddress)
+		const validatorSet = LXValidatorSet.at(config.mining.validatorSetContract.address)
+		const blockReward = LXBlockReward.at(config.mining.blockRewardsContract.address)
 
-		const validatorSet = LXValidatorSet.at(validatorSetAddress)
-		const blockReward = LXBlockReward.at(blockRewardAddress)
+		await manager.init(validatorSet.address, TimeHolder.address, sharesAddress)
 
-		await validatorSet.setBackend(LXValidatorManager.address)
-		await blockReward.setDataProvider(LXValidatorManager.address);
+		await validatorSet.setBackend(manager.address)
+		await blockReward.setDataProvider(manager.address);
 
 		console.log(`[MIGRATION] [${parseInt(basename(__filename))}] LXValidatorManager: #done`)
 	})

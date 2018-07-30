@@ -3,8 +3,10 @@ require('babel-polyfill');
 
 module.exports = {
   copyNodeModules: true,
-  skipFiles: ['migration/Migrations.sol',
-              'lib/SafeMath.sol',
-              'helper/FakeCoin.sol',
-              'event/MultiEventsHistory.sol'],
+  skipFiles: [
+    'migration/Migrations.sol',
+    'migration/Imports.sol',
+    'lib/SafeMath.sol',
+    'helper/FakeCoin.sol',
+  ],
 }
